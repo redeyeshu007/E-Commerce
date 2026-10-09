@@ -78,7 +78,7 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
 
       {/* Left-Aligned Text Content Block */}
       <div
-        className={`relative z-10 flex h-full flex-col items-start px-6 sm:px-10 lg:px-12 xl:px-14 max-w-[82%] sm:max-w-[65%] lg:max-w-[56%] ${
+        className={`relative z-10 flex h-full flex-col items-start px-5 sm:px-7 lg:px-8 xl:px-9 max-w-[84%] sm:max-w-[65%] lg:max-w-[58%] ${
           isFeatured
             ? "justify-start pt-9 sm:pt-12 lg:pt-14 xl:pt-16"
             : "justify-start pt-7 sm:pt-9 lg:pt-10 xl:pt-12"
@@ -161,15 +161,15 @@ export function HeroBanners({
       aria-label="Promotional Collections"
       className={`w-full bg-white pt-1 sm:pt-1.5 lg:pt-2 pb-6 sm:pb-8 lg:pb-10 ${className}`}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 lg:gap-8 items-stretch">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 items-stretch">
           {/* Left Column: Vertically Oriented Featured Banner */}
           <div className="h-full">
             <BannerCard item={config.featuredBanner} isFeatured />
           </div>
 
           {/* Right Column: Two Stacked Landscape Banners */}
-          <div className="flex flex-col gap-5 sm:gap-6 lg:gap-8 justify-between h-full">
+          <div className="flex flex-col gap-4 sm:gap-5 lg:gap-6 justify-between h-full">
             <div className="flex-1">
               <BannerCard item={config.secondaryTopBanner} />
             </div>
