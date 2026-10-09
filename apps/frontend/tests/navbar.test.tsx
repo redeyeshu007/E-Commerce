@@ -103,7 +103,7 @@ describe("JAVIX Premium Navbar Component Suite", () => {
       expect(cartButtons.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("opens and closes mobile menu drawer via hamburger button and close button", () => {
+    it("opens and closes mobile menu drawer via hamburger button and close button", async () => {
       render(<MainNavbar config={defaultNavigationConfig} />);
 
       const menuToggle = screen.getByRole("button", { name: "Open navigation menu" });
@@ -121,9 +121,11 @@ describe("JAVIX Premium Navbar Component Suite", () => {
       const closeMenuButton = screen.getByRole("button", { name: "Close menu" });
       fireEvent.click(closeMenuButton);
 
-      expect(
-        screen.queryByRole("dialog", { name: "Mobile Navigation Menu" }),
-      ).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.queryByRole("dialog", { name: "Mobile Navigation Menu" }),
+        ).not.toBeInTheDocument();
+      });
     });
 
     it("supports MENU and CATEGORIES tabs where MENU strictly reflects navbar links", () => {

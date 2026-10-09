@@ -18,13 +18,16 @@ const DEFAULT_CURRENCIES = ["$ Dollar (US)", "₹ Rupees (INR)", "€ Euro (EUR)
  * Mobile Navigation Drawer.
  *
  * Implements:
+ * - Silky smooth slide-in and slide-out transitions with backdrop fade.
  * - Top Header: Brand Wordmark (JAVIX) + Close 'X' button with light neutral background.
  * - Tabs Bar: 'MENU' and 'CATEGORIES' with solid black indicator underline for active tab.
- * - Tab 1 (MENU): Shows the exact primary navbar links (e.g. Home, Shop, Contact, New Arrivals).
+ * - Tab 1 (MENU): Shows the exact primary navbar links (Home, Shop, Contact, New Arrivals).
  * - Tab 2 (CATEGORIES): Categories list (New Products, Today On Sale, Special Offer!, Necklaces, Rings, Bracelets, Earnings, Charm & Dangles, Watches, Gift Ideas).
  * - Bottom Footer: Border-top with English ⌵ and $ Dollar (US) ⌵ dropdown selectors.
  */
 export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationProps) {
+  const [isClosing, setIsClosing] = useState(false);
+  const [active, setActive] = useState(false);
   const [activeTab, setActiveTab] = useState<"menu" | "categories">("menu");
   const [selectedLanguage, setSelectedLanguage] = useState<string>(
     config.utility.language || "English",
@@ -36,21 +39,47 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
   const langRef = useRef<HTMLDivElement>(null);
   const currencyRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll when mobile menu is open
+  // Smooth slide-in animation when opened
   useEffect(() => {
+    let raf: number;
     if (isOpen) {
+      raf = requestAnimationFrame(() => {
+        setActive(true);
+      });
+    } else {
+      raf = requestAnimationFrame(() => {
+        setActive(false);
+      });
+    }
+    return () => cancelAnimationFrame(raf);
+  }, [isOpen]);
+
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+    setActive(false);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 300);
+  }, [onClose]);
+
+  const isVisible = isOpen || isClosing;
+
+  // Lock body scroll when mobile menu is visible
+  useEffect(() => {
+    if (isVisible) {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = originalOverflow;
       };
     }
-  }, [isOpen]);
+  }, [isVisible]);
 
-  // Handle escape key to dismiss
+  // Handle escape key to dismiss smoothly
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === "Escape" && isVisible) {
         if (isLangOpen) {
           setIsLangOpen(false);
           return;
@@ -59,10 +88,10 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
           setIsCurrencyOpen(false);
           return;
         }
-        onClose();
+        handleClose();
       }
     },
-    [isOpen, isLangOpen, isCurrencyOpen, onClose],
+    [isVisible, isLangOpen, isCurrencyOpen, handleClose],
   );
 
   useEffect(() => {
@@ -87,7 +116,7 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
     }
   }, [isLangOpen, isCurrencyOpen]);
 
-  if (!isOpen) return null;
+  if (!isVisible) return null;
 
   const categories = config.categories ?? [
     { id: "new-products", label: "New Products", href: "/shop?filter=new" },
@@ -109,15 +138,21 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
       aria-label="Mobile Navigation Menu"
       className="fixed inset-0 z-50 flex lg:hidden"
     >
-      {/* Backdrop */}
+      {/* Backdrop with smooth fade in/out */}
       <div
-        className="fixed inset-0 bg-black/45 backdrop-blur-[2px] transition-opacity duration-300 motion-reduce:transition-none"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/50 backdrop-blur-[2px] transition-opacity duration-300 ease-in-out motion-reduce:transition-none ${
+          active ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={handleClose}
         aria-hidden="true"
       />
 
-      {/* Slide-over Drawer Panel */}
-      <div className="relative flex h-full w-[85vw] max-w-[340px] flex-col bg-white shadow-2xl transition-transform duration-300 motion-reduce:transition-none">
+      {/* Slide-over Drawer Panel with smooth slide in/out */}
+      <div
+        className={`relative flex h-full w-[85vw] max-w-[340px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${
+          active ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         {/* 1. Top Header inside drawer: Brand + Close Icon */}
         <div className="flex h-14 sm:h-16 flex-none items-center justify-between border-b border-[#E5E5E5] bg-[#F7F7F7] px-6">
           <span className="font-sans text-xl sm:text-2xl font-normal tracking-[0.18em] text-[#111111] uppercase">
@@ -125,7 +160,7 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
           </span>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close menu"
             className="flex h-9 w-9 items-center justify-center rounded-full text-[#222222] transition-colors hover:bg-neutral-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
           >
@@ -178,7 +213,7 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
                   <li key={item.id}>
                     <Link
                       href={item.href || "#"}
-                      onClick={onClose}
+                      onClick={handleClose}
                       className="block py-2.5 text-[15px] font-medium tracking-wide text-[#111111] transition-colors hover:text-black"
                     >
                       {item.label}
@@ -194,7 +229,7 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
                   <li key={cat.id}>
                     <Link
                       href={cat.href}
-                      onClick={onClose}
+                      onClick={handleClose}
                       className="block py-2.5 text-[15px] font-medium tracking-wide text-[#111111] transition-colors hover:text-black"
                     >
                       {cat.label}
