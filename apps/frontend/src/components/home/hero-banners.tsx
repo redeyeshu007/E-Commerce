@@ -159,7 +159,7 @@ export function HeroBanners({
   return (
     <section
       aria-label="Promotional Collections"
-      className={`w-full bg-white py-4 sm:py-6 lg:py-8 ${className}`}
+      className={`w-full bg-white pt-1 sm:pt-1.5 lg:pt-2 pb-6 sm:pb-8 lg:pb-10 ${className}`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 lg:gap-8 items-stretch">
