@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@gold-commerce/shared-types": ["../../packages/shared-types/src/index.ts"],
+      "@gold-commerce/validation": ["../../packages/validation/src/index.ts"]
     }
   },
   "include": [

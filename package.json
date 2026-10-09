@@ -11,9 +11,10 @@
   "scripts": {
     "dev:frontend": "npm run dev --workspace=apps/frontend",
     "dev:backend": "npm run dev --workspace=apps/backend",
-    "build": "npm run build --workspaces --if-present",
-    "build:frontend": "npm run build --workspace=apps/frontend",
-    "build:backend": "npm run build --workspace=apps/backend",
+    "build:packages": "npm run build --workspace=@gold-commerce/shared-types --if-present && npm run build --workspace=@gold-commerce/validation --if-present",
+    "build": "npm run build:packages && npm run build --workspaces --if-present",
+    "build:frontend": "npm run build:packages && npm run build --workspace=apps/frontend",
+    "build:backend": "npm run build:packages && npm run build --workspace=apps/backend",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
