@@ -65,8 +65,8 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
           fill
           priority={item.priority}
           sizes={isFeatured ? "(max-width: 1024px) 100vw, 50vw" : "(max-width: 1024px) 100vw, 50vw"}
-          className="object-cover origin-right scale-100 sm:scale-110 lg:scale-120 transition-transform duration-700 ease-out group-hover:scale-125"
-          style={{ objectPosition: item.image.objectPosition || "center right" }}
+          className="object-cover origin-top-right transition-transform duration-700 ease-out group-hover:scale-105"
+          style={{ objectPosition: item.image.objectPosition || "right top" }}
         />
       </div>
 

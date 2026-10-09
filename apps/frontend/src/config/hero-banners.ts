@@ -67,7 +67,7 @@ export const defaultHeroBannersConfig: HeroBannersConfig = {
     image: {
       src: "/images/hero/banner-necklaces.jpg",
       alt: "Necklaces & Body Jewels - JAVIX JEWELLERY",
-      objectPosition: "80% center",
+      objectPosition: "80% top",
     },
     priority: true,
   },
@@ -82,7 +82,7 @@ export const defaultHeroBannersConfig: HeroBannersConfig = {
     image: {
       src: "/images/hero/banner-desk-hals.jpg",
       alt: "Just Lunched Desk The Hals - JAVIX JEWELLERY",
-      objectPosition: "85% center",
+      objectPosition: "85% top",
     },
     priority: false,
   },
@@ -97,7 +97,7 @@ export const defaultHeroBannersConfig: HeroBannersConfig = {
     image: {
       src: "/images/hero/banner-charm-bracelets.jpg",
       alt: "Jewelry & Charm Bracelets - JAVIX JEWELLERY",
-      objectPosition: "90% center",
+      objectPosition: "90% top",
     },
     priority: false,
   },
