@@ -2,11 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
-import { Search, User, Heart, ShoppingBag } from "lucide-react";
+import { Search, User, Heart, ShoppingCart } from "lucide-react";
 import type { ActionItem } from "@/config/navigation";
 
 export interface NavbarActionsProps {
   actions?: ActionItem[];
+  cartCount?: number;
+  wishlistCount?: number;
   onSearchClick?: () => void;
   onAccountClick?: () => void;
   onWishlistClick?: () => void;
@@ -74,12 +76,28 @@ export function AccountButton({
 export function WishlistButton({
   href,
   isImplemented = false,
+  badgeCount,
   onClick,
 }: {
   href?: string;
   isImplemented?: boolean;
+  badgeCount?: number;
   onClick?: () => void;
 }) {
+  const content = (
+    <>
+      <Heart className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
+      {badgeCount !== undefined && (
+        <span
+          data-testid="wishlist-badge"
+          className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold leading-none text-white select-none"
+        >
+          {badgeCount}
+        </span>
+      )}
+    </>
+  );
+
   if (isImplemented && href) {
     return (
       <Link
@@ -87,7 +105,7 @@ export function WishlistButton({
         aria-label="Wishlist"
         className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
       >
-        <Heart className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
+        {content}
       </Link>
     );
   }
@@ -99,23 +117,43 @@ export function WishlistButton({
       aria-label="Wishlist"
       className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
     >
-      <Heart className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
+      {content}
     </button>
   );
 }
 
 /**
- * 4. Cart Action Button
+ * 4. Cart Action Button (with circular count badge matching screenshot)
  */
 export function CartButton({
   href,
   isImplemented = false,
+  badgeCount,
   onClick,
 }: {
   href?: string;
   isImplemented?: boolean;
+  badgeCount?: number;
   onClick?: () => void;
 }) {
+  const content = (
+    <>
+      <ShoppingCart
+        className={ICON_CLASS_NAME}
+        strokeWidth={ICON_STROKE_WIDTH}
+        aria-hidden="true"
+      />
+      {badgeCount !== undefined && (
+        <span
+          data-testid="cart-badge"
+          className="absolute top-1 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold leading-none text-white select-none"
+        >
+          {badgeCount}
+        </span>
+      )}
+    </>
+  );
+
   if (isImplemented && href) {
     return (
       <Link
@@ -123,11 +161,7 @@ export function CartButton({
         aria-label="Cart"
         className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
       >
-        <ShoppingBag
-          className={ICON_CLASS_NAME}
-          strokeWidth={ICON_STROKE_WIDTH}
-          aria-hidden="true"
-        />
+        {content}
       </Link>
     );
   }
@@ -139,7 +173,7 @@ export function CartButton({
       aria-label="Cart"
       className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
     >
-      <ShoppingBag className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
+      {content}
     </button>
   );
 }
@@ -154,6 +188,8 @@ export function CartButton({
  */
 export function NavbarActions({
   actions,
+  cartCount,
+  wishlistCount,
   onSearchClick,
   onAccountClick,
   onWishlistClick,
@@ -178,11 +214,13 @@ export function NavbarActions({
       <WishlistButton
         href={wishlistAction?.href}
         isImplemented={wishlistAction?.isImplemented}
+        badgeCount={wishlistCount}
         onClick={onWishlistClick}
       />
       <CartButton
         href={cartAction?.href}
         isImplemented={cartAction?.isImplemented}
+        badgeCount={cartCount}
         onClick={onCartClick}
       />
     </div>

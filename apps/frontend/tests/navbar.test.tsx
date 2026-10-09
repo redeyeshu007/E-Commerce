@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/navbar/site-header";
 import { AnnouncementBar } from "@/components/navbar/announcement-bar";
 import { UtilityBar } from "@/components/navbar/utility-bar";
 import { MainNavbar } from "@/components/navbar/main-navbar";
+import { MobileBottomBar } from "@/components/navbar/mobile-bottom-bar";
 import { defaultNavigationConfig } from "@/config/navigation";
 
 describe("JAVIX Premium Navbar Component Suite", () => {
@@ -87,13 +88,16 @@ describe("JAVIX Premium Navbar Component Suite", () => {
       expect(screen.getByText("New Arrivals")).toBeInTheDocument();
     });
 
-    it("renders the 4 action buttons in exact order: Search, Account, Wishlist, Cart with accessible names", () => {
+    it("renders action buttons including Search, Account, Wishlist, and Cart", () => {
       render(<MainNavbar config={defaultNavigationConfig} />);
 
       expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Account" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Wishlist" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Cart" })).toBeInTheDocument();
+
+      // Cart buttons exist for both mobile header and desktop actions
+      const cartButtons = screen.getAllByRole("button", { name: "Cart" });
+      expect(cartButtons.length).toBeGreaterThanOrEqual(1);
     });
 
     it("opens and closes mobile menu drawer via hamburger button and close button", () => {
@@ -120,8 +124,32 @@ describe("JAVIX Premium Navbar Component Suite", () => {
     });
   });
 
+  describe("MobileBottomBar (Sticky Navigation)", () => {
+    it("renders HOME, SEARCH, WISHLIST (with count badge), and ACCOUNT", () => {
+      render(<MobileBottomBar config={defaultNavigationConfig} />);
+
+      const bottomNav = screen.getByRole("navigation", {
+        name: "Mobile Bottom Navigation",
+      });
+      expect(bottomNav).toBeInTheDocument();
+
+      // HOME
+      expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
+
+      // SEARCH
+      expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();
+
+      // WISHLIST with badge
+      expect(screen.getByRole("button", { name: "Wishlist" })).toBeInTheDocument();
+      expect(screen.getByTestId("mobile-wishlist-badge")).toHaveTextContent("0");
+
+      // ACCOUNT
+      expect(screen.getByRole("button", { name: "Account" })).toBeInTheDocument();
+    });
+  });
+
   describe("Full SiteHeader Integration", () => {
-    it("renders complete 3-row header hierarchy", () => {
+    it("renders complete 3-row header and sticky mobile bottom bar", () => {
       render(<SiteHeader />);
 
       const header = screen.getByRole("banner");
@@ -136,6 +164,11 @@ describe("JAVIX Premium Navbar Component Suite", () => {
 
       // Row 3
       expect(screen.getByRole("link", { name: /JAVIX Fine Jewellery/ })).toBeInTheDocument();
+
+      // Mobile Bottom Bar
+      expect(
+        screen.getByRole("navigation", { name: "Mobile Bottom Navigation" }),
+      ).toBeInTheDocument();
     });
   });
 });

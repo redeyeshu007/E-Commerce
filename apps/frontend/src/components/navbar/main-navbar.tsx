@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Menu } from "lucide-react";
 import { BrandWordmark } from "./brand-wordmark";
 import { PrimaryNavigation } from "./primary-navigation";
-import { NavbarActions } from "./navbar-actions";
+import { NavbarActions, CartButton } from "./navbar-actions";
 import { MobileNavigation } from "./mobile-navigation";
 import type { NavigationConfig } from "@/config/navigation";
 
@@ -15,17 +15,21 @@ export interface MainNavbarProps {
 /**
  * Row Three: Main Navigation Bar.
  *
- * 3-Group Architecture:
- * - Left Group: Brand ("JAVIX")
- * - Centre Group: Primary Navigation ("Home", "Shop", "Contact", "New Arrivals")
- * - Right Group: Action Icons ("Search", "Account", "Wishlist", "Cart")
- *
- * Responsive:
- * - Desktop: Full three-column luxury layout with perfectly balanced center navigation.
- * - Mobile/Tablet: Accessible hamburger trigger, prominent wordmark, and action icons.
+ * Responsive Architecture matching the Alukas & Co reference:
+ * - Desktop:
+ *   - Left: JAVIX brand wordmark
+ *   - Centre: Primary Navigation (Home, Shop, Contact, New Arrivals)
+ *   - Right: Action Icons (Search, Account, Wishlist, Cart)
+ * - Mobile (< lg):
+ *   - Left: Hamburger Menu trigger
+ *   - Centre: JAVIX brand wordmark (optically centered)
+ *   - Right: Shopping Cart icon with circular "0" count badge
  */
 export function MainNavbar({ config }: MainNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const cartAction = config.actions?.find((a) => a.id === "cart");
+  const cartCount = config.badges?.cartCount ?? 0;
+  const wishlistCount = config.badges?.wishlistCount ?? 0;
 
   return (
     <>
@@ -33,9 +37,9 @@ export function MainNavbar({ config }: MainNavbarProps) {
         aria-label="Main Storefront Header"
         className="w-full border-b border-[#E5E5E5] bg-white transition-colors"
       >
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Mobile hamburger trigger (visible on screens < lg) */}
-          <div className="flex items-center lg:hidden">
+        <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Mobile Left: Hamburger trigger (visible strictly on screens < lg) */}
+          <div className="flex w-10 items-center justify-start lg:hidden">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
@@ -47,19 +51,38 @@ export function MainNavbar({ config }: MainNavbarProps) {
             </button>
           </div>
 
-          {/* Left Group: Brand Wordmark */}
-          <div className="flex items-center justify-start lg:w-1/4">
+          {/* Brand Wordmark: Centered on mobile (< lg), left-aligned on desktop (lg+) */}
+          <div className="flex flex-1 items-center justify-center lg:flex-none lg:w-1/4 lg:justify-start">
             <BrandWordmark config={config.brand} />
           </div>
 
-          {/* Centre Group: Primary Navigation Links (Desktop) */}
+          {/* Desktop Centre: Primary Navigation Links */}
           <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center">
             <PrimaryNavigation items={config.primaryNav} />
           </div>
 
-          {/* Right Group: Action Icons (Search, Account, Wishlist, Cart) */}
-          <div className="flex items-center justify-end lg:w-1/4">
-            <NavbarActions actions={config.actions} />
+          {/* Right Group:
+              - Mobile (< lg): Cart icon with badge matching mobile reference
+              - Desktop (lg+): Full 4 action icons (Search, Account, Wishlist, Cart)
+          */}
+          <div className="flex w-10 items-center justify-end lg:w-1/4">
+            {/* Mobile Cart Button */}
+            <div className="flex lg:hidden">
+              <CartButton
+                href={cartAction?.href}
+                isImplemented={cartAction?.isImplemented}
+                badgeCount={cartCount}
+              />
+            </div>
+
+            {/* Desktop Action Icons */}
+            <div className="hidden lg:flex">
+              <NavbarActions
+                actions={config.actions}
+                cartCount={cartCount}
+                wishlistCount={wishlistCount}
+              />
+            </div>
           </div>
         </div>
       </nav>

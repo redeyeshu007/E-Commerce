@@ -61,12 +61,18 @@ export interface ActionItem {
   isImplemented: boolean;
 }
 
+export interface BadgesConfig {
+  cartCount: number;
+  wishlistCount: number;
+}
+
 export interface NavigationConfig {
   announcement: AnnouncementConfig;
   utility: UtilityConfig;
   brand: BrandConfig;
   primaryNav: PrimaryNavItem[];
   actions: ActionItem[];
+  badges: BadgesConfig;
 }
 
 /**
@@ -117,4 +123,8 @@ export const defaultNavigationConfig: NavigationConfig = {
     { id: "wishlist", label: "Wishlist", href: "/wishlist", isImplemented: false },
     { id: "cart", label: "Cart", href: "/cart", isImplemented: false },
   ],
+  badges: {
+    cartCount: 0,
+    wishlistCount: 0,
+  },
 };
