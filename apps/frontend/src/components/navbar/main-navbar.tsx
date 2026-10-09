@@ -33,10 +33,7 @@ export function MainNavbar({ config }: MainNavbarProps) {
 
   return (
     <>
-      <nav
-        aria-label="Main Storefront Header"
-        className="w-full border-b border-[#E5E5E5] bg-white transition-colors"
-      >
+      <nav aria-label="Main Storefront Header" className="w-full bg-white transition-colors">
         <div className="mx-auto flex h-16 sm:h-20 lg:h-24 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Mobile Left: Hamburger trigger (visible strictly on screens < lg) */}
           <div className="flex w-10 items-center justify-start lg:hidden">
