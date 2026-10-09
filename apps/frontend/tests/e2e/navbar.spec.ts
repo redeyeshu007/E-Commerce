@@ -98,11 +98,32 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     await expect(wishlistBadge).toBeVisible();
     await expect(wishlistBadge).toHaveText("0");
 
-    // 3. Drawer toggle and keyboard escape dismissal
+    // 3. Drawer toggle, tabs, categories, and keyboard escape dismissal
     await hamburgerBtn.click();
     const drawer = page.getByRole("dialog", { name: "Mobile Navigation Menu" });
     await expect(drawer).toBeVisible();
     await expect(drawer).toContainText("JAVIX");
+
+    // Drawer tabs
+    const menuTab = drawer.getByRole("tab", { name: "Menu" });
+    const categoriesTab = drawer.getByRole("tab", { name: "Categories" });
+    await expect(menuTab).toBeVisible();
+    await expect(categoriesTab).toBeVisible();
+
+    // Default MENU tab content
+    await expect(drawer.getByRole("link", { name: "Home v1" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Shop" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Buy Theme!" })).toBeVisible();
+
+    // Switch to CATEGORIES tab
+    await categoriesTab.click();
+    await expect(drawer.getByRole("link", { name: "New Products" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Necklaces" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Earnings" })).toBeVisible();
+
+    // Footer controls
+    await expect(drawer.getByText("English")).toBeVisible();
+    await expect(drawer.getByText("$ Dollar (US)")).toBeVisible();
 
     await page.keyboard.press("Escape");
     await expect(drawer).not.toBeAttached();

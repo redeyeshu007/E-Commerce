@@ -66,11 +66,33 @@ export interface BadgesConfig {
   wishlistCount: number;
 }
 
+export interface MobileSubItem {
+  id: string;
+  label: string;
+  href: string;
+}
+
+export interface MobileMenuItem {
+  id: string;
+  label: string;
+  href?: string;
+  hasDropdown?: boolean;
+  subItems?: MobileSubItem[];
+}
+
+export interface CategoryItem {
+  id: string;
+  label: string;
+  href: string;
+}
+
 export interface NavigationConfig {
   announcement: AnnouncementConfig;
   utility: UtilityConfig;
   brand: BrandConfig;
   primaryNav: PrimaryNavItem[];
+  mobileMenu?: MobileMenuItem[];
+  categories?: CategoryItem[];
   actions: ActionItem[];
   badges: BadgesConfig;
 }
@@ -116,6 +138,55 @@ export const defaultNavigationConfig: NavigationConfig = {
     { id: "shop", label: "Shop", href: "/shop", isImplemented: false },
     { id: "contact", label: "Contact", href: "/contact", isImplemented: false },
     { id: "new-arrivals", label: "New Arrivals", href: "/new-arrivals", isImplemented: false },
+  ],
+  mobileMenu: [
+    {
+      id: "home-v1",
+      label: "Home v1",
+      href: "/",
+      hasDropdown: true,
+      subItems: [
+        { id: "home-1", label: "Home v1", href: "/" },
+        { id: "home-2", label: "Home v2", href: "/" },
+        { id: "home-3", label: "Home v3", href: "/" },
+      ],
+    },
+    { id: "shop", label: "Shop", href: "/shop" },
+    { id: "product", label: "Product", href: "/product" },
+    {
+      id: "pages",
+      label: "Pages",
+      hasDropdown: true,
+      subItems: [
+        { id: "about", label: "About Us", href: "/about" },
+        { id: "contact", label: "Contact Us", href: "/contact" },
+        { id: "store-location", label: "Store Location", href: "/store-location" },
+        { id: "faq", label: "FAQ", href: "/faq" },
+      ],
+    },
+    {
+      id: "blog",
+      label: "Blog",
+      hasDropdown: true,
+      subItems: [
+        { id: "blog-grid", label: "Blog Grid", href: "/blog" },
+        { id: "blog-standard", label: "Blog Standard", href: "/blog" },
+        { id: "single-post", label: "Single Post", href: "/blog" },
+      ],
+    },
+    { id: "buy-theme", label: "Buy Theme!", href: "/shop" },
+  ],
+  categories: [
+    { id: "new-products", label: "New Products", href: "/shop?filter=new" },
+    { id: "today-on-sale", label: "Today On Sale", href: "/shop?filter=sale" },
+    { id: "special-offer", label: "Special Offer!", href: "/shop?filter=special" },
+    { id: "necklaces", label: "Necklaces", href: "/category/necklaces" },
+    { id: "rings", label: "Rings", href: "/category/rings" },
+    { id: "bracelets", label: "Bracelets", href: "/category/bracelets" },
+    { id: "earrings", label: "Earnings", href: "/category/earrings" },
+    { id: "charm-dangles", label: "Charm & Dangles", href: "/category/charms" },
+    { id: "watches", label: "Watches", href: "/category/watches" },
+    { id: "gift-ideas", label: "Gift Ideas", href: "/category/gifts" },
   ],
   actions: [
     { id: "search", label: "Search", isImplemented: false },
