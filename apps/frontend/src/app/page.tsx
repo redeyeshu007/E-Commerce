@@ -1,19 +1,21 @@
+import React from "react";
+import { HeroBanners } from "@/components/home/hero-banners";
+import { defaultHeroBannersConfig } from "@/config/hero-banners";
+
 /**
- * Root page — scaffold placeholder.
+ * JAVIX JEWELLERY Storefront Homepage
  *
- * This page will be replaced by the actual homepage during feature development.
- * DO NOT implement final UI, colour palette, or brand identity here.
+ * Renders the primary hero and promotional banner section featuring
+ * luxury fine jewellery collections.
  */
 export default function HomePage() {
   return (
-    <main className="flex flex-1 items-center justify-center bg-white text-black p-8 pb-24 lg:pb-8">
-      <div className="text-center max-w-lg">
-        <h1 className="text-2xl font-semibold mb-4 text-black">Gold Commerce Platform</h1>
-        <p className="text-neutral-600 mb-2">Foundation scaffold — development in progress.</p>
-        <p className="text-sm text-neutral-400">
-          This placeholder will be replaced with the actual storefront homepage.
-        </p>
-      </div>
+    <main className="flex-1 bg-white text-black pb-24 lg:pb-12">
+      {/* Semantic Top-Level Heading */}
+      <h1 className="sr-only">Gold Commerce Platform</h1>
+
+      {/* Hero & Promotional Banner Grid */}
+      <HeroBanners config={defaultHeroBannersConfig} />
     </main>
   );
 }
