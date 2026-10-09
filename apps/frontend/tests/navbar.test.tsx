@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, screen, fireEvent, within, waitFor } from "@testing-library/react";
 import { SiteHeader } from "@/components/navbar/site-header";
 import { AnnouncementBar } from "@/components/navbar/announcement-bar";
 import { UtilityBar } from "@/components/navbar/utility-bar";
@@ -22,7 +22,7 @@ describe("JAVIX Premium Navbar Component Suite", () => {
       expect(aside).toHaveStyle({ backgroundColor: "rgb(251, 192, 206)" }); // #FBC0CE
     });
 
-    it("dismisses the announcement bar when the close button is clicked", () => {
+    it("dismisses the announcement bar when the close button is clicked", async () => {
       const onDismiss = vi.fn();
       render(
         <AnnouncementBar config={defaultNavigationConfig.announcement} onDismiss={onDismiss} />,
@@ -35,7 +35,10 @@ describe("JAVIX Premium Navbar Component Suite", () => {
 
       fireEvent.click(closeButton);
       expect(onDismiss).toHaveBeenCalledTimes(1);
-      expect(screen.queryByText("SUMMER SALE,")).not.toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(screen.queryByText("SUMMER SALE,")).not.toBeInTheDocument();
+      });
       expect(screen.queryByText("Get 40% Off for all products.")).not.toBeInTheDocument();
     });
   });
