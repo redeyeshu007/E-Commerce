@@ -57,7 +57,7 @@ export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
 export function UtilityBar({ config }: UtilityBarProps) {
   return (
     <div
-      className="w-full border-b border-[#E5E5E5] bg-white text-xs lg:text-[13px] text-black"
+      className="hidden lg:block w-full border-b border-[#E5E5E5] bg-white text-xs lg:text-[13px] text-black"
       role="region"
       aria-label="Utility navigation and store information"
     >

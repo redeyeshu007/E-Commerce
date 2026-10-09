@@ -13,7 +13,8 @@ describe("JAVIX Premium Navbar Component Suite", () => {
     it("renders the exact promotional announcement text with soft pink background", () => {
       render(<AnnouncementBar config={defaultNavigationConfig.announcement} />);
 
-      expect(screen.getByText("SUMMER SALE, Get 40% Off for all products.")).toBeInTheDocument();
+      expect(screen.getByText("SUMMER SALE,")).toBeInTheDocument();
+      expect(screen.getByText("Get 40% Off for all products.")).toBeInTheDocument();
 
       const aside = screen.getByRole("complementary", {
         name: "Promotional Announcement",
@@ -34,9 +35,8 @@ describe("JAVIX Premium Navbar Component Suite", () => {
 
       fireEvent.click(closeButton);
       expect(onDismiss).toHaveBeenCalledTimes(1);
-      expect(
-        screen.queryByText("SUMMER SALE, Get 40% Off for all products."),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText("SUMMER SALE,")).not.toBeInTheDocument();
+      expect(screen.queryByText("Get 40% Off for all products.")).not.toBeInTheDocument();
     });
   });
 
@@ -157,7 +157,8 @@ describe("JAVIX Premium Navbar Component Suite", () => {
       expect(header).toHaveClass("bg-white");
 
       // Row 1
-      expect(screen.getByText("SUMMER SALE, Get 40% Off for all products.")).toBeInTheDocument();
+      expect(screen.getByText("SUMMER SALE,")).toBeInTheDocument();
+      expect(screen.getByText("Get 40% Off for all products.")).toBeInTheDocument();
 
       // Row 2
       expect(screen.getByText("English")).toBeInTheDocument();

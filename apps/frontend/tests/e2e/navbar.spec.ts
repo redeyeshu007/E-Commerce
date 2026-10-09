@@ -60,6 +60,15 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     // Set viewport to mobile screen (iPhone / Android)
     await page.setViewportSize({ width: 375, height: 667 });
 
+    // 0. Top announcement bar wraps cleanly and utility bar (English & INR) is hidden on mobile
+    const utility = page.locator("div[role='region'][aria-label*='Utility navigation']");
+    await expect(utility).toBeHidden();
+
+    const announcement = page.locator("aside[aria-label='Promotional Announcement']");
+    await expect(announcement).toBeVisible();
+    await expect(announcement).toContainText("SUMMER SALE,");
+    await expect(announcement).toContainText("Get 40% Off for all products.");
+
     // 1. Mobile Top Header:
     // Left: Hamburger menu button
     const hamburgerBtn = page.getByRole("button", { name: "Open navigation menu" });
