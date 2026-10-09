@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/providers/index";
 import { LuxuryPreloader } from "@/components/shared/luxury-preloader";
 import { AnimatedTabTitle } from "@/components/shared/animated-tab-title";
+import { SiteHeader } from "@/components/navbar/site-header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <AnimatedTabTitle baseTitle="Javix Jewellery" />
           <LuxuryPreloader />
+          <SiteHeader />
           {children}
         </Providers>
       </body>
