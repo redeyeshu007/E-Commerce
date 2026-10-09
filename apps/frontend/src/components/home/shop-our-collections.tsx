@@ -28,14 +28,13 @@ export function CollectionCard({ item, className = "" }: CollectionCardProps) {
       className={`group flex flex-col items-center text-center cursor-pointer ${className}`}
     >
       {/* Square Image Box with Uniform Neutral Light-Grey Studio Background */}
-      <div className="relative aspect-square w-full overflow-hidden bg-[#F2F2F2] transition-colors duration-300 group-hover:bg-[#EAEAEA]">
+      <div className="relative aspect-square w-full overflow-hidden bg-[#F2F2F2]">
         <Image
           src={item.image.src}
           alt={item.image.alt}
           fill
-          unoptimized
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-          className="object-contain p-3.5 sm:p-5 lg:p-6 transition-transform duration-500 ease-out group-hover:scale-105"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           style={{ objectPosition: item.image.objectPosition || "center" }}
         />
       </div>

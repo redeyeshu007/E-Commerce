@@ -20,7 +20,7 @@ describe("JAVIX Shop Our Collections Component Suite", () => {
 
       const image = screen.getByRole("img");
       expect(image).toHaveAttribute("alt", item.image.alt);
-      expect(image).toHaveAttribute("src", item.image.src);
+      expect(image.getAttribute("src")).toContain(encodeURIComponent(item.image.src));
     });
 
     it("renders as accessible container without dead link when isImplemented is false", () => {
@@ -96,7 +96,7 @@ describe("JAVIX Shop Our Collections Component Suite", () => {
             id: "custom-pendants",
             slug: "pendants",
             title: "PENDANTS",
-            image: { src: "/images/collections/collection-necklaces.svg", alt: "Gold pendants" },
+            image: { src: "/images/collections/collection-necklaces.jpg", alt: "Gold pendants" },
             isImplemented: false,
             order: 1,
             isActive: true,
@@ -105,7 +105,7 @@ describe("JAVIX Shop Our Collections Component Suite", () => {
             id: "custom-chokers",
             slug: "chokers",
             title: "CHOKERS",
-            image: { src: "/images/collections/collection-necklaces.svg", alt: "Diamond chokers" },
+            image: { src: "/images/collections/collection-necklaces.jpg", alt: "Diamond chokers" },
             isImplemented: true,
             href: "/category/chokers",
             order: 2,

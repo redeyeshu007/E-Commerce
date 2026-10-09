@@ -57,7 +57,7 @@ export const defaultCollectionsConfig: CollectionsSectionConfig = {
       slug: "necklaces",
       title: "NECKLACES",
       image: {
-        src: "/images/collections/collection-necklaces.svg",
+        src: "/images/collections/collection-necklaces.jpg",
         alt: "Necklaces Collection - Delicate White Gold & Diamond Pendant",
       },
       href: "/category/necklaces",
@@ -70,7 +70,7 @@ export const defaultCollectionsConfig: CollectionsSectionConfig = {
       slug: "rings",
       title: "RINGS",
       image: {
-        src: "/images/collections/collection-rings.svg",
+        src: "/images/collections/collection-rings.jpg",
         alt: "Rings Collection - Sculptural 18k Yellow Gold Band",
       },
       href: "/category/rings",
@@ -83,7 +83,7 @@ export const defaultCollectionsConfig: CollectionsSectionConfig = {
       slug: "bracelets",
       title: "BRACELETS",
       image: {
-        src: "/images/collections/collection-bracelets.svg",
+        src: "/images/collections/collection-bracelets.jpg",
         alt: "Bracelets Collection - Minimalist Dual-Tone Gold & Silver Bangle",
       },
       href: "/category/bracelets",
@@ -96,7 +96,7 @@ export const defaultCollectionsConfig: CollectionsSectionConfig = {
       slug: "earrings",
       title: "EARRINGS",
       image: {
-        src: "/images/collections/collection-earrings.svg",
+        src: "/images/collections/collection-earrings.jpg",
         alt: "Earrings Collection - Coordinated White Gold & Diamond Teardrop Earrings",
       },
       href: "/category/earrings",
@@ -109,7 +109,7 @@ export const defaultCollectionsConfig: CollectionsSectionConfig = {
       slug: "charms-bangles",
       title: "CHARMS & BANGLES",
       image: {
-        src: "/images/collections/collection-charms-bangles.svg",
+        src: "/images/collections/collection-charms-bangles.jpg",
         alt: "Charms & Bangles Collection - Warm Rose Gold Charm Bangle",
       },
       href: "/category/charms-bangles",
@@ -122,7 +122,7 @@ export const defaultCollectionsConfig: CollectionsSectionConfig = {
       slug: "gift-ideas",
       title: "GIFT IDEAS",
       image: {
-        src: "/images/collections/collection-gift-ideas.svg",
+        src: "/images/collections/collection-gift-ideas.jpg",
         alt: "Gift Ideas Collection - Solitaire Diamond Engagement Ring",
       },
       href: "/category/gift-ideas",
