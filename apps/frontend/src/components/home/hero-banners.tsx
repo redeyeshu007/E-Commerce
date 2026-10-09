@@ -53,8 +53,8 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
       data-testid={`banner-${item.id}`}
       className={`group relative overflow-hidden bg-[#ECECEC] ${
         isFeatured
-          ? "h-full min-h-[460px] sm:min-h-[540px] lg:min-h-[620px]"
-          : "h-full min-h-[260px] sm:min-h-[285px] lg:min-h-[294px]"
+          ? "h-full min-h-[500px] sm:min-h-[580px] lg:min-h-[660px]"
+          : "h-full min-h-[275px] sm:min-h-[300px] lg:min-h-[314px]"
       } ${className}`}
     >
       {/* Background Image with Focal Point Alignment */}
@@ -65,14 +65,14 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
           fill
           priority={item.priority}
           sizes={isFeatured ? "(max-width: 1024px) 100vw, 50vw" : "(max-width: 1024px) 100vw, 50vw"}
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          className="object-cover origin-right scale-100 sm:scale-110 lg:scale-120 transition-transform duration-700 ease-out group-hover:scale-125"
           style={{ objectPosition: item.image.objectPosition || "center right" }}
         />
       </div>
 
       {/* Subtle Legibility Gradient Overlay (seamlessly blends with imagery) */}
       <div
-        className="pointer-events-none absolute inset-0 z-1 bg-gradient-to-r from-[#ECECEC]/60 via-[#ECECEC]/15 to-transparent sm:from-[#ECECEC]/45 sm:to-transparent"
+        className="pointer-events-none absolute inset-0 z-1 bg-gradient-to-r from-[#ECECEC]/75 via-[#ECECEC]/25 to-transparent sm:from-[#ECECEC]/45 sm:to-transparent"
         aria-hidden="true"
       />
 
