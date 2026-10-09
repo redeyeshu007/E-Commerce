@@ -6,11 +6,11 @@
  */
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center p-8">
+    <main className="flex min-h-screen items-center justify-center bg-white text-black p-8">
       <div className="text-center max-w-lg">
-        <h1 className="text-2xl font-semibold mb-4">Gold Commerce Platform</h1>
-        <p className="text-gray-600 mb-2">Foundation scaffold — development in progress.</p>
-        <p className="text-sm text-gray-400">
+        <h1 className="text-2xl font-semibold mb-4 text-black">Gold Commerce Platform</h1>
+        <p className="text-neutral-600 mb-2">Foundation scaffold — development in progress.</p>
+        <p className="text-sm text-neutral-400">
           This placeholder will be replaced with the actual storefront homepage.
         </p>
       </div>
