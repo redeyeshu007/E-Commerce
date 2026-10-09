@@ -23,20 +23,20 @@ export interface PrimaryNavigationProps {
 export function PrimaryNavigation({ items, className = "", onItemClick }: PrimaryNavigationProps) {
   return (
     <nav aria-label="Main Navigation" className={className}>
-      <ul className="flex items-center space-x-8 lg:space-x-12" role="list">
+      <ul className="flex items-center space-x-8 lg:space-x-14" role="list">
         {items.map((item) => (
           <li key={item.id}>
             {item.isImplemented && item.href ? (
               <Link
                 href={item.href}
                 onClick={onItemClick}
-                className="relative py-2 text-sm font-medium tracking-[0.04em] text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                className="relative py-2 text-sm lg:text-[15px] font-medium tracking-[0.05em] text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
               >
                 {item.label}
               </Link>
             ) : (
               <span
-                className="relative py-2 text-sm font-medium tracking-[0.04em] text-[#222222] transition-colors hover:text-black cursor-default select-none"
+                className="relative py-2 text-sm lg:text-[15px] font-medium tracking-[0.05em] text-[#222222] transition-colors hover:text-black cursor-default select-none"
                 title={`${item.label} (Coming Soon)`}
               >
                 {item.label}

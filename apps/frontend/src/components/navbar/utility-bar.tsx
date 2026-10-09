@@ -12,7 +12,10 @@ export interface UtilityBarProps {
  */
 export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
   return (
-    <ul className="flex items-center space-x-6 text-xs text-[#555555]" role="list">
+    <ul
+      className="flex items-center space-x-6 lg:space-x-8 text-xs lg:text-[13px] text-[#555555]"
+      role="list"
+    >
       {links.map((item) => (
         <li key={item.id}>
           {item.isImplemented && item.href ? (
@@ -54,24 +57,27 @@ export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
 export function UtilityBar({ config }: UtilityBarProps) {
   return (
     <div
-      className="w-full border-b border-[#E5E5E5] bg-white text-xs text-[#555555]"
+      className="w-full border-b border-[#E5E5E5] bg-white text-xs lg:text-[13px] text-[#555555]"
       role="region"
       aria-label="Utility navigation and store information"
     >
-      <div className="mx-auto flex h-10 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-10 lg:h-12 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left group */}
-        <div className="flex items-center space-x-4 sm:space-x-5 overflow-x-auto no-scrollbar py-1">
+        <div className="flex items-center space-x-4 sm:space-x-5 lg:space-x-6 overflow-x-auto no-scrollbar py-1">
           {/* 1. Language (English only, static) */}
           <span className="whitespace-nowrap font-normal text-[#555555]">{config.language}</span>
 
-          <span className="h-3 w-px bg-[#E5E5E5]" aria-hidden="true" />
+          <span className="h-3 lg:h-3.5 w-px bg-[#E5E5E5]" aria-hidden="true" />
 
           {/* 2. Currency (₹ Rupees INR only, static) */}
           <span className="whitespace-nowrap font-normal text-[#555555]">
             <span className="font-sans font-medium">{config.currencySymbol}</span> {config.currency}
           </span>
 
-          <span className="hidden h-3 w-px bg-[#E5E5E5] sm:inline-block" aria-hidden="true" />
+          <span
+            className="hidden h-3 lg:h-3.5 w-px bg-[#E5E5E5] sm:inline-block"
+            aria-hidden="true"
+          />
 
           {/* 3. Promotional info */}
           <span className="hidden whitespace-nowrap text-[#555555] sm:inline-block">

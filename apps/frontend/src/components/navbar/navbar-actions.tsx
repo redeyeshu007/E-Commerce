@@ -16,7 +16,7 @@ export interface NavbarActionsProps {
 }
 
 const ICON_STROKE_WIDTH = 1.4;
-const ICON_CLASS_NAME = "h-5 w-5";
+const ICON_CLASS_NAME = "h-5 w-5 lg:h-[22px] lg:w-[22px]";
 
 /**
  * 1. Search Action Button
@@ -27,7 +27,7 @@ export function SearchButton({ onClick }: { onClick?: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="Search"
-      className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+      className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
     >
       <Search className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
     </button>
@@ -51,7 +51,7 @@ export function AccountButton({
       <Link
         href={href}
         aria-label="Account"
-        className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+        className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
       >
         <User className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
       </Link>
@@ -63,7 +63,7 @@ export function AccountButton({
       type="button"
       onClick={onClick}
       aria-label="Account"
-      className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+      className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
     >
       <User className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
     </button>
@@ -90,7 +90,7 @@ export function WishlistButton({
       {badgeCount !== undefined && (
         <span
           data-testid="wishlist-badge"
-          className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold leading-none text-white select-none"
+          className="absolute top-0.5 right-0.5 flex h-4 min-w-4 lg:h-[18px] lg:min-w-[18px] items-center justify-center rounded-full bg-black px-1 text-[10px] lg:text-[11px] font-semibold leading-none text-white select-none"
         >
           {badgeCount}
         </span>
@@ -103,7 +103,7 @@ export function WishlistButton({
       <Link
         href={href}
         aria-label="Wishlist"
-        className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+        className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
       >
         {content}
       </Link>
@@ -115,7 +115,7 @@ export function WishlistButton({
       type="button"
       onClick={onClick}
       aria-label="Wishlist"
-      className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+      className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
     >
       {content}
     </button>
@@ -146,7 +146,7 @@ export function CartButton({
       {badgeCount !== undefined && (
         <span
           data-testid="cart-badge"
-          className="absolute top-1 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold leading-none text-white select-none"
+          className="absolute top-0.5 right-0.5 flex h-4 min-w-4 lg:h-[18px] lg:min-w-[18px] items-center justify-center rounded-full bg-black px-1 text-[10px] lg:text-[11px] font-semibold leading-none text-white select-none"
         >
           {badgeCount}
         </span>
@@ -159,7 +159,7 @@ export function CartButton({
       <Link
         href={href}
         aria-label="Cart"
-        className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+        className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
       >
         {content}
       </Link>
@@ -171,7 +171,7 @@ export function CartButton({
       type="button"
       onClick={onClick}
       aria-label="Cart"
-      className="group relative flex h-10 w-10 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+      className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
     >
       {content}
     </button>
@@ -201,7 +201,7 @@ export function NavbarActions({
 
   return (
     <div
-      className="flex items-center space-x-1 sm:space-x-2"
+      className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3"
       role="group"
       aria-label="Customer actions"
     >
