@@ -16,7 +16,7 @@ export interface OutlineButtonProps {
 
 /**
  * Rectangular outline call-to-action button matching the reference design.
- * Features crisp square corners, thin border, and subtle hover transition.
+ * Features clean square corners, thin border, and subtle hover transition.
  */
 export function OutlineButton({
   label,
@@ -28,7 +28,7 @@ export function OutlineButton({
     <Link
       href={href}
       aria-label={ariaLabel || label}
-      className={`inline-flex items-center justify-center border border-[#111111] bg-transparent px-6 py-2.5 sm:px-7 sm:py-3 text-xs sm:text-[13px] font-medium tracking-[0.1em] uppercase text-[#111111] transition-colors duration-200 hover:bg-[#111111] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 ${className}`}
+      className={`inline-flex items-center justify-center border border-[#222222] bg-transparent px-5 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-[13px] font-normal text-[#111111] transition-colors duration-200 hover:bg-[#111111] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 ${className}`}
     >
       {label}
     </Link>
@@ -43,7 +43,7 @@ export interface BannerCardProps {
 
 /**
  * Single editorial banner card with image background, subtle contrast
- * treatment, and left-aligned text hierarchy.
+ * treatment, and left-aligned text hierarchy matching reference composition.
  */
 export function BannerCard({ item, isFeatured = false, className = "" }: BannerCardProps) {
   const HeadingTag = isFeatured ? "h2" : "h3";
@@ -51,10 +51,10 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
   return (
     <article
       data-testid={`banner-${item.id}`}
-      className={`group relative overflow-hidden bg-[#F6F6F6] ${
+      className={`group relative overflow-hidden bg-[#ECECEC] ${
         isFeatured
           ? "h-full min-h-[460px] sm:min-h-[540px] lg:min-h-[620px]"
-          : "h-full min-h-[250px] sm:min-h-[280px] lg:min-h-[294px]"
+          : "h-full min-h-[260px] sm:min-h-[285px] lg:min-h-[294px]"
       } ${className}`}
     >
       {/* Background Image with Focal Point Alignment */}
@@ -70,27 +70,46 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
         />
       </div>
 
-      {/* Subtle Legibility Gradient Overlay (does not obscure imagery) */}
+      {/* Subtle Legibility Gradient Overlay (seamlessly blends with imagery) */}
       <div
-        className="pointer-events-none absolute inset-0 z-1 bg-gradient-to-r from-white/70 via-white/20 to-transparent sm:from-white/55 sm:to-transparent"
+        className="pointer-events-none absolute inset-0 z-1 bg-gradient-to-r from-[#ECECEC]/60 via-[#ECECEC]/15 to-transparent sm:from-[#ECECEC]/45 sm:to-transparent"
         aria-hidden="true"
       />
 
       {/* Left-Aligned Text Content Block */}
-      <div className="relative z-10 flex h-full flex-col justify-center p-6 sm:p-10 lg:p-12 xl:p-14 max-w-[72%] sm:max-w-[62%]">
-        {/* Optional Introductory Small Heading */}
+      <div
+        className={`relative z-10 flex h-full flex-col items-start px-6 sm:px-10 lg:px-12 xl:px-14 max-w-[82%] sm:max-w-[65%] lg:max-w-[56%] ${
+          isFeatured
+            ? "justify-start pt-9 sm:pt-12 lg:pt-14 xl:pt-16"
+            : "justify-start pt-7 sm:pt-9 lg:pt-10 xl:pt-12"
+        }`}
+      >
+        {/* Optional Introductory Small Badge */}
         {item.introHeading && (
           <span className="mb-2 text-[11px] sm:text-xs font-semibold tracking-[0.14em] uppercase text-[#666666]">
             {item.introHeading}
           </span>
         )}
 
-        {/* Main Headline */}
+        {/* Heading Line 1 (Subheading) */}
+        {item.subheading && (
+          <span
+            className={`font-light text-[#222222] tracking-[-0.01em] leading-tight sm:whitespace-nowrap ${
+              isFeatured
+                ? "text-2xl sm:text-3xl lg:text-[28px] xl:text-[30px] mb-0.5 sm:mb-1"
+                : "text-lg sm:text-xl lg:text-[22px] xl:text-[24px] mb-0.5 sm:mb-1"
+            }`}
+          >
+            {item.subheading}
+          </span>
+        )}
+
+        {/* Heading Line 2 (Main Prominent Title) */}
         <HeadingTag
-          className={`font-normal tracking-[-0.01em] text-[#111111] leading-[1.18] whitespace-pre-line ${
+          className={`font-normal tracking-[-0.01em] text-[#111111] leading-[1.12] sm:whitespace-nowrap ${
             isFeatured
-              ? "text-2xl sm:text-3xl lg:text-[36px] xl:text-[40px] mb-3"
-              : "text-xl sm:text-2xl lg:text-[27px] xl:text-[30px] mb-3"
+              ? "text-3xl sm:text-4xl lg:text-[36px] xl:text-[40px] mb-2 sm:mb-3"
+              : "text-2xl sm:text-3xl lg:text-[28px] xl:text-[32px] mb-4 sm:mb-5"
           }`}
         >
           {item.title}
@@ -98,7 +117,7 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
 
         {/* Optional Supporting Description */}
         {item.description && (
-          <p className="mb-5 sm:mb-6 max-w-xs text-xs sm:text-sm font-normal text-[#555555] leading-relaxed whitespace-pre-line">
+          <p className="mb-6 sm:mb-7 lg:mb-8 max-w-[270px] text-xs sm:text-[13.5px] font-normal text-[#555555] leading-relaxed">
             {item.description}
           </p>
         )}
@@ -108,7 +127,7 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
           <OutlineButton
             label={item.cta.label}
             href={item.cta.href}
-            aria-label={`${item.cta.label} - ${item.title.replace(/\n/g, " ")}`}
+            aria-label={`${item.cta.label} - ${item.subheading ? `${item.subheading} ` : ""}${item.title.replace(/\n/g, " ")}`}
           />
         </div>
       </div>

@@ -16,8 +16,8 @@ test.describe("JAVIX Hero & Promotional Banners E2E Suite", () => {
     await expect(section).toBeVisible();
 
     const leftBanner = page.getByTestId("banner-hero-featured-necklaces");
-    const rightTopBanner = page.getByTestId("banner-hero-secondary-charm-rings");
-    const rightBottomBanner = page.getByTestId("banner-hero-secondary-statement-rings");
+    const rightTopBanner = page.getByTestId("banner-hero-secondary-desk-hals");
+    const rightBottomBanner = page.getByTestId("banner-hero-secondary-charm-bracelets");
 
     await expect(leftBanner).toBeVisible();
     await expect(rightTopBanner).toBeVisible();
@@ -42,11 +42,13 @@ test.describe("JAVIX Hero & Promotional Banners E2E Suite", () => {
       expect(Math.abs(leftBox.height - combinedRightHeight)).toBeLessThanOrEqual(5);
     }
 
-    // Verify text content
-    await expect(leftBanner.locator("h2")).toContainText("Necklaces");
+    // Verify text content matching exact reference
+    await expect(leftBanner.locator("span", { hasText: "Necklaces &" })).toBeVisible();
     await expect(leftBanner.locator("h2")).toContainText("Body Jewels");
-    await expect(rightTopBanner.locator("h3")).toContainText("Jewelry &");
-    await expect(rightBottomBanner.locator("h3")).toContainText("Desk The Hals");
+    await expect(rightTopBanner.locator("span", { hasText: "Just Lunched" })).toBeVisible();
+    await expect(rightTopBanner.locator("h3")).toContainText("Desk The Hals");
+    await expect(rightBottomBanner.locator("span", { hasText: "Jewelry &" })).toBeVisible();
+    await expect(rightBottomBanner.locator("h3")).toContainText("Charm Bracelets");
 
     // Verify rectangular outline CTA buttons
     const leftCta = leftBanner.locator("a", { hasText: "Shop Now" });
@@ -58,8 +60,8 @@ test.describe("JAVIX Hero & Promotional Banners E2E Suite", () => {
     await page.setViewportSize({ width: 375, height: 812 });
 
     const leftBanner = page.getByTestId("banner-hero-featured-necklaces");
-    const rightTopBanner = page.getByTestId("banner-hero-secondary-charm-rings");
-    const rightBottomBanner = page.getByTestId("banner-hero-secondary-statement-rings");
+    const rightTopBanner = page.getByTestId("banner-hero-secondary-desk-hals");
+    const rightBottomBanner = page.getByTestId("banner-hero-secondary-charm-bracelets");
 
     await expect(leftBanner).toBeVisible();
     await expect(rightTopBanner).toBeVisible();
