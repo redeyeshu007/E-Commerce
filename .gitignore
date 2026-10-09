@@ -1,0 +1,64 @@
+# ──────────────────────────────────────────────────
+# Environment files — never commit real credentials
+# ──────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# ──────────────────────────────────────────────────
+# Node / npm
+# ──────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ──────────────────────────────────────────────────
+# Build outputs
+# ──────────────────────────────────────────────────
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# ──────────────────────────────────────────────────
+# TypeScript / IDE
+# ──────────────────────────────────────────────────
+*.js.map
+*.d.ts.map
+
+# ──────────────────────────────────────────────────
+# OS
+# ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ──────────────────────────────────────────────────
+# Editors
+# ──────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ──────────────────────────────────────────────────
+# Testing / Coverage
+# ──────────────────────────────────────────────────
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# ──────────────────────────────────────────────────
+# Prisma
+# ──────────────────────────────────────────────────
+# Keep prisma/schema.prisma in version control
+# Do not commit migration SQL that contains secrets

@@ -1,0 +1,42 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Local development Docker Compose for Gold Commerce Platform
+#
+# This spins up a PostgreSQL database for local development.
+# It does NOT run the application — run the apps with npm run dev:* instead.
+#
+# Prerequisites:
+#   - Docker Desktop installed and running
+#
+# Usage:
+#   docker compose up -d        # Start services in background
+#   docker compose down         # Stop services
+#   docker compose down -v      # Stop and remove volumes (destroys data)
+#
+# NOTE: Docker is not available in this environment.
+#       This file is provided for future use when Docker is installed.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gold_commerce_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gold_commerce_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local

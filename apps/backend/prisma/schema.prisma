@@ -1,0 +1,30 @@
+// Prisma Schema — Gold Commerce Platform
+//
+// This is the initial scaffold schema.
+// The full production schema (products, orders, payments, etc.) will be
+// implemented during feature development.
+//
+// See: docs/database-schema.md (to be written during feature development)
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Scaffold models — extend these as business requirements are implemented
+// ──────────────────────────────────────────────────────────────────────────
+
+/// Placeholder model to make the schema syntactically valid.
+/// Replace with real business models during feature development.
+model HealthCheck {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  @@map("health_checks")
+}

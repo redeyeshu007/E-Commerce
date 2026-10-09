@@ -1,0 +1,34 @@
+/**
+
+- Module stubs for backend modules.
+-
+- This README describes the intended structure for each module.
+- Implement business logic here as feature development progresses.
+-
+- Each module follows this structure:
+-
+- modules/<module-name>/
+- ├── index.ts Public exports for this module
+- ├── routes/ Express router definitions
+- ├── controllers/ Request handlers (parse input, call service, send response)
+- ├── services/ Business logic layer
+- ├── repositories/ Database access layer (Prisma queries)
+- ├── schemas/ Zod validation schemas for this module's endpoints
+- └── types/ Module-specific TypeScript types
+-
+- Modules:
+- - auth Authentication and authorization
+- - products Product catalogue
+- - categories Product categories
+- - gold-rates Live and manual gold rates
+- - inventory Stock management
+- - cart Shopping cart
+- - checkout Checkout flow
+- - orders Order management
+- - payments Payment processing
+- - shipments Shipment and tracking
+- - customers Customer profiles
+- - admin Administration
+- - content Website content and banners
+- - offers Promotions and discounts
+    */

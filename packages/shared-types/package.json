@@ -1,0 +1,28 @@
+{
+  "name": "@gold-commerce/shared-types",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared TypeScript type definitions and API contracts for the Gold Commerce Platform",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@gold-commerce/typescript-config": "*",
+    "rimraf": "^5.0.10",
+    "typescript": "^5.7.3"
+  },
+  "license": "UNLICENSED"
+}
