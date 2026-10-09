@@ -17,16 +17,15 @@ const DEFAULT_CURRENCIES = ["$ Dollar (US)", "₹ Rupees (INR)", "€ Euro (EUR)
 /**
  * Mobile Navigation Drawer.
  *
- * Faithfully reproduces the Alukas & Co mobile reference drawer:
- * - Top Header: Brand Wordmark (e.g. JAVIX) + Close 'X' button with light neutral background.
+ * Implements:
+ * - Top Header: Brand Wordmark (JAVIX) + Close 'X' button with light neutral background.
  * - Tabs Bar: 'MENU' and 'CATEGORIES' with solid black indicator underline for active tab.
- * - Tab 1 (MENU): Home v1 (accordion), Shop, Product, Pages (accordion), Blog (accordion), Buy Theme!
- * - Tab 2 (CATEGORIES): New Products, Today On Sale, Special Offer!, Necklaces, Rings, Bracelets, Earnings, Charm & Dangles, Watches, Gift Ideas.
+ * - Tab 1 (MENU): Shows the exact primary navbar links (e.g. Home, Shop, Contact, New Arrivals).
+ * - Tab 2 (CATEGORIES): Categories list (New Products, Today On Sale, Special Offer!, Necklaces, Rings, Bracelets, Earnings, Charm & Dangles, Watches, Gift Ideas).
  * - Bottom Footer: Border-top with English ⌵ and $ Dollar (US) ⌵ dropdown selectors.
  */
 export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationProps) {
   const [activeTab, setActiveTab] = useState<"menu" | "categories">("menu");
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [selectedLanguage, setSelectedLanguage] = useState<string>(
     config.utility.language || "English",
   );
@@ -89,51 +88,6 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
   }, [isLangOpen, isCurrencyOpen]);
 
   if (!isOpen) return null;
-
-  const toggleExpand = (id: string) => {
-    setExpandedItems((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
-  const menuItems = config.mobileMenu ?? [
-    {
-      id: "home-v1",
-      label: "Home v1",
-      href: "/",
-      hasDropdown: true,
-      subItems: [
-        { id: "home-1", label: "Home v1", href: "/" },
-        { id: "home-2", label: "Home v2", href: "/" },
-        { id: "home-3", label: "Home v3", href: "/" },
-      ],
-    },
-    { id: "shop", label: "Shop", href: "/shop" },
-    { id: "product", label: "Product", href: "/product" },
-    {
-      id: "pages",
-      label: "Pages",
-      hasDropdown: true,
-      subItems: [
-        { id: "about", label: "About Us", href: "/about" },
-        { id: "contact", label: "Contact Us", href: "/contact" },
-        { id: "store-location", label: "Store Location", href: "/store-location" },
-        { id: "faq", label: "FAQ", href: "/faq" },
-      ],
-    },
-    {
-      id: "blog",
-      label: "Blog",
-      hasDropdown: true,
-      subItems: [
-        { id: "blog-grid", label: "Blog Grid", href: "/blog" },
-        { id: "blog-standard", label: "Blog Standard", href: "/blog" },
-        { id: "single-post", label: "Single Post", href: "/blog" },
-      ],
-    },
-    { id: "buy-theme", label: "Buy Theme!", href: "/shop" },
-  ];
 
   const categories = config.categories ?? [
     { id: "new-products", label: "New Products", href: "/shop?filter=new" },
@@ -220,65 +174,17 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
           {activeTab === "menu" ? (
             <nav aria-label="Mobile Menu Navigation">
               <ul className="space-y-1" role="list">
-                {menuItems.map((item) => {
-                  const isExpanded = !!expandedItems[item.id];
-                  if (item.hasDropdown && item.subItems && item.subItems.length > 0) {
-                    return (
-                      <li key={item.id} className="border-b border-transparent">
-                        <div className="flex items-center justify-between py-2.5">
-                          <Link
-                            href={item.href || "#"}
-                            onClick={onClose}
-                            className="text-[15px] font-medium tracking-wide text-[#111111] transition-colors hover:text-black"
-                          >
-                            {item.label}
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => toggleExpand(item.id)}
-                            aria-expanded={isExpanded}
-                            aria-label={`Toggle ${item.label} submenu`}
-                            className="flex h-8 w-8 items-center justify-center text-[#777777] transition-colors hover:text-black"
-                          >
-                            <ChevronDown
-                              className={`h-4 w-4 stroke-[1.5] transition-transform duration-200 ${
-                                isExpanded ? "rotate-180" : ""
-                              }`}
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </div>
-                        {isExpanded && (
-                          <ul className="ml-2 mb-2 space-y-2.5 border-l border-neutral-200 py-1 pl-4">
-                            {item.subItems.map((sub) => (
-                              <li key={sub.id}>
-                                <Link
-                                  href={sub.href}
-                                  onClick={onClose}
-                                  className="block text-sm text-[#555555] transition-colors hover:text-black"
-                                >
-                                  {sub.label}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </li>
-                    );
-                  }
-
-                  return (
-                    <li key={item.id}>
-                      <Link
-                        href={item.href || "#"}
-                        onClick={onClose}
-                        className="block py-2.5 text-[15px] font-medium tracking-wide text-[#111111] transition-colors hover:text-black"
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                })}
+                {config.primaryNav.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={item.href || "#"}
+                      onClick={onClose}
+                      className="block py-2.5 text-[15px] font-medium tracking-wide text-[#111111] transition-colors hover:text-black"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </nav>
           ) : (

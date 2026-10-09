@@ -110,10 +110,11 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     await expect(menuTab).toBeVisible();
     await expect(categoriesTab).toBeVisible();
 
-    // Default MENU tab content
-    await expect(drawer.getByRole("link", { name: "Home v1" })).toBeVisible();
+    // Default MENU tab content strictly mirrors navbar links
+    await expect(drawer.getByRole("link", { name: "Home" })).toBeVisible();
     await expect(drawer.getByRole("link", { name: "Shop" })).toBeVisible();
-    await expect(drawer.getByRole("link", { name: "Buy Theme!" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Contact" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "New Arrivals" })).toBeVisible();
 
     // Switch to CATEGORIES tab
     await categoriesTab.click();

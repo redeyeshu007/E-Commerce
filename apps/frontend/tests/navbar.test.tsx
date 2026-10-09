@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { SiteHeader } from "@/components/navbar/site-header";
 import { AnnouncementBar } from "@/components/navbar/announcement-bar";
 import { UtilityBar } from "@/components/navbar/utility-bar";
@@ -123,48 +123,52 @@ describe("JAVIX Premium Navbar Component Suite", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("supports MENU and CATEGORIES tabs, accordion submenus, and footer dropdowns in mobile drawer", () => {
+    it("supports MENU and CATEGORIES tabs where MENU strictly reflects navbar links", () => {
       render(<MainNavbar config={defaultNavigationConfig} />);
 
       const menuToggle = screen.getByRole("button", { name: "Open navigation menu" });
       fireEvent.click(menuToggle);
 
+      const mobileDialog = screen.getByRole("dialog", {
+        name: "Mobile Navigation Menu",
+      });
+      const drawer = within(mobileDialog);
+
       // Verify tabs exist
-      const menuTab = screen.getByRole("tab", { name: "Menu" });
-      const categoriesTab = screen.getByRole("tab", { name: "Categories" });
+      const menuTab = drawer.getByRole("tab", { name: "Menu" });
+      const categoriesTab = drawer.getByRole("tab", { name: "Categories" });
       expect(menuTab).toBeInTheDocument();
       expect(categoriesTab).toBeInTheDocument();
 
-      // Under MENU tab:
-      expect(screen.getByRole("link", { name: "Home v1" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Shop" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Product" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Pages" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Blog" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Buy Theme!" })).toBeInTheDocument();
+      // Under MENU tab: strictly mirrors navbar links (Home, Shop, Contact, New Arrivals)
+      expect(drawer.getByRole("link", { name: "Home" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Shop" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Contact" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "New Arrivals" })).toBeInTheDocument();
 
-      // Expand Pages submenu accordion
-      const togglePagesBtn = screen.getByRole("button", { name: "Toggle Pages submenu" });
-      fireEvent.click(togglePagesBtn);
-      expect(screen.getByRole("link", { name: "About Us" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Contact Us" })).toBeInTheDocument();
+      // Ensure template dummy items are not shown
+      expect(drawer.queryByRole("link", { name: "Home v1" })).not.toBeInTheDocument();
+      expect(drawer.queryByRole("link", { name: "Product" })).not.toBeInTheDocument();
+      expect(drawer.queryByRole("link", { name: "Pages" })).not.toBeInTheDocument();
+      expect(drawer.queryByRole("link", { name: "Blog" })).not.toBeInTheDocument();
+      expect(drawer.queryByRole("link", { name: "Buy Theme!" })).not.toBeInTheDocument();
 
       // Switch to CATEGORIES tab
       fireEvent.click(categoriesTab);
-      expect(screen.getByRole("link", { name: "New Products" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Today On Sale" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Special Offer!" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Necklaces" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Rings" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Bracelets" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Earnings" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Charm & Dangles" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Watches" })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Gift Ideas" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "New Products" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Today On Sale" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Special Offer!" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Necklaces" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Rings" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Bracelets" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Earnings" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Charm & Dangles" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Watches" })).toBeInTheDocument();
+      expect(drawer.getByRole("link", { name: "Gift Ideas" })).toBeInTheDocument();
 
       // Bottom footer controls
-      expect(screen.getByRole("button", { name: /English/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /Dollar \(US\)/i })).toBeInTheDocument();
+      expect(drawer.getByRole("button", { name: /English/i })).toBeInTheDocument();
+      expect(drawer.getByRole("button", { name: /Dollar \(US\)/i })).toBeInTheDocument();
     });
   });
 
