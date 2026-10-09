@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F6F6F6" />
+      <stop offset="100%" stop-color="#EDEDED" />
+    </linearGradient>
+
+    <!-- Studio Floor Soft Shadow -->
+    <filter id="braceletShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="11" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.15 0"/>
+    </filter>
+
+    <!-- Refined Minimalist Gold Finish -->
+    <linearGradient id="goldBangle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF5D1" />
+      <stop offset="20%" stop-color="#F5CE58" />
+      <stop offset="50%" stop-color="#D99E2B" />
+      <stop offset="75%" stop-color="#AD7613" />
+      <stop offset="90%" stop-color="#F6D66E" />
+      <stop offset="100%" stop-color="#FFF3C7" />
+    </linearGradient>
+
+    <!-- Polished Silver Segment Finish -->
+    <linearGradient id="silverAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#CED4DA" />
+      <stop offset="30%" stop-color="#FFFFFF" />
+      <stop offset="60%" stop-color="#ADB5BD" />
+      <stop offset="85%" stop-color="#6C757D" />
+      <stop offset="100%" stop-color="#E9ECEF" />
+    </linearGradient>
+  </defs>
+
+  <!-- Neutral Studio Background -->
+  <rect width="500" height="500" fill="url(#bgGrad)" />
+
+  <!-- Soft Contact Shadows -->
+  <ellipse cx="250" cy="380" rx="145" ry="30" fill="#000000" filter="url(#braceletShadow)" />
+  <ellipse cx="250" cy="370" rx="100" ry="18" fill="#000000" filter="url(#braceletShadow)" />
+
+  <!-- Bracelet / Bangle Structure - Perfectly Centred Circular Oval -->
+  <g transform="translate(0, 0)">
+    <!-- Back / Under Arc (Darker Depth Shadow) -->
+    <path d="M 110 250 C 110 160, 175 140, 250 140 C 325 140, 390 160, 390 250"
+          fill="none" stroke="#7A500B" stroke-width="15" stroke-linecap="round" />
+    <path d="M 110 250 C 110 160, 175 140, 250 140 C 325 140, 390 160, 390 250"
+          fill="none" stroke="url(#goldBangle)" stroke-width="13" stroke-linecap="round" opacity="0.85" />
+
+    <!-- Front / Foreground Arc (Luminous High Contrast) -->
+    <path d="M 110 250 C 110 340, 175 365, 250 365 C 325 365, 390 340, 390 250"
+          fill="none" stroke="url(#goldBangle)" stroke-width="16" stroke-linecap="round" />
+
+    <!-- Silver Hinge / Clasp Accent at 9 o'clock -->
+    <rect x="98" y="235" width="22" height="30" rx="5" fill="url(#silverAccent)" stroke="#6C757D" stroke-width="1" />
+    <line x1="109" y1="237" x2="109" y2="263" stroke="#495057" stroke-width="1" />
+
+    <!-- Diamond Pave Center Accent Bar on Front Curve -->
+    <rect x="220" y="357" width="60" height="16" rx="4" fill="url(#silverAccent)" stroke="#ADB5BD" stroke-width="1" />
+    <!-- Delicate Pave Diamonds in Accent Bar -->
+    <circle cx="230" cy="365" r="2.5" fill="#FFFFFF" stroke="#CED4DA" stroke-width="0.5" />
+    <circle cx="240" cy="365" r="2.5" fill="#FFFFFF" stroke="#CED4DA" stroke-width="0.5" />
+    <circle cx="250" cy="365" r="2.5" fill="#FFFFFF" stroke="#CED4DA" stroke-width="0.5" />
+    <circle cx="260" cy="365" r="2.5" fill="#FFFFFF" stroke="#CED4DA" stroke-width="0.5" />
+    <circle cx="270" cy="365" r="2.5" fill="#FFFFFF" stroke="#CED4DA" stroke-width="0.5" />
+
+    <!-- Specular Highlight Curve Along Front Rim -->
+    <path d="M 125 260 C 135 330, 185 358, 218 360"
+          fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.8" />
+    <path d="M 282 360 C 315 358, 365 330, 375 260"
+          fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.8" />
+
+    <!-- Studio Light Sparkle -->
+    <circle cx="340" cy="320" r="3" fill="#FFFFFF" />
+    <polygon points="340,312 342,318 348,320 342,322 340,328 338,322 332,320 338,318" fill="#FFFFFF" opacity="0.9" />
+  </g>
+</svg>

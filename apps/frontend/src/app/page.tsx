@@ -1,12 +1,15 @@
 import React from "react";
 import { HeroBanners } from "@/components/home/hero-banners";
 import { defaultHeroBannersConfig } from "@/config/hero-banners";
+import { ShopOurCollections } from "@/components/home/shop-our-collections";
+import { defaultCollectionsConfig } from "@/config/collections";
 
 /**
  * JAVIX JEWELLERY Storefront Homepage
  *
- * Renders the primary hero and promotional banner section featuring
- * luxury fine jewellery collections.
+ * Renders:
+ * 1. Promotional hero banners featuring luxury fine jewellery
+ * 2. "Shop Our Collections" category gallery section
  */
 export default function HomePage() {
   return (
@@ -16,6 +19,9 @@ export default function HomePage() {
 
       {/* Hero & Promotional Banner Grid */}
       <HeroBanners config={defaultHeroBannersConfig} />
+
+      {/* Shop Our Collections Category Gallery Section */}
+      <ShopOurCollections config={defaultCollectionsConfig} />
     </main>
   );
 }

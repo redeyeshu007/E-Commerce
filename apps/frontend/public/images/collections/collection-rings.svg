@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F6F6F6" />
+      <stop offset="100%" stop-color="#EDEDED" />
+    </linearGradient>
+
+    <!-- Studio Floor Soft Shadow -->
+    <filter id="ringShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.16 0"/>
+    </filter>
+
+    <!-- Sculptural Gold Ring Gradients -->
+    <!-- Inner Band Shadow -->
+    <linearGradient id="innerBand" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#5E3E07" />
+      <stop offset="40%" stop-color="#996914" />
+      <stop offset="80%" stop-color="#D49E35" />
+      <stop offset="100%" stop-color="#4F3304" />
+    </linearGradient>
+
+    <!-- Outer Sculpted Band Luxury Metallic Gradient -->
+    <linearGradient id="goldBand" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF5D1" />
+      <stop offset="15%" stop-color="#FAD961" />
+      <stop offset="35%" stop-color="#ECC246" />
+      <stop offset="60%" stop-color="#C28C1A" />
+      <stop offset="80%" stop-color="#8F5F0B" />
+      <stop offset="90%" stop-color="#E9BF44" />
+      <stop offset="100%" stop-color="#FFF7DC" />
+    </linearGradient>
+
+    <!-- High-Sheen Ridge Highlight -->
+    <linearGradient id="sheenHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9" />
+      <stop offset="30%" stop-color="#FFFFFF" stop-opacity="0.1" />
+      <stop offset="70%" stop-color="#FFFFFF" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.2" />
+    </linearGradient>
+  </defs>
+
+  <!-- Neutral Studio Background -->
+  <rect width="500" height="500" fill="url(#bgGrad)" />
+
+  <!-- Realistic Natural Drop Shadow -->
+  <ellipse cx="250" cy="365" rx="115" ry="24" fill="#000000" filter="url(#ringShadow)" />
+  <ellipse cx="250" cy="355" rx="75" ry="14" fill="#000000" filter="url(#ringShadow)" />
+
+  <!-- Ring Group - Isolated & Centred in 3D Isometric View -->
+  <g transform="translate(0, 0)">
+    <!-- Inner Cavity of the Ring -->
+    <ellipse cx="250" cy="245" rx="90" ry="58" fill="url(#innerBand)" />
+
+    <!-- Sculptural Outer Ring Band -->
+    <path d="M 130 245
+             C 130 180, 185 135, 250 135
+             C 315 135, 370 180, 370 245
+             C 370 325, 305 355, 250 355
+             C 195 355, 130 325, 130 245 Z"
+          fill="url(#goldBand)"
+          stroke="#946513"
+          stroke-width="1.5" />
+
+    <!-- Sculpted Domed Ridge Reflection (Clean Architectural Contour) -->
+    <path d="M 148 245
+             C 148 190, 195 152, 250 152
+             C 305 152, 352 190, 352 245
+             C 352 308, 300 338, 250 338
+             C 200 338, 148 308, 148 245 Z"
+          fill="none"
+          stroke="url(#sheenHighlight)"
+          stroke-width="6"
+          opacity="0.65" />
+
+    <!-- Crisp Inner Bevel Line -->
+    <ellipse cx="250" cy="245" rx="88" ry="56"
+             fill="none"
+             stroke="#FFF6D8"
+             stroke-width="2"
+             opacity="0.85" />
+
+    <!-- Light Glint / Studio Star Highlight on Crown -->
+    <circle cx="210" cy="155" r="3.5" fill="#FFFFFF" />
+    <polygon points="210,146 212,153 219,155 212,157 210,164 208,157 201,155 208,153" fill="#FFFFFF" opacity="0.9" />
+  </g>
+</svg>
