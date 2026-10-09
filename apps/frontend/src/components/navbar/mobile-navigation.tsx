@@ -114,23 +114,23 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
 
           {/* Utility Links */}
           <div className="mb-6">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-black">
               Information & Services
             </h3>
-            <ul className="space-y-3 text-sm text-[#555555]" role="list">
+            <ul className="space-y-3 text-sm text-black" role="list">
               {config.utility.links.map((link) => (
                 <li key={link.id}>
                   {link.isImplemented && link.href ? (
                     <Link
                       href={link.href}
                       onClick={onClose}
-                      className="block transition-colors hover:text-black"
+                      className="block transition-opacity hover:opacity-75"
                     >
                       {link.label}
                     </Link>
                   ) : (
                     <span
-                      className="block cursor-default text-[#555555] hover:text-black"
+                      className="block cursor-default text-black hover:opacity-75"
                       title={`${link.label} (Coming Soon)`}
                     >
                       {link.label}
@@ -144,13 +144,13 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
           <hr className="my-6 border-[#E5E5E5]" />
 
           {/* Language & Currency info */}
-          <div className="space-y-2 text-xs text-[#666666]">
+          <div className="space-y-2 text-xs text-black">
             <div>
-              <span className="font-medium text-neutral-400">Language:</span>{" "}
+              <span className="font-medium text-neutral-500">Language:</span>{" "}
               {config.utility.language}
             </div>
             <div>
-              <span className="font-medium text-neutral-400">Currency:</span>{" "}
+              <span className="font-medium text-neutral-500">Currency:</span>{" "}
               {config.utility.currencySymbol} {config.utility.currency}
             </div>
           </div>
