@@ -32,6 +32,13 @@ export interface StorefrontContextValue {
   // Toast / Feedback
   toastMessage: string | null;
   dismissToast: () => void;
+
+  // Authentication Modal
+  isAuthModalOpen: boolean;
+  authModalView: "login" | "register" | "forgot-password";
+  openAuthModal: (view?: "login" | "register" | "forgot-password") => void;
+  closeAuthModal: () => void;
+  setAuthModalView: (view: "login" | "register" | "forgot-password") => void;
 }
 
 const StorefrontContext = createContext<StorefrontContextValue | null>(null);
@@ -46,6 +53,8 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalView, setAuthModalView] = useState<"login" | "register" | "forgot-password">("login");
 
   // Restore client-side state from localStorage on mount
   useEffect(() => {
@@ -170,6 +179,15 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
     [cartItems],
   );
 
+  const openAuthModal = useCallback((view: "login" | "register" | "forgot-password" = "login") => {
+    setAuthModalView(view);
+    setIsAuthModalOpen(true);
+  }, []);
+
+  const closeAuthModal = useCallback(() => {
+    setIsAuthModalOpen(false);
+  }, []);
+
   const value = useMemo<StorefrontContextValue>(
     () => ({
       wishlistIds,
@@ -187,6 +205,11 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
       closeQuickView,
       toastMessage,
       dismissToast,
+      isAuthModalOpen,
+      authModalView,
+      openAuthModal,
+      closeAuthModal,
+      setAuthModalView,
     }),
     [
       wishlistIds,
@@ -204,6 +227,11 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
       closeQuickView,
       toastMessage,
       dismissToast,
+      isAuthModalOpen,
+      authModalView,
+      openAuthModal,
+      closeAuthModal,
+      setAuthModalView,
     ],
   );
 
@@ -226,6 +254,11 @@ const defaultStorefrontValue: StorefrontContextValue = {
   closeQuickView: () => {},
   toastMessage: null,
   dismissToast: () => {},
+  isAuthModalOpen: false,
+  authModalView: "login",
+  openAuthModal: () => {},
+  closeAuthModal: () => {},
+  setAuthModalView: () => {},
 };
 
 export function useStorefront(): StorefrontContextValue {

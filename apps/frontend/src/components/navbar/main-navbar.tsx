@@ -80,6 +80,7 @@ export function MainNavbar({ config }: MainNavbarProps) {
                 actions={config.actions}
                 cartCount={cartCount}
                 wishlistCount={wishlistCount}
+                onAccountClick={() => storefront.openAuthModal("login")}
               />
             </div>
           </div>

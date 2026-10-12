@@ -128,7 +128,7 @@ export function MobileBottomBar({
         ) : (
           <button
             type="button"
-            onClick={onAccountClick}
+            onClick={onAccountClick ?? (() => storefront.openAuthModal("login"))}
             aria-label="Account"
             className="flex flex-col items-center justify-center py-1 text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
           >

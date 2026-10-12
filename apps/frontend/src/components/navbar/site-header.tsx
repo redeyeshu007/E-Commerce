@@ -1,8 +1,12 @@
+"use client";
+
 import React from "react";
 import { AnnouncementBar } from "./announcement-bar";
 import { UtilityBar } from "./utility-bar";
 import { MainNavbar } from "./main-navbar";
 import { MobileBottomBar } from "./mobile-bottom-bar";
+import { AuthModal } from "@/components/auth";
+import { useStorefront } from "@/providers/storefront-provider";
 import { defaultNavigationConfig, type NavigationConfig } from "@/config/navigation";
 
 export interface SiteHeaderProps {
@@ -29,6 +33,8 @@ export interface SiteHeaderProps {
  * 2. Bottom Sticky Navigation Bar — Fixed at bottom with HOME, SEARCH, WISHLIST (with "0" badge), and ACCOUNT.
  */
 export function SiteHeader({ config = defaultNavigationConfig, className = "" }: SiteHeaderProps) {
+  const storefront = useStorefront();
+
   return (
     <>
       <header className={`relative w-full z-30 bg-white text-black ${className}`} role="banner">
@@ -44,6 +50,13 @@ export function SiteHeader({ config = defaultNavigationConfig, className = "" }:
 
       {/* Mobile Sticky Bottom Navigation Bar */}
       <MobileBottomBar config={config} />
+
+      {/* Premium Authentication Modal */}
+      <AuthModal
+        isOpen={storefront.isAuthModalOpen}
+        onClose={storefront.closeAuthModal}
+        initialView={storefront.authModalView}
+      />
     </>
   );
 }
