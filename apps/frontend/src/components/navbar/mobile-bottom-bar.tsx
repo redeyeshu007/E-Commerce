@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Home, Search, Heart, User } from "lucide-react";
 import type { NavigationConfig } from "@/config/navigation";
+import { useStorefront } from "@/providers/storefront-provider";
 
 export interface MobileBottomBarProps {
   config: NavigationConfig;
@@ -34,7 +35,8 @@ export function MobileBottomBar({
   onWishlistClick,
   onAccountClick,
 }: MobileBottomBarProps) {
-  const wishlistCount = config.badges?.wishlistCount ?? 0;
+  const storefront = useStorefront();
+  const wishlistCount = storefront.wishlistCount || (config.badges?.wishlistCount ?? 0);
   const accountAction = config.actions?.find((a) => a.id === "account");
   const wishlistAction = config.actions?.find((a) => a.id === "wishlist");
 

@@ -13,6 +13,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { NetworkLoadingIndicator } from "@/components/shared/network-loading-indicator";
+import { StorefrontProvider } from "./storefront-provider";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -36,8 +37,10 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
-      <NetworkLoadingIndicator />
+      <StorefrontProvider>
+        {children}
+        <NetworkLoadingIndicator />
+      </StorefrontProvider>
     </QueryClientProvider>
   );
 }

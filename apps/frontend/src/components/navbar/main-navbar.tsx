@@ -7,6 +7,7 @@ import { PrimaryNavigation } from "./primary-navigation";
 import { NavbarActions, CartButton } from "./navbar-actions";
 import { MobileNavigation } from "./mobile-navigation";
 import type { NavigationConfig } from "@/config/navigation";
+import { useStorefront } from "@/providers/storefront-provider";
 
 export interface MainNavbarProps {
   config: NavigationConfig;
@@ -27,9 +28,10 @@ export interface MainNavbarProps {
  */
 export function MainNavbar({ config }: MainNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const storefront = useStorefront();
   const cartAction = config.actions?.find((a) => a.id === "cart");
-  const cartCount = config.badges?.cartCount ?? 0;
-  const wishlistCount = config.badges?.wishlistCount ?? 0;
+  const cartCount = storefront.cartCount || (config.badges?.cartCount ?? 0);
+  const wishlistCount = storefront.wishlistCount || (config.badges?.wishlistCount ?? 0);
 
   return (
     <>
