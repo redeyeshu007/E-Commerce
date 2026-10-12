@@ -112,7 +112,7 @@ export function RegisterForm({
         <div
           role="alert"
           data-testid="auth-error-banner"
-          className="w-full mb-4 p-3 bg-[#FEF2F2] border border-[#FCA5A5] text-xs text-[#991B1B] flex items-start gap-2 leading-relaxed"
+          className="w-full mb-4 p-3 bg-[#FEF2F2] border border-[#FCA5A5] text-xs text-[#991B1B] flex items-start gap-2 leading-relaxed rounded-lg"
         >
           <AlertCircle className="h-4 w-4 shrink-0 text-red-500 mt-0.5" aria-hidden="true" />
           <span>{formError}</span>
@@ -178,7 +178,7 @@ export function RegisterForm({
           type="submit"
           disabled={isSubmitting}
           data-testid="register-submit-button"
-          className="w-full h-11 sm:h-12 bg-[#111111] hover:bg-black active:bg-[#222222] text-white text-xs sm:text-[13px] font-semibold uppercase tracking-[0.08em] transition-colors duration-200 flex items-center justify-center gap-2 rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+          className="w-full h-11 sm:h-12 bg-[#111111] hover:bg-black active:bg-[#222222] text-white text-xs sm:text-[13px] font-semibold uppercase tracking-[0.08em] transition-colors duration-200 flex items-center justify-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black disabled:opacity-60 disabled:cursor-not-allowed mt-2"
         >
           {isSubmitting ? (
             <>

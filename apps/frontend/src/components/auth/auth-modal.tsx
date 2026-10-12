@@ -82,7 +82,7 @@ export function AuthModal({
         {/* Subtle Semi-Transparent Backdrop */}
         <Dialog.Overlay
           data-testid="auth-modal-backdrop"
-          className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px] transition-opacity duration-300 motion-reduce:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+          className="auth-modal-overlay fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px]"
         />
 
         {/* Centered Modal Content Container */}
@@ -92,7 +92,7 @@ export function AuthModal({
             data-testid="auth-modal-content"
             aria-describedby="auth-modal-description"
             aria-labelledby="auth-modal-title"
-            className="relative w-full max-w-[460px] max-h-[92vh] overflow-y-auto bg-white p-6 sm:p-9 shadow-2xl rounded-none pointer-events-auto border border-[#EAE6DF] transition-all duration-300 motion-reduce:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
+            className="auth-modal-content relative w-full max-w-[460px] max-h-[92vh] overflow-y-auto bg-white p-6 sm:p-9 shadow-2xl rounded-2xl sm:rounded-[24px] pointer-events-auto border border-[#EAE6DF] focus:outline-none"
           >
             {/* Accessible Close Button in Upper-Right Corner */}
             <Dialog.Close asChild>
@@ -100,7 +100,7 @@ export function AuthModal({
                 type="button"
                 data-testid="auth-modal-close-button"
                 aria-label="Close authentication modal"
-                className="absolute right-4 top-4 sm:right-5 sm:top-5 flex h-9 w-9 items-center justify-center text-[#777777] hover:text-[#111111] hover:bg-[#FAF8F5] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black z-10"
+                className="absolute right-4 top-4 sm:right-5 sm:top-5 flex h-9 w-9 items-center justify-center rounded-full text-[#777777] hover:text-[#111111] hover:bg-[#FAF8F5] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black z-10"
               >
                 <X className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
               </button>

@@ -54,7 +54,7 @@ export function GoogleSignInButton({
         onClick={handleGoogleClick}
         disabled={disabled || isLoading}
         data-testid="google-sign-in-button"
-        className={`w-full h-11 sm:h-12 flex items-center justify-center gap-3 px-4 bg-white hover:bg-[#F9F9F9] active:bg-[#F0F0F0] text-[#222222] font-medium text-xs sm:text-[13px] border border-[#E5E5E5] rounded-none transition-colors duration-200 outline-none focus-visible:ring-1 focus-visible:ring-black disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
+        className={`w-full h-11 sm:h-12 flex items-center justify-center gap-3 px-4 bg-white hover:bg-[#F9F9F9] active:bg-[#F0F0F0] text-[#222222] font-medium text-xs sm:text-[13px] border border-[#E5E5E5] rounded-lg transition-colors duration-200 outline-none focus-visible:ring-1 focus-visible:ring-black disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
       >
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin text-[#666666]" aria-hidden="true" />
@@ -89,7 +89,7 @@ export function GoogleSignInButton({
         <div
           role="status"
           data-testid="google-setup-notice"
-          className="mt-2.5 p-2.5 bg-[#FAF8F5] border border-[#EAE6DF] text-xs text-[#555555] flex items-start gap-2 leading-relaxed"
+          className="mt-2.5 p-2.5 bg-[#FAF8F5] border border-[#EAE6DF] text-xs text-[#555555] flex items-start gap-2 leading-relaxed rounded-lg"
         >
           <Info className="h-4 w-4 shrink-0 text-[#C5A572] mt-0.5" aria-hidden="true" />
           <span>{setupNotice}</span>

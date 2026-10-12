@@ -19,3 +19,70 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* PERALAGAE Luxury Authentication Modal Slide From/To Top Animations */
+@keyframes authModalSlideInFromTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-64px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes authModalSlideOutToTop {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-64px) scale(0.96);
+  }
+}
+
+@keyframes authBackdropFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes authBackdropFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.auth-modal-content[data-state="open"] {
+  animation: authModalSlideInFromTop 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-modal-content[data-state="closed"] {
+  animation: authModalSlideOutToTop 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.auth-modal-overlay[data-state="open"] {
+  animation: authBackdropFadeIn 300ms ease-out forwards;
+}
+
+.auth-modal-overlay[data-state="closed"] {
+  animation: authBackdropFadeOut 250ms ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-modal-content[data-state="open"],
+  .auth-modal-content[data-state="closed"],
+  .auth-modal-overlay[data-state="open"],
+  .auth-modal-overlay[data-state="closed"] {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
