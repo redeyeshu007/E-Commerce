@@ -11,6 +11,10 @@ import { EditorialCollectionsSection } from "@/components/home/editorial-collect
 import { defaultEditorialCollectionsConfig } from "@/config/editorial-collections";
 import { CustomerReviewsSection } from "@/components/home/customer-reviews";
 import { defaultReviewsConfig } from "@/config/reviews";
+import { InstagramGallerySection } from "@/components/home/instagram-gallery";
+import { defaultInstagramConfig } from "@/config/instagram";
+import { NewsletterSignupSection } from "@/components/home/newsletter-section";
+import { defaultNewsletterConfig } from "@/config/newsletter";
 
 /**
  * JAVIX JEWELLERY Storefront Homepage
@@ -22,6 +26,8 @@ import { defaultReviewsConfig } from "@/config/reviews";
  * 4. "Find Jewelry Shops Near You" store locator banner
  * 5. Editorial collection banners ("Designed in India. Crafted with timeless elegance.")
  * 6. "Customer Reviews" testimonial carousel section
+ * 7. "Follow Us on Instagram" 6-photo editorial gallery
+ * 8. "Sign up now & get 10% off" newsletter subscription section
  */
 export default function HomePage() {
   return (
@@ -46,6 +52,12 @@ export default function HomePage() {
 
       {/* Customer Reviews Testimonials Carousel Section */}
       <CustomerReviewsSection config={defaultReviewsConfig} />
+
+      {/* Follow Us on Instagram Gallery Section */}
+      <InstagramGallerySection config={defaultInstagramConfig} />
+
+      {/* Newsletter Subscription Section */}
+      <NewsletterSignupSection config={defaultNewsletterConfig} />
     </main>
   );
 }
