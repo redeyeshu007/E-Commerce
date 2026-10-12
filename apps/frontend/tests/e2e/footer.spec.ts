@@ -76,18 +76,20 @@ test.describe("PERALAGAE Footer Comprehensive E2E & QA Suite", () => {
     await expect(followCol.getByRole("link", { name: "Instagram", exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "Pinterest", exact: true })).toHaveCount(0);
 
-    // Payment Methods Row (Maestro, PayPal, Visa, MasterCard)
-    const paymentMethods = footer.getByTestId("footer-payment-methods");
-    await expect(paymentMethods).toBeVisible();
-    await expect(paymentMethods.getByRole("img", { name: "Maestro" })).toBeVisible();
-    await expect(paymentMethods.getByRole("img", { name: "PayPal" })).toBeVisible();
-    await expect(paymentMethods.getByRole("img", { name: "Visa" })).toBeVisible();
-    await expect(paymentMethods.getByRole("img", { name: "MasterCard" })).toBeVisible();
+    // Payment Methods Row removed per user request
+    await expect(footer.getByTestId("footer-payment-methods")).toHaveCount(0);
 
-    // Centered Copyright Notice
+    // Bottom Row: Left: Copyright Notice, Right: Design and Developed by Javix
     const copyright = footer.getByTestId("footer-copyright");
     await expect(copyright).toBeVisible();
     await expect(copyright).toHaveText("© 2026 PERALAGAE. All Rights Reserved.");
+
+    const developer = footer.getByTestId("footer-developer");
+    await expect(developer).toBeVisible();
+    await expect(developer).toContainText("Design and Developed by");
+    const devLink = developer.getByRole("link", { name: "Javix" });
+    await expect(devLink).toBeVisible();
+    await expect(devLink).toHaveAttribute("href", "https://javixtechnologies.com/");
 
     // Zero horizontal overflow
     const footerOverflow = await page.evaluate(() => {
@@ -212,10 +214,10 @@ test.describe("PERALAGAE Footer Comprehensive E2E & QA Suite", () => {
     await expect(storeTrigger).toHaveAttribute("aria-expanded", "true");
     await expect(footer.getByText("123 45678 90")).toBeVisible();
 
-    // Check payment logos and copyright are centered at bottom
-    const paymentMethods = footer.getByTestId("footer-payment-methods");
-    await expect(paymentMethods).toBeVisible();
+    // Check bottom row copyright and developer credits (payment methods removed)
+    await expect(footer.getByTestId("footer-payment-methods")).toHaveCount(0);
     await expect(footer.getByTestId("footer-copyright")).toBeVisible();
+    await expect(footer.getByTestId("footer-developer")).toBeVisible();
 
     // No horizontal scrollbar
     const footerOverflow = await page.evaluate(() => {

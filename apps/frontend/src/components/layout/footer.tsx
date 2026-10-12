@@ -503,25 +503,35 @@ export interface FooterBottomProps {
     brandName: string;
     rightsText: string;
   };
+  developer?: {
+    text: string;
+    label: string;
+    href: string;
+  };
   paymentMethods?: Array<{ id: string; name: string }>;
   className?: string;
 }
 
 export function FooterBottom({
   copyright,
+  developer = {
+    text: "Design and Developed by",
+    label: "Javix",
+    href: "https://javixtechnologies.com/",
+  },
   paymentMethods,
   className = "",
 }: FooterBottomProps) {
   const hasPaymentMethods = paymentMethods && paymentMethods.length > 0;
 
   return (
-    <div className={`border-t border-[#EAE6DF] pt-8 sm:pt-10 pb-12 sm:pb-14 ${className}`}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
-        {/* Payment Methods Row */}
+    <div className={`border-t border-[#EAE6DF] pt-8 sm:pt-10 pb-24 sm:pb-14 ${className}`}>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Payment Methods Row (Rendered only if methods are provided) */}
         {hasPaymentMethods && (
           <div
             data-testid="footer-payment-methods"
-            className="flex items-center justify-center flex-wrap gap-3 sm:gap-4 mb-4"
+            className="flex items-center justify-center flex-wrap gap-3 sm:gap-4 mb-6"
           >
             {paymentMethods.map((method) => (
               <span key={method.id} className="inline-block" title={method.name}>
@@ -531,13 +541,34 @@ export function FooterBottom({
           </div>
         )}
 
-        {/* Centred Copyright Notice */}
-        <p
-          data-testid="footer-copyright"
-          className="text-xs text-[#777777] tracking-[0.02em] font-normal"
-        >
-          © {copyright.year} {copyright.brandName}. {copyright.rightsText}
-        </p>
+        {/* Bottom Bar: Left: Copyright, Right: Design and Developed by Javix */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-center sm:text-left">
+          {/* Left: Copyright */}
+          <p
+            data-testid="footer-copyright"
+            className="text-xs text-[#777777] tracking-[0.02em] font-normal"
+          >
+            © {copyright.year} {copyright.brandName}. {copyright.rightsText}
+          </p>
+
+          {/* Right: Design and Developed by Javix */}
+          {developer && (
+            <p
+              data-testid="footer-developer"
+              className="text-xs text-[#777777] tracking-[0.02em] font-normal"
+            >
+              <span>{developer.text}{" "}</span>
+              <a
+                href={developer.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#111111] hover:text-[#C5A572] font-medium transition-colors underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+              >
+                {developer.label}
+              </a>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -580,6 +611,7 @@ export function SiteFooter({
     storeDetails,
     followUs,
     copyright,
+    developer,
     backToTop,
     paymentMethods,
   } = config;
@@ -623,6 +655,7 @@ export function SiteFooter({
       {/* Horizontal Divider & Bottom Section */}
       <FooterBottom
         copyright={copyright}
+        developer={developer}
         paymentMethods={paymentMethods}
       />
 

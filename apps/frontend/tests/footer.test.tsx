@@ -121,7 +121,7 @@ describe("PERALAGAE Footer Unit Test Suite", () => {
       expect(screen.queryByRole("link", { name: "Pinterest" })).not.toBeInTheDocument();
     });
 
-    it("renders centered copyright notice", () => {
+    it("renders left copyright notice and right developer attribution without payment icons", () => {
       render(<SiteFooter />);
 
       const copyright = screen.getByTestId("footer-copyright");
@@ -129,17 +129,14 @@ describe("PERALAGAE Footer Unit Test Suite", () => {
       expect(copyright).toHaveTextContent(
         "© 2026 PERALAGAE. All Rights Reserved."
       );
-    });
 
-    it("renders payment methods row with Maestro, PayPal, Visa, and MasterCard", () => {
-      render(<SiteFooter />);
+      const developer = screen.getByTestId("footer-developer");
+      expect(developer).toBeInTheDocument();
+      expect(developer).toHaveTextContent("Design and Developed by Javix");
+      const devLink = screen.getByRole("link", { name: "Javix" });
+      expect(devLink).toHaveAttribute("href", "https://javixtechnologies.com/");
 
-      const paymentContainer = screen.getByTestId("footer-payment-methods");
-      expect(paymentContainer).toBeInTheDocument();
-      expect(screen.getByRole("img", { name: "Maestro" })).toBeInTheDocument();
-      expect(screen.getByRole("img", { name: "PayPal" })).toBeInTheDocument();
-      expect(screen.getByRole("img", { name: "Visa" })).toBeInTheDocument();
-      expect(screen.getByRole("img", { name: "MasterCard" })).toBeInTheDocument();
+      expect(screen.queryByTestId("footer-payment-methods")).not.toBeInTheDocument();
     });
   });
 

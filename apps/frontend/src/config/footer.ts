@@ -73,10 +73,15 @@ export interface FooterConfig {
     brandName: string;
     rightsText: string;
   };
+  developer?: {
+    text: string;
+    label: string;
+    href: string;
+  };
   backToTop: {
     label: string;
   };
-  paymentMethods: PaymentMethodItem[];
+  paymentMethods?: PaymentMethodItem[];
 }
 
 const explorePeralagaeColumn: FooterColumnConfig = {
@@ -135,13 +140,13 @@ export const defaultFooterConfig: FooterConfig = {
     brandName: "PERALAGAE",
     rightsText: "All Rights Reserved.",
   },
+  developer: {
+    text: "Design and Developed by",
+    label: "Javix",
+    href: "https://javixtechnologies.com/",
+  },
   backToTop: {
     label: "Back to top",
   },
-  paymentMethods: [
-    { id: "maestro", name: "Maestro" },
-    { id: "paypal", name: "PayPal" },
-    { id: "visa", name: "Visa" },
-    { id: "mastercard", name: "MasterCard" },
-  ],
+  paymentMethods: [],
 };
