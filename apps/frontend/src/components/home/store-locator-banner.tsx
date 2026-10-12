@@ -79,11 +79,7 @@ export function StoreLocatorBanner({
               href={config.buttonHref}
               onClick={onButtonClick}
               data-testid="store-locator-cta"
-              className="inline-flex items-center justify-center border bg-transparent px-6 py-2.5 sm:px-7 sm:py-3 text-xs sm:text-[13px] font-medium tracking-[0.06em] uppercase whitespace-nowrap transition-colors duration-200 hover:bg-[#111111] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
-              style={{
-                borderColor: config.textColor,
-                color: config.textColor,
-              }}
+              className="inline-flex items-center justify-center border border-[#111111] bg-transparent px-6 py-2.5 sm:px-7 sm:py-3 text-xs sm:text-[13px] font-medium tracking-[0.06em] uppercase whitespace-nowrap text-[#111111] transition-colors duration-200 hover:bg-[#111111] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
               title={
                 config.isImplemented
                   ? config.buttonLabel

@@ -80,4 +80,25 @@ test.describe("JAVIX Store Locator Banner E2E Suite", () => {
     });
     expect(hasHorizontalOverflow).toBe(false);
   });
+
+  test("Desktop: hover on CTA button displays legible white text against dark charcoal fill", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const storeLocator = page.locator('section[aria-labelledby="store-locator-heading"]');
+    const cta = storeLocator.getByTestId("store-locator-cta");
+    await cta.scrollIntoViewIfNeeded();
+
+    // Hover on button
+    await cta.hover();
+    await page.waitForTimeout(250);
+
+    // Verify text is clearly visible in white and background is dark charcoal
+    const textColor = await cta.evaluate((el) => window.getComputedStyle(el).color);
+    expect(textColor).toBe("rgb(255, 255, 255)");
+
+    const bgColor = await cta.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bgColor).toBe("rgb(17, 17, 17)");
+  });
 });
