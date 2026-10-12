@@ -258,7 +258,7 @@ export function FooterLinkGroup({ column, className = "" }: FooterLinkGroupProps
       className={className}
       testId={`footer-column-${column.id}`}
     >
-      <ul className="space-y-2.5 sm:space-y-3" role="list">
+      <ul className="space-y-2 sm:space-y-2.5" role="list">
         {column.links.map((link) => (
           <li key={link.id}>
             {link.isExternal ? (
@@ -525,7 +525,7 @@ export function FooterBottom({
   const hasPaymentMethods = paymentMethods && paymentMethods.length > 0;
 
   return (
-    <div className={`border-t border-[#EAE6DF] pt-8 sm:pt-10 pb-24 sm:pb-14 ${className}`}>
+    <div className={`border-t border-[#EAE6DF] pt-4 sm:pt-5 pb-20 sm:pb-7 ${className}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Payment Methods Row (Rendered only if methods are provided) */}
         {hasPaymentMethods && (
@@ -625,7 +625,7 @@ export function SiteFooter({
       className={`w-full bg-[#FAF8F5] text-black ${className}`}
     >
       {/* Main Grid: 5-column on desktop, smooth collapsible accordions on mobile */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-24 pb-8 sm:pb-12 lg:pb-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 lg:pt-12 pb-5 sm:pb-6 lg:pb-7">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-12 items-start">
           {/* Column 1: PERALAGAE Brand */}
           <FooterBrand

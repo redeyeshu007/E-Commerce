@@ -31,7 +31,7 @@ import { defaultNewsletterConfig } from "@/config/newsletter";
  */
 export default function HomePage() {
   return (
-    <main className="flex-1 bg-white text-black pb-24 lg:pb-12">
+    <main className="flex-1 bg-white text-black pb-12 lg:pb-0">
       {/* Semantic Top-Level Heading */}
       <h1 className="sr-only">Gold Commerce Platform</h1>
 
