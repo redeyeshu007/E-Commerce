@@ -208,7 +208,7 @@ export function NewsletterSignupSection({
     <section
       aria-labelledby="newsletter-heading"
       data-testid="newsletter-section"
-      className={`w-full py-16 sm:py-20 lg:py-24 ${className}`}
+      className={`w-full pt-8 sm:pt-10 lg:pt-12 pb-16 sm:pb-20 lg:pb-24 ${className}`}
       style={{ backgroundColor }}
     >
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">

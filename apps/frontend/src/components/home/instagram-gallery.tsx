@@ -142,7 +142,7 @@ export function InstagramGallerySection({
     <section
       aria-labelledby="instagram-gallery-heading"
       data-testid="instagram-gallery-section"
-      className={`w-full bg-white py-16 sm:py-20 lg:py-24 ${className}`}
+      className={`w-full bg-white pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-10 lg:pb-12 ${className}`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Exact Section Heading: Follow Us on Instagram */}
