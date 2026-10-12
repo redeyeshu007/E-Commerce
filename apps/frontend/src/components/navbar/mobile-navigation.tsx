@@ -2,6 +2,7 @@
 
 import React, { useEffect, useCallback, useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { X, ChevronDown, Check } from "lucide-react";
 import type { NavigationConfig } from "@/config/navigation";
 
@@ -155,9 +156,22 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
       >
         {/* 1. Top Header inside drawer: Brand + Close Icon */}
         <div className="flex h-14 sm:h-16 flex-none items-center justify-between border-b border-[#E5E5E5] bg-[#F7F7F7] px-6">
-          <span className="font-sans text-xl sm:text-2xl font-normal tracking-[0.18em] text-[#111111] uppercase">
-            {config.brand.name}
-          </span>
+          {config.brand.logoSrc ? (
+            <div className="flex items-center">
+              <Image
+                src={config.brand.logoSrc}
+                alt={`${config.brand.name} Fine Jewellery`}
+                width={config.brand.logoWidth ?? 1308}
+                height={config.brand.logoHeight ?? 537}
+                className="h-7 sm:h-8 w-auto max-w-[140px] object-contain"
+              />
+              <span className="sr-only">{config.brand.name}</span>
+            </div>
+          ) : (
+            <span className="font-sans text-xl sm:text-2xl font-normal tracking-[0.18em] text-[#111111] uppercase">
+              {config.brand.name}
+            </span>
+          )}
           <button
             type="button"
             onClick={handleClose}

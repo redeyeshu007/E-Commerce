@@ -26,6 +26,7 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     // Row 3: Main Navbar Brand
     const brand = page.locator("a[aria-label*='PERALAGAE Fine Jewellery']");
     await expect(brand).toBeVisible();
+    await expect(brand.locator("img")).toBeVisible();
     await expect(brand).toHaveText("PERALAGAE");
 
     // Desktop Primary Nav items
@@ -74,6 +75,7 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     // Center: PERALAGAE brand
     const brand = page.locator("a[aria-label*='PERALAGAE Fine Jewellery']");
     await expect(brand).toBeVisible();
+    await expect(brand.locator("img")).toBeVisible();
 
     // Right: Cart icon with "0" badge
     const cartBadge = page.getByTestId("cart-badge").filter({ visible: true });

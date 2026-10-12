@@ -43,6 +43,9 @@ export interface UtilityConfig {
 export interface BrandConfig {
   name: string;
   href: string;
+  logoSrc?: string;
+  logoWidth?: number;
+  logoHeight?: number;
 }
 
 export interface PrimaryNavItem {
@@ -121,6 +124,9 @@ export const defaultNavigationConfig: NavigationConfig = {
   brand: {
     name: "PERALAGAE",
     href: "/",
+    logoSrc: "/images/logo/peralagae-logo.png",
+    logoWidth: 1308,
+    logoHeight: 537,
   },
   primaryNav: [
     { id: "home", label: "Home", href: "/", isImplemented: true },

@@ -70,7 +70,7 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
   });
 
   describe("Row 3: MainNavbar", () => {
-    it("renders the PERALAGAE brand wordmark pointing to / without taglines or extra logos", () => {
+    it("renders the PERALAGAE brand logo pointing to / without taglines or extra logos", () => {
       render(<MainNavbar config={defaultNavigationConfig} />);
 
       const brandLink = screen.getByRole("link", {
@@ -79,6 +79,8 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
       expect(brandLink).toBeInTheDocument();
       expect(brandLink).toHaveAttribute("href", "/");
       expect(brandLink).toHaveTextContent("PERALAGAE");
+      const logoImg = screen.getByRole("img", { name: "PERALAGAE Fine Jewellery" });
+      expect(logoImg).toBeInTheDocument();
     });
 
     it("renders exactly 4 primary navigation items: Home, Shop, Contact, New Arrivals in order", () => {
