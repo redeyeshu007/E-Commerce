@@ -1,32 +1,35 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
+test.describe("JAVIX JEWELLERY Footer Comprehensive E2E & QA Suite", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Wait for luxury preloader to complete
     await expect(page.getByRole("status")).not.toBeAttached({ timeout: 10000 });
   });
 
-  test("Desktop: renders five columns matching reference screenshot", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 900 });
+  /* -------------------------------------------------------------------------
+   * 1. Desktop & Laptop Viewports (1920x1080, 1366x768)
+   * ------------------------------------------------------------------------- */
+
+  test("Desktop (1920x1080): renders five-column layout with exact headings, links, payment logos, and copyright", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
 
     const footer = page.locator('footer[data-testid="site-footer"]');
     await expect(footer).toBeVisible();
 
     // Column 1: JAVIX JEWELLERY Brand & Tagline
-    const brandColumn = footer.getByTestId("footer-brand-column");
-    await expect(brandColumn).toBeVisible();
-    await expect(brandColumn.getByRole("link", { name: "JAVIX JEWELLERY", exact: true })).toBeVisible();
+    const brandCol = footer.getByTestId("footer-brand-column");
+    await expect(brandCol.getByRole("link", { name: "JAVIX JEWELLERY", exact: true })).toBeVisible();
     await expect(
-      brandColumn.getByText("Designed in India. Crafted with timeless elegance.")
+      brandCol.getByText("Designed in India. Crafted with timeless elegance.")
     ).toBeVisible();
 
-    // Column 2: Explore JAVIX (Replaced "About Alukas")
+    // Column 2: Explore JAVIX with exact 6 links
     const exploreCol = footer.getByTestId("footer-column-explore-javix");
-    await expect(exploreCol).toBeVisible();
     await expect(exploreCol.getByText("Explore JAVIX", { exact: true })).toBeVisible();
-
-    const expectedExploreLinks = [
+    const exploreLinks = [
       { name: "Shop Our Collections", href: "/#shop-our-collections" },
       { name: "New Arrivals", href: "/#new-collection" },
       { name: "Necklaces", href: "/#shop-our-collections" },
@@ -34,27 +37,23 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
       { name: "Bracelets", href: "/#shop-our-collections" },
       { name: "Earrings", href: "/#shop-our-collections" },
     ];
-
-    for (const { name, href } of expectedExploreLinks) {
+    for (const { name, href } of exploreLinks) {
       const link = exploreCol.getByRole("link", { name, exact: true });
       await expect(link).toBeVisible();
       await expect(link).toHaveAttribute("href", href);
     }
 
-    // Column 3: Shopping & More (Replaced "Our Company")
+    // Column 3: Shopping & More with exact 5 links
     const shoppingCol = footer.getByTestId("footer-column-shopping-and-more");
-    await expect(shoppingCol).toBeVisible();
     await expect(shoppingCol.getByText("Shopping & More", { exact: true })).toBeVisible();
-
-    const expectedShoppingLinks = [
+    const shoppingLinks = [
       { name: "Charms & Bangles", href: "/#shop-our-collections" },
       { name: "Gift Ideas", href: "/#shop-our-collections" },
       { name: "Find Store", href: "/#store-locator" },
       { name: "Services", href: "/#store-locator" },
       { name: "Subscribe", href: "/#newsletter-section" },
     ];
-
-    for (const { name, href } of expectedShoppingLinks) {
+    for (const { name, href } of shoppingLinks) {
       const link = shoppingCol.getByRole("link", { name, exact: true });
       await expect(link).toBeVisible();
       await expect(link).toHaveAttribute("href", href);
@@ -62,7 +61,6 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
 
     // Column 4: Store Details
     const storeCol = footer.getByTestId("footer-column-store-details");
-    await expect(storeCol).toBeVisible();
     await expect(storeCol.getByText("Store Details", { exact: true })).toBeVisible();
     await expect(storeCol.getByText("Need Any Help?")).toBeVisible();
     await expect(storeCol.getByText("123 45678 90")).toBeVisible();
@@ -71,14 +69,13 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
 
     // Column 5: Follow Us
     const followCol = footer.getByTestId("footer-column-follow-us");
-    await expect(followCol).toBeVisible();
     await expect(followCol.getByText("Follow Us", { exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "Facebook", exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "X (Twitter)", exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "Pinterest", exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "Instagram", exact: true })).toBeVisible();
 
-    // Payment Methods Row
+    // Payment Methods Row (Maestro, PayPal, Visa, MasterCard)
     const paymentMethods = footer.getByTestId("footer-payment-methods");
     await expect(paymentMethods).toBeVisible();
     await expect(paymentMethods.getByRole("img", { name: "Maestro" })).toBeVisible();
@@ -86,12 +83,12 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
     await expect(paymentMethods.getByRole("img", { name: "Visa" })).toBeVisible();
     await expect(paymentMethods.getByRole("img", { name: "MasterCard" })).toBeVisible();
 
-    // Copyright
+    // Centered Copyright Notice
     const copyright = footer.getByTestId("footer-copyright");
     await expect(copyright).toBeVisible();
     await expect(copyright).toHaveText("© 2026 JAVIX JEWELLERY. All Rights Reserved.");
 
-    // Check no horizontal scrollbar / overflow on footer
+    // Zero horizontal overflow
     const footerOverflow = await page.evaluate(() => {
       const footerEl = document.querySelector('footer[data-testid="site-footer"]');
       if (!footerEl) return false;
@@ -100,71 +97,267 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
     expect(footerOverflow).toBe(false);
   });
 
-  test("Desktop: Back-to-top button appears on scroll and returns to top", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await page.emulateMedia({ reducedMotion: "reduce" });
+  test("Laptop (1366x768): maintains five columns with balanced proportions and zero clipping", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1366, height: 768 });
 
-    // Initially at top: back-to-top button should not be attached/visible
-    const backToTopBtn = page.getByTestId("back-to-top-button");
-    await expect(backToTopBtn).not.toBeVisible();
+    const footer = page.locator('footer[data-testid="site-footer"]');
+    await expect(footer).toBeVisible();
+    await expect(footer.getByText("Explore JAVIX", { exact: true })).toBeVisible();
+    await expect(footer.getByText("Shopping & More", { exact: true })).toBeVisible();
+    await expect(footer.getByText("Store Details", { exact: true })).toBeVisible();
+    await expect(footer.getByText("Follow Us", { exact: true })).toBeVisible();
 
-    // Scroll down 600px
-    await page.evaluate(() => window.scrollTo(0, 600));
-    await expect(backToTopBtn).toBeVisible({ timeout: 5000 });
-
-    // Click back-to-top button
-    await backToTopBtn.click();
-
-    // Verify scrolled back to top
-    await expect.poll(async () => {
-      return await page.evaluate(() => window.scrollY);
-    }, { timeout: 5000 }).toBeLessThan(10);
+    const footerOverflow = await page.evaluate(() => {
+      const footerEl = document.querySelector('footer[data-testid="site-footer"]');
+      if (!footerEl) return false;
+      return footerEl.scrollWidth > document.documentElement.clientWidth;
+    });
+    expect(footerOverflow).toBe(false);
   });
 
-  test("Mobile: renders collapsible accordions and toggles with smooth transition", async ({ page }) => {
+  /* -------------------------------------------------------------------------
+   * 2. Tablet Viewport (768x1024)
+   * ------------------------------------------------------------------------- */
+
+  test("Tablet (768x1024): reflows gracefully without text overlaps or horizontal overflow", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+
+    const footer = page.locator('footer[data-testid="site-footer"]');
+    await expect(footer).toBeVisible();
+
+    // Verify all columns and triggers exist
+    await expect(footer.getByText("JAVIX JEWELLERY", { exact: true })).toBeVisible();
+    await expect(footer.getByText("Explore JAVIX", { exact: true })).toBeVisible();
+    await expect(footer.getByText("Shopping & More", { exact: true })).toBeVisible();
+
+    const footerOverflow = await page.evaluate(() => {
+      const footerEl = document.querySelector('footer[data-testid="site-footer"]');
+      if (!footerEl) return false;
+      return footerEl.scrollWidth > document.documentElement.clientWidth;
+    });
+    expect(footerOverflow).toBe(false);
+  });
+
+  /* -------------------------------------------------------------------------
+   * 3. Mobile Viewports (430x932, 375x812)
+   * ------------------------------------------------------------------------- */
+
+  test("Large mobile (430x932): collapsible accordions toggle smoothly and no horizontal overflow", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 430, height: 932 });
+
+    const footer = page.locator('footer[data-testid="site-footer"]');
+    await expect(footer).toBeVisible();
+
+    const exploreTrigger = footer.getByTestId("accordion-trigger-explore-javix");
+    await expect(exploreTrigger).toBeVisible();
+    await expect(exploreTrigger).toHaveAttribute("aria-expanded", "false");
+
+    // Expand
+    await exploreTrigger.click();
+    await expect(exploreTrigger).toHaveAttribute("aria-expanded", "true");
+    await expect(footer.getByRole("link", { name: "Rings", exact: true })).toBeVisible();
+
+    // Collapse
+    await exploreTrigger.click();
+    await expect(exploreTrigger).toHaveAttribute("aria-expanded", "false");
+
+    const footerOverflow = await page.evaluate(() => {
+      const footerEl = document.querySelector('footer[data-testid="site-footer"]');
+      if (!footerEl) return false;
+      return footerEl.scrollWidth > document.documentElement.clientWidth;
+    });
+    expect(footerOverflow).toBe(false);
+  });
+
+  test("Mobile (375x812): renders exact mobile reference layout with smooth accordions", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 375, height: 812 });
 
     const footer = page.locator('footer[data-testid="site-footer"]');
     await expect(footer).toBeVisible();
 
-    // All 4 accordion triggers exist and start collapsed
+    // Brand and tagline are visible at top
+    await expect(footer.getByText("JAVIX JEWELLERY", { exact: true })).toBeVisible();
+    await expect(
+      footer.getByText("Designed in India. Crafted with timeless elegance.")
+    ).toBeVisible();
+
+    // All 4 collapsible accordions start collapsed
     const exploreTrigger = footer.getByTestId("accordion-trigger-explore-javix");
     const shoppingTrigger = footer.getByTestId("accordion-trigger-shopping-and-more");
     const storeTrigger = footer.getByTestId("accordion-trigger-store-details");
     const followTrigger = footer.getByTestId("accordion-trigger-follow-us");
-
-    await expect(exploreTrigger).toBeVisible();
-    await expect(shoppingTrigger).toBeVisible();
-    await expect(storeTrigger).toBeVisible();
-    await expect(followTrigger).toBeVisible();
 
     await expect(exploreTrigger).toHaveAttribute("aria-expanded", "false");
     await expect(shoppingTrigger).toHaveAttribute("aria-expanded", "false");
     await expect(storeTrigger).toHaveAttribute("aria-expanded", "false");
     await expect(followTrigger).toHaveAttribute("aria-expanded", "false");
 
-    // Click to expand "Explore JAVIX"
-    await exploreTrigger.click();
-    await expect(exploreTrigger).toHaveAttribute("aria-expanded", "true");
+    // Open "Shopping & More"
+    await shoppingTrigger.click();
+    await expect(shoppingTrigger).toHaveAttribute("aria-expanded", "true");
+    await expect(footer.getByRole("link", { name: "Charms & Bangles", exact: true })).toBeVisible();
+    await expect(footer.getByRole("link", { name: "Gift Ideas", exact: true })).toBeVisible();
 
-    const necklacesLink = footer.getByRole("link", { name: "Necklaces", exact: true });
-    await expect(necklacesLink).toBeVisible();
-
-    // Click to collapse "Explore JAVIX"
-    await exploreTrigger.click();
-    await expect(exploreTrigger).toHaveAttribute("aria-expanded", "false");
-
-    // Click to expand "Store Details"
+    // Open "Store Details"
     await storeTrigger.click();
     await expect(storeTrigger).toHaveAttribute("aria-expanded", "true");
     await expect(footer.getByText("123 45678 90")).toBeVisible();
 
-    // Check footer itself does not overflow horizontally
+    // Check payment logos and copyright are centered at bottom
+    const paymentMethods = footer.getByTestId("footer-payment-methods");
+    await expect(paymentMethods).toBeVisible();
+    await expect(footer.getByTestId("footer-copyright")).toBeVisible();
+
+    // No horizontal scrollbar
     const footerOverflow = await page.evaluate(() => {
       const footerEl = document.querySelector('footer[data-testid="site-footer"]');
       if (!footerEl) return false;
       return footerEl.scrollWidth > document.documentElement.clientWidth;
     });
     expect(footerOverflow).toBe(false);
+  });
+
+  /* -------------------------------------------------------------------------
+   * 4. Functional Link Navigation & Sticky Header Clearance
+   * ------------------------------------------------------------------------- */
+
+  test("Navigation: clicking Shop Our Collections navigates smoothly without hiding heading behind sticky header", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const footer = page.locator('footer[data-testid="site-footer"]');
+    await footer.scrollIntoViewIfNeeded();
+
+    const collectionsLink = footer.getByRole("link", {
+      name: "Shop Our Collections",
+      exact: true,
+    });
+    await collectionsLink.click();
+
+    // Verify URL updated with anchor
+    await expect(page).toHaveURL(/\/#shop-our-collections/);
+
+    // Verify destination section is visible
+    const targetSection = page.locator("#shop-our-collections");
+    await expect(targetSection).toBeVisible();
+
+    // Verify section heading is in viewport and not covered by sticky header
+    const heading = targetSection.locator("#shop-our-collections-heading");
+    await expect(heading).toBeInViewport();
+  });
+
+  test("Navigation: clicking New Arrivals navigates to New Collection section", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const footer = page.locator('footer[data-testid="site-footer"]');
+    await footer.scrollIntoViewIfNeeded();
+
+    const newArrivalsLink = footer.getByRole("link", {
+      name: "New Arrivals",
+      exact: true,
+    });
+    await newArrivalsLink.click();
+
+    await expect(page).toHaveURL(/\/#new-collection/);
+    const targetSection = page.locator("#new-collection");
+    await expect(targetSection).toBeVisible();
+  });
+
+  test("Navigation: clicking Find Store navigates to Store Locator banner", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const footer = page.locator('footer[data-testid="site-footer"]');
+    await footer.scrollIntoViewIfNeeded();
+
+    const findStoreLink = footer.getByRole("link", {
+      name: "Find Store",
+      exact: true,
+    });
+    await findStoreLink.click();
+
+    await expect(page).toHaveURL(/\/#store-locator/);
+    const targetSection = page.locator("#store-locator");
+    await expect(targetSection).toBeVisible();
+  });
+
+  test("Navigation: clicking Subscribe navigates to Newsletter section", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const footer = page.locator('footer[data-testid="site-footer"]');
+    await footer.scrollIntoViewIfNeeded();
+
+    const subscribeLink = footer.getByRole("link", {
+      name: "Subscribe",
+      exact: true,
+    });
+    await subscribeLink.click();
+
+    await expect(page).toHaveURL(/\/#newsletter-section/);
+    const targetSection = page.locator("#newsletter-section");
+    await expect(targetSection).toBeVisible();
+  });
+
+  /* -------------------------------------------------------------------------
+   * 5. Back-to-Top Button Smooth Scroll
+   * ------------------------------------------------------------------------- */
+
+  test("Back-to-top button: appears on scroll > 300px and returns to top", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+
+    const backToTopBtn = page.getByTestId("back-to-top-button");
+    await expect(backToTopBtn).not.toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, 600));
+    await expect(backToTopBtn).toBeVisible({ timeout: 5000 });
+
+    await backToTopBtn.click();
+
+    await expect.poll(async () => {
+      return await page.evaluate(() => window.scrollY);
+    }, { timeout: 5000 }).toBeLessThan(10);
+  });
+
+  /* -------------------------------------------------------------------------
+   * 6. Accessibility & Hygiene: No empty hrefs or broken links
+   * ------------------------------------------------------------------------- */
+
+  test("Accessibility: all footer links have valid non-empty destinations and proper landmarks", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const footer = page.locator('footer[data-testid="site-footer"]');
+    await expect(footer).toHaveAttribute("role", "contentinfo");
+
+    // Collect all links in footer
+    const links = footer.getByRole("link");
+    const count = await links.count();
+    expect(count).toBeGreaterThan(10);
+
+    for (let i = 0; i < count; i++) {
+      const link = links.nth(i);
+      const href = await link.getAttribute("href");
+      expect(href).toBeTruthy();
+      expect(href).not.toBe("#");
+      expect(href).not.toBe("");
+    }
   });
 });

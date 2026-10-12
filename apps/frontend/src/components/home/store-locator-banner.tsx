@@ -50,7 +50,7 @@ export function StoreLocatorBanner({
       id="store-locator"
       aria-labelledby="store-locator-heading"
       data-testid="store-locator-section"
-      className={`w-full bg-white pb-14 sm:pb-20 lg:pb-24 ${className}`}
+      className={`w-full bg-white pb-14 sm:pb-20 lg:pb-24 scroll-mt-24 sm:scroll-mt-28 ${className}`}
     >
       <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         <div

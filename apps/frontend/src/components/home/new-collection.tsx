@@ -196,7 +196,7 @@ export function NewCollectionSection({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className={`relative w-full overflow-hidden bg-white pt-10 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24 ${className}`}
+      className={`relative w-full overflow-hidden bg-white pt-10 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24 scroll-mt-24 sm:scroll-mt-28 ${className}`}
     >
       <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         {/* 1. SECTION HEADER: Centred heading with flanking horizontal lines and subtitle */}
