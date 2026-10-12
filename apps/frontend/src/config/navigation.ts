@@ -31,9 +31,11 @@ export interface UtilityLinkItem {
 }
 
 export interface UtilityConfig {
-  language: string;
-  currency: string;
-  currencySymbol: string;
+  phone?: string;
+  phoneHref?: string;
+  language?: string;
+  currency?: string;
+  currencySymbol?: string;
   promotion: UtilityPromotionConfig;
   links: UtilityLinkItem[];
 }
@@ -94,6 +96,8 @@ export const defaultNavigationConfig: NavigationConfig = {
     dismissible: true,
   },
   utility: {
+    phone: "+91 98765 43210",
+    phoneHref: "tel:+919876543210",
     language: "English",
     currency: "Rupees (INR)",
     currencySymbol: "₹",

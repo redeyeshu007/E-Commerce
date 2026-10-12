@@ -44,16 +44,15 @@ describe("JAVIX Premium Navbar Component Suite", () => {
   });
 
   describe("Row 2: UtilityBar", () => {
-    it("renders English, Indian Rupee currency symbol ₹ (INR), and Summer Sale promo", () => {
+    it("renders Indian phone number (+91 98765 43210) and Summer Sale promo", () => {
       render(<UtilityBar config={defaultNavigationConfig.utility} />);
 
-      // English (plain text, no dropdown)
-      expect(screen.getByText("English")).toBeInTheDocument();
-
-      // Rupee symbol and currency (never US dollar $)
-      expect(screen.getByText("₹")).toBeInTheDocument();
-      expect(screen.getByText(/Rupees \(INR\)/)).toBeInTheDocument();
-      expect(screen.queryByText("$")).not.toBeInTheDocument();
+      // Indian 10-digit phone number
+      expect(screen.getByText("+91 98765 43210")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "+91 98765 43210" })).toHaveAttribute(
+        "href",
+        "tel:+919876543210"
+      );
 
       // Promo text
       expect(screen.getByText(/Summer Sale 15% off!/)).toBeInTheDocument();
@@ -214,7 +213,7 @@ describe("JAVIX Premium Navbar Component Suite", () => {
       expect(screen.getByText("Get 40% Off for all products.")).toBeInTheDocument();
 
       // Row 2
-      expect(screen.getByText("English")).toBeInTheDocument();
+      expect(screen.getByText("+91 98765 43210")).toBeInTheDocument();
 
       // Row 3
       expect(screen.getByRole("link", { name: /JAVIX Fine Jewellery/ })).toBeInTheDocument();

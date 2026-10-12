@@ -21,10 +21,7 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     // Row 2: Utility Bar
     const utility = page.locator("div[role='region'][aria-label*='Utility navigation']");
     await expect(utility).toBeVisible();
-    await expect(utility).toContainText("English");
-    await expect(utility).toContainText("₹");
-    await expect(utility).toContainText("Rupees (INR)");
-    await expect(utility).not.toContainText("$");
+    await expect(utility).toContainText("+91 98765 43210");
 
     // Row 3: Main Navbar Brand
     const brand = page.locator("a[aria-label*='JAVIX Fine Jewellery']");
@@ -32,16 +29,16 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     await expect(brand).toHaveText("JAVIX");
 
     // Desktop Primary Nav items
-    await expect(page.getByRole("link", { name: "Home", exact: true })).toBeVisible();
-    await expect(page.getByText("Shop", { exact: true })).toBeVisible();
-    await expect(page.getByText("Contact", { exact: true })).toBeVisible();
-    await expect(page.getByText("New Arrivals", { exact: true })).toBeVisible();
+    await expect(header.getByRole("link", { name: "Home", exact: true })).toBeVisible();
+    await expect(header.getByText("Shop", { exact: true })).toBeVisible();
+    await expect(header.getByText("Contact", { exact: true })).toBeVisible();
+    await expect(header.getByText("New Arrivals", { exact: true })).toBeVisible();
 
     // Action buttons visible on desktop
-    await expect(page.getByRole("button", { name: "Search" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Account" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Wishlist", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Cart" }).first()).toBeVisible();
+    await expect(header.getByRole("button", { name: "Search" })).toBeVisible();
+    await expect(header.getByRole("button", { name: "Account" })).toBeVisible();
+    await expect(header.getByRole("button", { name: "Wishlist", exact: true })).toBeVisible();
+    await expect(header.getByRole("button", { name: "Cart" }).first()).toBeVisible();
   });
 
   test("dismisses announcement bar upon clicking close button", async ({ page }) => {

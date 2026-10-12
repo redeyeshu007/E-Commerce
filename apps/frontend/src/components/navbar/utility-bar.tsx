@@ -64,23 +64,21 @@ export function UtilityBar({ config }: UtilityBarProps) {
       <div className="mx-auto flex h-10 lg:h-12 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left group */}
         <div className="flex items-center space-x-4 sm:space-x-5 lg:space-x-6 overflow-x-auto no-scrollbar py-1">
-          {/* 1. Language (English only, static) */}
-          <span className="whitespace-nowrap font-normal text-black">{config.language}</span>
-
-          <span className="h-3 lg:h-3.5 w-px bg-[#E5E5E5]" aria-hidden="true" />
-
-          {/* 2. Currency (₹ Rupees INR only, static) */}
-          <span className="whitespace-nowrap font-normal text-black">
-            <span className="font-sans font-medium">{config.currencySymbol}</span> {config.currency}
-          </span>
+          {/* 1. Indian Phone Number (10 digits) */}
+          <a
+            href={config.phoneHref ?? "tel:+919876543210"}
+            className="whitespace-nowrap font-normal text-black transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+          >
+            {config.phone ?? "+91 98765 43210"}
+          </a>
 
           <span
-            className="hidden h-3 lg:h-3.5 w-px bg-[#E5E5E5] sm:inline-block"
+            className="h-3 lg:h-3.5 w-px bg-[#E5E5E5] inline-block"
             aria-hidden="true"
           />
 
-          {/* 3. Promotional info */}
-          <span className="hidden whitespace-nowrap text-black sm:inline-block">
+          {/* 2. Promotional info */}
+          <span className="whitespace-nowrap text-black inline-block">
             {config.promotion.text}{" "}
             {config.promotion.linkText && (
               <span className="font-semibold text-black transition-opacity hover:underline hover:opacity-75 cursor-pointer">
