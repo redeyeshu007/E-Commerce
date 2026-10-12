@@ -111,14 +111,13 @@ export const defaultNavigationConfig: NavigationConfig = {
     },
     links: [
       {
-        id: "store-location",
-        label: "Store Location",
-        href: "/store-location",
-        isImplemented: false,
+        id: "find-store",
+        label: "Find a Store",
+        href: "/#store-locator",
+        isImplemented: true,
       },
-      { id: "services", label: "Services", href: "/services", isImplemented: false },
-      { id: "subscribe", label: "Subscribe", href: "#subscribe", isImplemented: false },
-      { id: "gift-cards", label: "Gift Cards", href: "/gift-cards", isImplemented: false },
+      { id: "faqs", label: "FAQs", isImplemented: false },
+      { id: "subscribe", label: "Subscribe", href: "/#newsletter-section", isImplemented: true },
     ],
   },
   brand: {

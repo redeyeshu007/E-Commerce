@@ -22,6 +22,27 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     const utility = page.locator("div[role='region'][aria-label*='Utility navigation']");
     await expect(utility).toBeVisible();
     await expect(utility).toContainText("+91 98765 43210");
+    await expect(utility).toContainText("Summer Sale 15% off!");
+
+    // Utility links in exact order: Find a Store, FAQs, Subscribe
+    const utilityLinks = utility.locator("ul[role='list'] li");
+    await expect(utilityLinks).toHaveCount(3);
+    await expect(utilityLinks.nth(0)).toHaveText("Find a Store");
+    await expect(utilityLinks.nth(1)).toHaveText("FAQs");
+    await expect(utilityLinks.nth(2)).toHaveText("Subscribe");
+
+    // Valid destinations for Find a Store and Subscribe
+    await expect(utility.getByRole("link", { name: "Find a Store" })).toHaveAttribute(
+      "href",
+      "/#store-locator"
+    );
+    await expect(utility.getByRole("link", { name: "Subscribe" })).toHaveAttribute(
+      "href",
+      "/#newsletter-section"
+    );
+    // FAQs is static navigation (not a link)
+    await expect(utility.getByRole("link", { name: "FAQs" })).toHaveCount(0);
+    await expect(utility.getByText("FAQs")).toBeVisible();
 
     // Row 3: Main Navbar Brand
     const brand = page.locator("a[aria-label*='PERALAGAE Fine Jewellery']");

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import type { UtilityConfig, UtilityLinkItem } from "@/config/navigation";
@@ -7,10 +9,25 @@ export interface UtilityBarProps {
 }
 
 /**
- * Renders the right-side utility links (Store Location, Services, Subscribe, Gift Cards).
+ * Renders the right-side utility links (Find a Store, FAQs, Subscribe).
  * Handles unimplemented routes gracefully without dead links or broken 404 navigation.
  */
 export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
+  const handleAnchorClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string
+  ) => {
+    if (href.startsWith("/#") && typeof window !== "undefined") {
+      const targetId = href.replace("/#", "");
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        e.preventDefault();
+        targetElement.scrollIntoView({ behavior: "smooth" });
+        window.history.pushState(null, "", href);
+      }
+    }
+  };
+
   return (
     <ul
       className="flex items-center space-x-6 lg:space-x-8 text-xs lg:text-[13px] text-black"
@@ -21,6 +38,7 @@ export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
           {item.isImplemented && item.href ? (
             <Link
               href={item.href}
+              onClick={(e) => handleAnchorClick(e, item.href!)}
               className="text-black transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
             >
               {item.label}
@@ -43,12 +61,11 @@ export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
  * Row Two: Full-width utility information bar.
  *
  * Left group:
- * 1. English (static, no dropdown)
- * 2. ₹ Rupees (INR) (static, no dropdown, Indian rupee symbol strictly)
- * 3. Summer Sale 15% off! Shop Now!
+ * 1. Indian Phone Number (10 digits)
+ * 2. Summer Sale 15% off! Shop Now!
  *
  * Right group:
- * - Store Location, Services, Subscribe, Gift Cards
+ * - Find a Store, FAQs, Subscribe
  *
  * Style:
  * - Clean white background with subtle #E5E5E5 bottom border.

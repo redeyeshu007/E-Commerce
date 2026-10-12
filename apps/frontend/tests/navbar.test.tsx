@@ -59,13 +59,28 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
       expect(screen.getByText("Shop Now!")).toBeInTheDocument();
     });
 
-    it("renders the 4 utility items on the right: Store Location, Services, Subscribe, Gift Cards", () => {
+    it("renders the 3 utility items on the right in exact order: Find a Store, FAQs, Subscribe", () => {
       render(<UtilityBar config={defaultNavigationConfig.utility} />);
 
-      expect(screen.getByText("Store Location")).toBeInTheDocument();
-      expect(screen.getByText("Services")).toBeInTheDocument();
-      expect(screen.getByText("Subscribe")).toBeInTheDocument();
-      expect(screen.getByText("Gift Cards")).toBeInTheDocument();
+      const listItems = screen.getAllByRole("listitem");
+      expect(listItems).toHaveLength(3);
+      expect(listItems[0]).toHaveTextContent("Find a Store");
+      expect(listItems[1]).toHaveTextContent("FAQs");
+      expect(listItems[2]).toHaveTextContent("Subscribe");
+
+      // Find a Store & Subscribe have valid destination links
+      expect(screen.getByRole("link", { name: "Find a Store" })).toHaveAttribute(
+        "href",
+        "/#store-locator"
+      );
+      expect(screen.getByRole("link", { name: "Subscribe" })).toHaveAttribute(
+        "href",
+        "/#newsletter-section"
+      );
+
+      // FAQs is rendered as a static navigation item (no fake route or broken link)
+      expect(screen.queryByRole("link", { name: "FAQs" })).not.toBeInTheDocument();
+      expect(screen.getByText("FAQs")).toBeInTheDocument();
     });
   });
 
