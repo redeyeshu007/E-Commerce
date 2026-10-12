@@ -124,7 +124,7 @@ test.describe("JAVIX New Collection E2E Suite", () => {
     await expect(wishlistBadge).toHaveText("1");
   });
 
-  test("Mobile responsive: renders cleanly on mobile screen without horizontal overflow", async ({
+  test("Mobile responsive: renders 2 cards per row, 4 circular dots, and clean layout matching reference", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 375, height: 667 });
@@ -135,9 +135,39 @@ test.describe("JAVIX New Collection E2E Suite", () => {
     const heading = newCollectionSection.locator("#new-collection-heading");
     await expect(heading).toBeVisible();
 
-    // Verify product card is visible on mobile
+    // Verify side arrows are hidden on mobile
+    const prevBtn = newCollectionSection.getByRole("button", { name: "Previous products" });
+    const nextBtn = newCollectionSection.getByRole("button", { name: "Next products" });
+    await expect(prevBtn).not.toBeVisible();
+    await expect(nextBtn).not.toBeVisible();
+
+    // Verify exactly 4 pagination dots on mobile (8 items / 2 per page)
+    const dots = newCollectionSection.getByRole("tab", { name: /Go to carousel page/i });
+    await expect(dots).toHaveCount(4);
+    await expect(dots.first()).toHaveAttribute("aria-selected", "true");
+
+    // Verify 2 product cards are visible side-by-side on mobile
     const firstProduct = page.getByTestId("product-card-prod-solitaire-pendant");
+    const secondProduct = page.getByTestId("product-card-prod-sculpted-gold-ring");
     await expect(firstProduct).toBeVisible();
+    await expect(secondProduct).toBeVisible();
+
+    const box1 = await firstProduct.boundingBox();
+    const box2 = await secondProduct.boundingBox();
+    expect(box1).not.toBeNull();
+    expect(box2).not.toBeNull();
+    if (box1 && box2) {
+      // Both cards are in the same horizontal row (similar y-coordinate)
+      expect(Math.abs(box1.y - box2.y)).toBeLessThan(10);
+      // Card 2 is to the right of Card 1
+      expect(box2.x).toBeGreaterThan(box1.x);
+    }
+
+    // Verify centered text and INR prices
+    await expect(firstProduct.getByText("NECKLACES")).toBeVisible();
+    await expect(firstProduct.getByText("₹24,999")).toBeVisible();
+    await expect(secondProduct.getByText("RINGS")).toBeVisible();
+    await expect(secondProduct.getByText("₹18,500")).toBeVisible();
 
     // Check no horizontal scrollbar on body
     const scrollWidth = await page.evaluate(() => document.body.scrollWidth);

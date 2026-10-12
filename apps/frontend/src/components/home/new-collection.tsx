@@ -32,6 +32,27 @@ function getReducedMotionServerSnapshot() {
   return false;
 }
 
+function subscribeMobile(callback: () => void) {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return () => {};
+  }
+  const mediaQuery = window.matchMedia("(max-width: 639px)");
+  if (!mediaQuery.addEventListener) return () => {};
+  mediaQuery.addEventListener("change", callback);
+  return () => mediaQuery.removeEventListener("change", callback);
+}
+
+function getMobileSnapshot() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+  return window.matchMedia("(max-width: 639px)").matches;
+}
+
+function getMobileServerSnapshot() {
+  return false;
+}
+
 export interface NewCollectionSectionProps {
   config?: NewCollectionConfig;
   className?: string;
@@ -41,10 +62,10 @@ export interface NewCollectionSectionProps {
  * NewCollectionSection Component — JAVIX JEWELLERY
  *
  * Implements:
- * 1. Centred Section Header with flanking subtle divider lines and subtitle
- * 2. Product Carousel displaying 4 products at a time on desktop (8 configured products across 2 pages)
- * 3. 10-second automatic rotation with pause-on-hover & focus handling
- * 4. Minimalist Previous & Next arrow controls and pagination indicator dots
+ * 1. Centred Section Header with flanking subtle divider lines and subtitle (stacked on mobile)
+ * 2. Product Carousel displaying 2 products on mobile, 4 on desktop
+ * 3. 10-second automatic rotation with pause-on-hover & touch swipe support
+ * 4. Minimalist Previous & Next arrow controls (desktop) and circular pagination dots (matching reference)
  * 5. Full keyboard navigation and reduced-motion compliance
  * 6. Quick View modal integration
  */
@@ -60,23 +81,35 @@ export function NewCollectionSection({
     getReducedMotionSnapshot,
     getReducedMotionServerSnapshot,
   );
+  const isMobile = useSyncExternalStore(
+    subscribeMobile,
+    getMobileSnapshot,
+    getMobileServerSnapshot,
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
   const { products, heading, subtitle, autoRotateIntervalMs = 10000 } = config;
+  const headingWords = heading.split(" ");
+  const firstHeadingPart = headingWords[0] ?? "New";
+  const secondHeadingPart = headingWords.slice(1).join(" ") || "Collection";
 
-  // Chunk products into groups of 4 for desktop 4-per-page display
-  const itemsPerPage = 4;
+  // On mobile (<640px): 2 items per page (4 pages for 8 items, matching reference screenshot)
+  // On tablet & desktop (>=640px): 4 items per page (2 pages for 8 items)
+  const itemsPerPage = isMobile ? 2 : 4;
   const pages = useMemo(() => {
     const chunks: Product[][] = [];
     for (let i = 0; i < products.length; i += itemsPerPage) {
       chunks.push(products.slice(i, i + itemsPerPage));
     }
     return chunks;
-  }, [products]);
+  }, [products, itemsPerPage]);
 
   const totalPages = pages.length;
+  const activePage = currentPage >= totalPages ? 0 : currentPage;
 
   const goToNextPage = useCallback(() => {
     if (totalPages <= 1) return;
@@ -90,7 +123,6 @@ export function NewCollectionSection({
 
   // 10-second automatic rotation timer
   useEffect(() => {
-    // Disable auto-rotation if reduced motion is preferred, only 1 page, or currently paused
     if (reducedMotion || totalPages <= 1 || isPaused) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -116,7 +148,6 @@ export function NewCollectionSection({
   const handleMouseLeave = () => setIsPaused(false);
   const handleFocus = () => setIsPaused(true);
   const handleBlur = (e: React.FocusEvent) => {
-    // Only resume if focus left the entire section container
     if (!containerRef.current?.contains(e.relatedTarget as Node)) {
       setIsPaused(false);
     }
@@ -131,6 +162,27 @@ export function NewCollectionSection({
     }
   };
 
+  // Touch swipe handlers for smooth mobile swiping
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distance = touchStartX.current - touchEndX.current;
+    if (distance > 45) {
+      goToNextPage();
+    } else if (distance < -45) {
+      goToPrevPage();
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
   return (
     <section
       ref={containerRef}
@@ -140,56 +192,62 @@ export function NewCollectionSection({
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
-      className={`relative w-full overflow-hidden bg-white pt-12 sm:pt-16 lg:pt-20 pb-16 sm:pb-20 lg:pb-24 ${className}`}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className={`relative w-full overflow-hidden bg-white pt-10 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24 ${className}`}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         {/* 1. SECTION HEADER: Centred heading with flanking horizontal lines and subtitle */}
-        <div className="flex flex-col items-center justify-center text-center mb-10 sm:mb-12 lg:mb-14">
-          <div className="flex items-center justify-center w-full gap-4 sm:gap-6">
+        <div className="flex flex-col items-center justify-center text-center mb-7 sm:mb-12 lg:mb-14">
+          <div className="flex items-center justify-center w-full gap-3 sm:gap-6">
             <span
-              className="h-[1px] w-12 sm:w-20 lg:w-28 bg-[#D8D8D8]"
+              className="h-[1px] w-8 sm:w-20 lg:w-28 bg-[#D8D8D8]"
               aria-hidden="true"
             />
             <h2
               id="new-collection-heading"
-              className="text-2xl sm:text-3xl lg:text-[32px] font-normal tracking-[-0.01em] text-[#111111] leading-tight px-2 whitespace-nowrap"
+              className="text-2xl sm:text-3xl lg:text-[32px] font-normal tracking-[-0.01em] text-[#111111] leading-[1.2] px-2 text-center"
             >
-              {heading}
+              <span className="block sm:inline">{firstHeadingPart} </span>
+              {headingWords.length > 1 && (
+                <span className="block sm:inline">{secondHeadingPart}</span>
+              )}
             </h2>
             <span
-              className="h-[1px] w-12 sm:w-20 lg:w-28 bg-[#D8D8D8]"
+              className="h-[1px] w-8 sm:w-20 lg:w-28 bg-[#D8D8D8]"
               aria-hidden="true"
             />
           </div>
 
           {subtitle && (
-            <p className="mt-2.5 text-xs sm:text-sm text-[#666666] font-normal tracking-normal max-w-md">
-              {subtitle}
+            <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm text-[#666666] font-normal tracking-normal max-w-[280px] sm:max-w-md mx-auto text-center leading-relaxed">
+              Collect your loves with our newest<br className="sm:hidden" /> arrivals.
             </p>
           )}
         </div>
 
         {/* 2. PRODUCT CAROUSEL WRAPPER WITH NAVIGATION ARROWS */}
         <div className="relative group/carousel">
-          {/* Previous Arrow Button */}
+          {/* Previous Arrow Button (Desktop & Tablet) */}
           {totalPages > 1 && (
             <button
               type="button"
               onClick={goToPrevPage}
               aria-label="Previous products"
-              className="absolute left-1 sm:-left-5 lg:-left-6 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-white text-[#222222] shadow-md border border-neutral-100 transition-all duration-200 hover:bg-black hover:text-white hover:border-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              className="hidden sm:flex absolute -left-3 sm:-left-5 lg:-left-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-white text-[#222222] shadow-md border border-neutral-100 transition-all duration-200 hover:bg-black hover:text-white hover:border-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             >
               <ChevronLeft className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
             </button>
           )}
 
-          {/* Next Arrow Button */}
+          {/* Next Arrow Button (Desktop & Tablet) */}
           {totalPages > 1 && (
             <button
               type="button"
               onClick={goToNextPage}
               aria-label="Next products"
-              className="absolute right-1 sm:-right-5 lg:-right-6 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-white text-[#222222] shadow-md border border-neutral-100 transition-all duration-200 hover:bg-black hover:text-white hover:border-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              className="hidden sm:flex absolute -right-3 sm:-right-5 lg:-right-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-white text-[#222222] shadow-md border border-neutral-100 transition-all duration-200 hover:bg-black hover:text-white hover:border-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             >
               <ChevronRight className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
             </button>
@@ -201,15 +259,15 @@ export function NewCollectionSection({
               className={`flex ${
                 reducedMotion ? "" : "transition-transform duration-700 ease-in-out"
               }`}
-              style={{ transform: `translateX(-${currentPage * 100}%)` }}
+              style={{ transform: `translateX(-${activePage * 100}%)` }}
             >
               {pages.map((pageProducts, pageIdx) => (
                 <div
                   key={`page-${pageIdx}`}
                   className="w-full shrink-0"
-                  aria-hidden={pageIdx !== currentPage}
+                  aria-hidden={pageIdx !== activePage}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
                     {pageProducts.map((product) => (
                       <ProductCard
                         key={product.id}
@@ -224,10 +282,10 @@ export function NewCollectionSection({
           </div>
         </div>
 
-        {/* 3. PAGINATION DOTS */}
+        {/* 3. PAGINATION DOTS: Clean circular indicators matching reference */}
         {totalPages > 1 && (
           <div
-            className="flex items-center justify-center gap-2 mt-8 sm:mt-10"
+            className="flex items-center justify-center gap-2 sm:gap-2.5 mt-7 sm:mt-10"
             role="tablist"
             aria-label="Product carousel pages"
           >
@@ -236,13 +294,13 @@ export function NewCollectionSection({
                 key={`dot-${idx}`}
                 type="button"
                 role="tab"
-                aria-selected={idx === currentPage}
+                aria-selected={idx === activePage}
                 aria-label={`Go to carousel page ${idx + 1}`}
                 onClick={() => setCurrentPage(idx)}
-                className={`transition-all duration-300 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-                  idx === currentPage
-                    ? "w-6 h-1.5 bg-[#111111]"
-                    : "w-1.5 h-1.5 bg-[#D1D5DB] hover:bg-[#9CA3AF]"
+                className={`h-2 w-2 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
+                  idx === activePage
+                    ? "bg-[#222222] border border-[#222222]"
+                    : "bg-white border border-[#888888] hover:border-black"
                 }`}
               />
             ))}

@@ -95,19 +95,19 @@ export function ProductCard({ product, className = "", onQuickView }: ProductCar
         </Link>
 
         {/* Action Controls: Vertically stacked circular white buttons on upper-right */}
-        <div className="absolute top-3 right-3 z-20 flex flex-col gap-2 opacity-100 sm:opacity-0 sm:translate-x-2 sm:group-hover:opacity-100 sm:group-hover:translate-x-0 transition-all duration-300">
+        <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-20 flex flex-col gap-1.5 sm:gap-2 opacity-0 sm:translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 focus-within:opacity-100 transition-all duration-300">
           {/* Wishlist Button */}
           <button
             type="button"
             onClick={handleWishlistClick}
             aria-label={isFavorite ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
             aria-pressed={isFavorite}
-            className={`flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
+            className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white shadow-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
               isFavorite ? "text-[#D9383A]" : "text-[#222222] hover:text-[#D9383A]"
             }`}
           >
             <Heart
-              className={`h-4 w-4 ${isFavorite ? "fill-[#D9383A]" : ""}`}
+              className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isFavorite ? "fill-[#D9383A]" : ""}`}
               strokeWidth={1.75}
               aria-hidden="true"
             />
@@ -118,19 +118,19 @@ export function ProductCard({ product, className = "", onQuickView }: ProductCar
             type="button"
             onClick={handleQuickViewClick}
             aria-label={`Quick view ${product.name}`}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#222222] shadow-md transition-colors duration-200 hover:text-black hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+            className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white text-[#222222] shadow-md transition-colors duration-200 hover:text-black hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
           >
-            <Eye className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
 
         {/* Slide-Up Add to Cart Bar */}
-        <div className="absolute bottom-0 inset-x-0 z-20 translate-y-0 sm:translate-y-full sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 transition-all duration-300">
+        <div className="absolute bottom-0 inset-x-0 z-20 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 focus-within:translate-y-0 focus-within:opacity-100 transition-all duration-300">
           <button
             type="button"
             onClick={handleAddToCartClick}
             aria-label={`Add ${product.name} to cart`}
-            className={`w-full py-2.5 px-4 text-xs font-semibold tracking-[0.08em] uppercase transition-colors duration-200 flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
+            className={`w-full py-2 sm:py-2.5 px-3 sm:px-4 text-[11px] sm:text-xs font-semibold tracking-[0.08em] uppercase transition-colors duration-200 flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
               justAdded
                 ? "bg-[#111111] text-white"
                 : "bg-white/95 text-[#111111] hover:bg-[#111111] hover:text-white border-t border-[#E5E7EB]"
@@ -148,15 +148,15 @@ export function ProductCard({ product, className = "", onQuickView }: ProductCar
         </div>
       </div>
 
-      {/* 2. Text Details Underneath Image */}
-      <div className="flex flex-col pt-3 pb-1 text-left">
+      {/* 2. Text Details Underneath Image — Optically centered matching reference */}
+      <div className="flex flex-col pt-2.5 sm:pt-3 pb-1 text-center items-center">
         {/* Category Label */}
-        <span className="text-[11px] sm:text-xs font-medium uppercase tracking-[0.08em] text-[#777777] mb-1">
+        <span className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.08em] text-[#777777] mb-1">
           {product.category}
         </span>
 
         {/* Product Name */}
-        <h3 className="text-xs sm:text-[13.5px] font-normal text-[#111111] leading-snug line-clamp-1 mb-1">
+        <h3 className="text-xs sm:text-[13.5px] font-normal text-[#111111] leading-snug line-clamp-1 truncate mb-1 max-w-full px-1">
           <Link
             href={`/product/${product.slug}`}
             className="hover:underline transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
@@ -166,12 +166,12 @@ export function ProductCard({ product, className = "", onQuickView }: ProductCar
         </h3>
 
         {/* Indian Rupee Price */}
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-0.5">
           <span className="text-xs sm:text-sm font-semibold text-[#111111]">
             {formatInr(product.priceInr)}
           </span>
           {product.compareAtPriceInr && (
-            <span className="text-xs text-[#888888] line-through font-normal">
+            <span className="text-[11px] sm:text-xs text-[#888888] line-through font-normal">
               {formatInr(product.compareAtPriceInr)}
             </span>
           )}
