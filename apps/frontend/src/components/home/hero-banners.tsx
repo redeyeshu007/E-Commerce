@@ -145,7 +145,7 @@ export interface HeroBannersProps {
 }
 
 /**
- * JAVIX JEWELLERY Hero & Promotional Banner Section
+ * PERALAGAE Hero & Promotional Banner Section
  *
  * Implements a 2-column desktop composition:
  * - Left column: One large vertically-oriented promotional banner spanning full height.

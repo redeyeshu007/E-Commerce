@@ -15,7 +15,7 @@ export interface ProductCardProps {
 }
 
 /**
- * ProductCard Component — JAVIX JEWELLERY
+ * ProductCard Component — PERALAGAE
  *
  * Implements the luxury jewellery catalogue card matching the reference:
  * - Square image container on uniform light-grey studio background (#F2F2F2)

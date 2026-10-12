@@ -27,7 +27,7 @@ export interface StoreLocatorBannerProps {
 }
 
 /**
- * StoreLocatorBanner Component — JAVIX JEWELLERY
+ * StoreLocatorBanner Component — PERALAGAE
  *
  * Implements the "Find Jewelry Shops Near You" spacious horizontal banner
  * positioned directly below the New Collection carousel.

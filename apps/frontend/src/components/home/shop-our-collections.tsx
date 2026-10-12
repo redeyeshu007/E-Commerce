@@ -89,7 +89,7 @@ export interface ShopOurCollectionsProps {
 }
 
 /**
- * JAVIX JEWELLERY "Shop Our Collections" Section
+ * PERALAGAE "Shop Our Collections" Section
  *
  * Appears immediately below the three promotional hero banners.
  * Renders:

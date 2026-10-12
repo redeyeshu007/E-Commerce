@@ -19,7 +19,7 @@ const DEFAULT_CURRENCIES = ["$ Dollar (US)", "₹ Rupees (INR)", "€ Euro (EUR)
  *
  * Implements:
  * - Silky smooth slide-in and slide-out transitions with backdrop fade.
- * - Top Header: Brand Wordmark (JAVIX) + Close 'X' button with light neutral background.
+ * - Top Header: Brand Wordmark (PERALAGAE) + Close 'X' button with light neutral background.
  * - Tabs Bar: 'MENU' and 'CATEGORIES' with solid black indicator underline for active tab.
  * - Tab 1 (MENU): Shows the exact primary navbar links (Home, Shop, Contact, New Arrivals).
  * - Tab 2 (CATEGORIES): Categories list (New Products, Today On Sale, Special Offer!, Necklaces, Rings, Bracelets, Earnings, Charm & Dangles, Watches, Gift Ideas).

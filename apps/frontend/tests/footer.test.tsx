@@ -9,7 +9,7 @@ import {
 } from "@/components/layout/footer";
 import { defaultFooterConfig } from "@/config/footer";
 
-describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
+describe("PERALAGAE Footer Unit Test Suite", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.scrollTo = vi.fn();
@@ -28,10 +28,10 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
       expect(footer).toHaveAttribute("data-testid", "site-footer");
     });
 
-    it("renders Column 1: JAVIX JEWELLERY brand name and approved tagline", () => {
+    it("renders Column 1: PERALAGAE brand name and approved tagline", () => {
       render(<SiteFooter />);
 
-      const brandLink = screen.getByRole("link", { name: /^JAVIX JEWELLERY$/i });
+      const brandLink = screen.getByRole("link", { name: /^PERALAGAE$/i });
       expect(brandLink).toBeInTheDocument();
       expect(brandLink).toHaveAttribute("href", "/");
 
@@ -40,10 +40,10 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
       ).toBeInTheDocument();
     });
 
-    it("renders Column 2: Explore JAVIX with exact 6 links", () => {
+    it("renders Column 2: Explore Peralagae with exact 6 links", () => {
       render(<SiteFooter />);
 
-      const exploreHeading = screen.getByText("Explore JAVIX");
+      const exploreHeading = screen.getByText("Explore Peralagae");
       expect(exploreHeading).toBeInTheDocument();
 
       const expectedLinks = [
@@ -94,7 +94,7 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
       expect(
         screen.getByText(/502 New Design Str, Melbourne, Australia/i)
       ).toBeInTheDocument();
-      expect(screen.getByText("contact@javixjewellery.com")).toBeInTheDocument();
+      expect(screen.getByText("contact@peralagae.com")).toBeInTheDocument();
     });
 
     it("renders Column 5: Follow Us with social media links", () => {
@@ -127,7 +127,7 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
       const copyright = screen.getByTestId("footer-copyright");
       expect(copyright).toBeInTheDocument();
       expect(copyright).toHaveTextContent(
-        "© 2026 JAVIX JEWELLERY. All Rights Reserved."
+        "© 2026 PERALAGAE. All Rights Reserved."
       );
     });
 
@@ -177,7 +177,7 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
       mockElement.scrollIntoView = vi.fn();
       document.body.appendChild(mockElement);
 
-      const column = defaultFooterConfig.exploreJavix;
+      const column = defaultFooterConfig.explorePeralagae;
       render(<FooterLinkGroup column={column} />);
 
       const necklacesLink = screen.getByRole("link", { name: "Necklaces" });

@@ -13,11 +13,11 @@ describe("LuxuryPreloader Component", () => {
     vi.useRealTimers();
   });
 
-  it("renders with role='status' and aria-label='JAVIX JEWELLERY'", () => {
+  it("renders with role='status' and aria-label='PERALAGAE'", () => {
     render(<LuxuryPreloader />);
     const preloader = screen.getByRole("status");
     expect(preloader).toBeInTheDocument();
-    expect(preloader).toHaveAttribute("aria-label", "JAVIX JEWELLERY");
+    expect(preloader).toHaveAttribute("aria-label", "PERALAGAE");
   });
 
   it("defaults to pure white background with black text and supports dark theme", () => {
@@ -31,11 +31,11 @@ describe("LuxuryPreloader Component", () => {
     expect(darkPreloader).toHaveStyle({ backgroundColor: "#000000" });
   });
 
-  it("initializes with Javix text in the morphing element", () => {
+  it("initializes with Peralagae text in the morphing element", () => {
     const { container } = render(<LuxuryPreloader />);
     const spans = container.querySelectorAll("span");
     const spanTexts = Array.from(spans).map((s) => s.textContent);
-    expect(spanTexts).toContain("Javix");
+    expect(spanTexts).toContain("Peralagae");
   });
 
   it("includes the threshold SVG filter for liquid morphing", () => {

@@ -62,7 +62,7 @@ describe("Newsletter Signup Suite", () => {
     it("invokes onSubscribe service and handles genuine success", async () => {
       const mockService = vi.fn().mockResolvedValue({
         success: true,
-        message: "Welcome to JAVIX! Check your inbox for exclusive updates.",
+        message: "Welcome to PERALAGAE! Check your inbox for exclusive updates.",
       });
 
       render(<NewsletterSignupForm onSubscribe={mockService} />);
@@ -79,7 +79,7 @@ describe("Newsletter Signup Suite", () => {
 
       const successMsg = await screen.findByTestId("newsletter-success-message");
       expect(successMsg).toHaveTextContent(
-        "Welcome to JAVIX! Check your inbox for exclusive updates."
+        "Welcome to PERALAGAE! Check your inbox for exclusive updates."
       );
     });
 

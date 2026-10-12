@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import { HeroBanners, OutlineButton, BannerCard } from "@/components/home/hero-banners";
 import { defaultHeroBannersConfig, type HeroBannersConfig } from "@/config/hero-banners";
 
-describe("JAVIX Hero & Promotional Banners Component Suite", () => {
+describe("PERALAGAE Hero & Promotional Banners Component Suite", () => {
   describe("OutlineButton", () => {
     it("renders rectangular outline button with correct label, href, and styling classes", () => {
       render(<OutlineButton label="Shop Now" href="/category/necklaces" />);
@@ -37,7 +37,7 @@ describe("JAVIX Hero & Promotional Banners Component Suite", () => {
 
       // Image
       const image = screen.getByRole("img");
-      expect(image).toHaveAttribute("alt", "Necklaces & Body Jewels - JAVIX JEWELLERY");
+      expect(image).toHaveAttribute("alt", "Necklaces & Body Jewels - PERALAGAE");
     });
 
     it("renders secondary banner card with h3, subheading, and gracefully handles omitted description", () => {

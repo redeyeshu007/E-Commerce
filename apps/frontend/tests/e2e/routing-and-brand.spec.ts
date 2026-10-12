@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Test C & E: Routing, Brand Identity & Page Rendering", () => {
-  test("displays brand tab title in Title Case (no full uppercase) and points to J monogram favicon", async ({
+  test("displays brand tab title in Title Case (no full uppercase) and points to P monogram favicon", async ({
     page,
   }) => {
     await page.goto("/");
@@ -9,13 +9,13 @@ test.describe("Test C & E: Routing, Brand Identity & Page Rendering", () => {
     // Wait for initial preloader to finish
     await expect(page.getByRole("status")).not.toBeAttached({ timeout: 5000 });
 
-    // Verify settled document title is "Javix Jewellery" (Title Case, NOT full uppercase)
-    await expect(page).toHaveTitle(/Javix Jewellery/);
+    // Verify settled document title is "Peralagae Jewellery" (Title Case, NOT full uppercase)
+    await expect(page).toHaveTitle(/Peralagae Jewellery/);
     const title = await page.title();
-    expect(title).not.toBe("JAVIX JEWELLERY");
-    expect(title).not.toBe("JAVIX");
+    expect(title).not.toBe("PERALAGAE JEWELLERY");
+    expect(title).not.toBe("PERALAGAE");
 
-    // Verify favicon link points to J monogram SVG icon
+    // Verify favicon link points to P monogram SVG icon
     const iconLink = page.locator("link[rel*='icon']").first();
     await expect(iconLink).toBeAttached();
     const href = await iconLink.getAttribute("href");
@@ -38,7 +38,7 @@ test.describe("Test C & E: Routing, Brand Identity & Page Rendering", () => {
     const metaDescription = page.locator('meta[name="description"]');
     await expect(metaDescription).toHaveAttribute(
       "content",
-      "Javix Jewellery — Luxury Gold & Fine Jewellery",
+      "PERALAGAE — Luxury Gold & Fine Jewellery. Designed in India. Crafted with timeless elegance.",
     );
   });
 });

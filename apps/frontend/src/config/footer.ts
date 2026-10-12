@@ -1,16 +1,16 @@
 /**
- * Footer Configuration — JAVIX JEWELLERY
+ * Footer Configuration — PERALAGAE
  *
  * Configuration-driven architecture for the five-column luxury footer.
  * Faithfully mirrors the reference proportions and layout:
- * - Column 1: JAVIX JEWELLERY brand wordmark & tagline
- * - Column 2: Explore JAVIX (Shop Our Collections, New Arrivals, Necklaces, Rings, Bracelets, Earrings)
+ * - Column 1: PERALAGAE brand wordmark & tagline
+ * - Column 2: Explore Peralagae (Shop Our Collections, New Arrivals, Necklaces, Rings, Bracelets, Earrings)
  * - Column 3: Shopping & More (Charms & Bangles, Gift Ideas, Find Store, Services, Subscribe)
  * - Column 4: Store Details (Need Any Help?, phone, address, email)
  * - Column 5: Follow Us (social links)
  * - Divider line
  * - Payment method logos row (Maestro, PayPal, Visa, MasterCard)
- * - Centered copyright text
+ * - Centered copyright text: © 2026 PERALAGAE. All Rights Reserved.
  * - Bottom-right back-to-top button
  */
 
@@ -59,7 +59,9 @@ export interface FooterConfig {
     tagline: string;
     href: string;
   };
-  exploreJavix: FooterColumnConfig;
+  explorePeralagae: FooterColumnConfig;
+  /** Backwards-compatible alias for explorePeralagae */
+  exploreJavix?: FooterColumnConfig;
   shoppingAndMore: FooterColumnConfig;
   storeDetails: StoreDetailsConfig;
   followUs: FollowUsConfig;
@@ -74,24 +76,27 @@ export interface FooterConfig {
   paymentMethods: PaymentMethodItem[];
 }
 
+const explorePeralagaeColumn: FooterColumnConfig = {
+  id: "explore-peralagae",
+  title: "Explore Peralagae",
+  links: [
+    { id: "explore-collections", label: "Shop Our Collections", href: "/#shop-our-collections" },
+    { id: "explore-new-arrivals", label: "New Arrivals", href: "/#new-collection" },
+    { id: "explore-necklaces", label: "Necklaces", href: "/#shop-our-collections" },
+    { id: "explore-rings", label: "Rings", href: "/#shop-our-collections" },
+    { id: "explore-bracelets", label: "Bracelets", href: "/#shop-our-collections" },
+    { id: "explore-earrings", label: "Earrings", href: "/#shop-our-collections" },
+  ],
+};
+
 export const defaultFooterConfig: FooterConfig = {
   brand: {
-    name: "JAVIX JEWELLERY",
+    name: "PERALAGAE",
     tagline: "Designed in India. Crafted with timeless elegance.",
     href: "/",
   },
-  exploreJavix: {
-    id: "explore-javix",
-    title: "Explore JAVIX",
-    links: [
-      { id: "explore-collections", label: "Shop Our Collections", href: "/#shop-our-collections" },
-      { id: "explore-new-arrivals", label: "New Arrivals", href: "/#new-collection" },
-      { id: "explore-necklaces", label: "Necklaces", href: "/#shop-our-collections" },
-      { id: "explore-rings", label: "Rings", href: "/#shop-our-collections" },
-      { id: "explore-bracelets", label: "Bracelets", href: "/#shop-our-collections" },
-      { id: "explore-earrings", label: "Earrings", href: "/#shop-our-collections" },
-    ],
-  },
+  explorePeralagae: explorePeralagaeColumn,
+  exploreJavix: explorePeralagaeColumn,
   shoppingAndMore: {
     id: "shopping-and-more",
     title: "Shopping & More",
@@ -109,7 +114,7 @@ export const defaultFooterConfig: FooterConfig = {
     phone: "123 45678 90",
     phoneHref: "tel:+11234567890",
     address: "502 New Design Str, Melbourne, Australia",
-    email: "contact@javixjewellery.com",
+    email: "contact@peralagae.com",
   },
   followUs: {
     title: "Follow Us",
@@ -122,7 +127,7 @@ export const defaultFooterConfig: FooterConfig = {
   },
   copyright: {
     year: 2026,
-    brandName: "JAVIX JEWELLERY",
+    brandName: "PERALAGAE",
     rightsText: "All Rights Reserved.",
   },
   backToTop: {

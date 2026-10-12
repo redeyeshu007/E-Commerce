@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 export interface AnimatedTabTitleProps {
   /**
    * Final settled brand title to display in the tab.
-   * Defaults to "Javix Jewellery" (clean Title Case, no all-caps).
+   * Defaults to "Peralagae Jewellery" (clean Title Case, no all-caps).
    */
   baseTitle?: string;
   /**
@@ -18,18 +18,18 @@ export interface AnimatedTabTitleProps {
   intervalMs?: number;
 }
 
-const DEFAULT_FRAMES = ["Javix", "Javix ⟡ Jewellery", "Javix Jewellery"];
+const DEFAULT_FRAMES = ["Peralagae", "Peralagae ⟡ Jewellery", "Peralagae Jewellery"];
 
 /**
  * AnimatedTabTitle
  *
  * Drives both the browser tab title and tab favicon:
- * 1. Favicon: Ensures the tab icon is a luxury black disc with the "J" monogram (never the Next.js "N" logo).
- * 2. Title: Elegant Title Case ("Javix Jewellery") — no full uppercase.
- * 3. Graceful settlement: Settles on crisp static "J" icon and "Javix Jewellery".
+ * 1. Favicon: Ensures the tab icon is a luxury black disc with the "P" monogram (never the Next.js "N" logo).
+ * 2. Title: Elegant Title Case ("Peralagae Jewellery") — no full uppercase.
+ * 3. Graceful settlement: Settles on crisp static "P" icon and "Peralagae Jewellery".
  */
 export function AnimatedTabTitle({
-  baseTitle = "Javix Jewellery",
+  baseTitle = "Peralagae Jewellery",
   frames = DEFAULT_FRAMES,
   intervalMs = 800,
 }: AnimatedTabTitleProps) {

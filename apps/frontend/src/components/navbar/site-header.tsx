@@ -15,17 +15,17 @@ export interface SiteHeaderProps {
 }
 
 /**
- * Top-Level Storefront Header for JAVIX JEWELLERY.
+ * Top-Level Storefront Header for PERALAGAE.
  *
- * Reproduces the Alukas & Co reference design across desktop and mobile:
+ * Reproduces the luxury header reference design across desktop and mobile:
  *
  * Desktop:
  * 1. Announcement Bar — Soft pastel pink promotional banner (#FBC0CE) with centered text and dismiss X.
- * 2. Utility Bar — Top utility bar with English, ₹ Rupees (INR), promotional callout, and utility links.
- * 3. Main Navigation Bar — Left: "JAVIX", Centre: Home / Shop / Contact / New Arrivals, Right: Search / Account / Wishlist / Cart.
+ * 2. Utility Bar — Top utility bar with contact number, promotional callout, and utility links.
+ * 3. Main Navigation Bar — Left: "PERALAGAE", Centre: Home / Shop / Contact / New Arrivals, Right: Search / Account / Wishlist / Cart.
  *
  * Mobile:
- * 1. Top Navbar — Left: Hamburger Menu, Centre: "JAVIX" (centered), Right: Shopping Cart with "0" badge.
+ * 1. Top Navbar — Left: Hamburger Menu, Centre: "PERALAGAE" (centered), Right: Shopping Cart with "0" badge.
  * 2. Bottom Sticky Navigation Bar — Fixed at bottom with HOME, SEARCH, WISHLIST (with "0" badge), and ACCOUNT.
  */
 export function SiteHeader({ config = defaultNavigationConfig, className = "" }: SiteHeaderProps) {

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("JAVIX Instagram Gallery and Newsletter Sections E2E Suite", () => {
+test.describe("PERALAGAE Instagram Gallery and Newsletter Sections E2E Suite", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Wait for preloader to complete
@@ -53,7 +53,7 @@ test.describe("JAVIX Instagram Gallery and Newsletter Sections E2E Suite", () =>
     await expect(igHeading).toHaveText("Follow Us on Instagram");
 
     const igHandle = instagramSection.getByTestId("instagram-handle-text");
-    await expect(igHandle).toHaveText("@yourjavixhandle");
+    await expect(igHandle).toHaveText("@peralagaeofficial");
 
     // Exactly 6 images rendered in gallery
     const igImages = instagramSection.getByRole("img");

@@ -1,5 +1,5 @@
 /**
- * Product Data Model — JAVIX JEWELLERY
+ * Product Data Model — PERALAGAE
  *
  * Defines strongly-typed product schemas used across product cards,
  * carousels, quick-view dialogs, cart, and wishlist operations.

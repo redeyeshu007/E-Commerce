@@ -59,7 +59,7 @@ export interface NewCollectionSectionProps {
 }
 
 /**
- * NewCollectionSection Component — JAVIX JEWELLERY
+ * NewCollectionSection Component — PERALAGAE
  *
  * Implements:
  * 1. Centred Section Header with flanking subtle divider lines and subtitle (stacked on mobile)

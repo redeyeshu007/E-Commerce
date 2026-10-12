@@ -40,7 +40,7 @@ export interface AppLoaderProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * JAVIX JEWELLERY Centralized Reusable Loader
+ * PERALAGAE Centralized Reusable Loader
  *
  * Implements accessible, scoped loading states across inline, section,
  * and page scopes while preserving the supplied Aaron Iker geometric animation.

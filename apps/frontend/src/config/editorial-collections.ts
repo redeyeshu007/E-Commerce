@@ -1,5 +1,5 @@
 /**
- * Editorial Collections Section Configuration — JAVIX JEWELLERY
+ * Editorial Collections Section Configuration — PERALAGAE
  *
  * Configurable metadata, copywriting, lifestyle imagery, and destination routes
  * for the premium 3-card editorial collection campaign section.
@@ -39,7 +39,7 @@ export interface EditorialCollectionsSectionConfig {
 }
 
 /**
- * Approved configuration for JAVIX JEWELLERY Editorial Collections section.
+ * Approved configuration for PERALAGAE Editorial Collections section.
  * Faithful reproduction of the brand tagline and 3 collection cards.
  */
 export const defaultEditorialCollectionsConfig: EditorialCollectionsSectionConfig = {

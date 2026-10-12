@@ -1,5 +1,5 @@
 /**
- * Store Locator Banner Configuration — JAVIX JEWELLERY
+ * Store Locator Banner Configuration — PERALAGAE
  *
  * Configurable settings for the "Find Jewelry Shops Near You" horizontal banner.
  * Allows easy destination updates and content localization without code refactoring.
@@ -39,7 +39,7 @@ export interface StoreLocatorBannerConfig {
 
   /**
    * Foreground text, icon, and button border hex color.
-   * Dark charcoal matching JAVIX editorial palette.
+   * Dark charcoal matching PERALAGAE editorial palette.
    * Default: "#111111"
    */
   textColor: string;
@@ -58,7 +58,7 @@ export interface StoreLocatorBannerConfig {
 }
 
 /**
- * Approved default configuration for JAVIX JEWELLERY Store Locator Banner.
+ * Approved default configuration for PERALAGAE Store Locator Banner.
  */
 export const defaultStoreLocatorConfig: StoreLocatorBannerConfig = {
   heading: "Find Jewelry Shops Near You",

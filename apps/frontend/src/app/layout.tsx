@@ -6,6 +6,7 @@ import { LuxuryPreloader } from "@/components/shared/luxury-preloader";
 import { AnimatedTabTitle } from "@/components/shared/animated-tab-title";
 import { SiteHeader } from "@/components/navbar/site-header";
 import { SiteFooter } from "@/components/layout/footer";
+import { brandConfig } from "@/config/brand";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,10 +23,22 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Javix Jewellery",
-    template: "%s | Javix Jewellery",
+    default: brandConfig.metaTitle,
+    template: `%s | ${brandConfig.metaTitle}`,
   },
-  description: "Javix Jewellery — Luxury Gold & Fine Jewellery",
+  description: brandConfig.metaDescription,
+  openGraph: {
+    title: `${brandConfig.name} — Luxury Gold & Fine Jewellery`,
+    description: brandConfig.tagline,
+    siteName: brandConfig.name,
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${brandConfig.name} — Luxury Gold & Fine Jewellery`,
+    description: brandConfig.tagline,
+  },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
@@ -49,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-full flex flex-col bg-white text-black">
         <Providers>
-          <AnimatedTabTitle baseTitle="Javix Jewellery" />
+          <AnimatedTabTitle baseTitle={brandConfig.metaTitle} />
           <LuxuryPreloader />
           <SiteHeader />
           {children}

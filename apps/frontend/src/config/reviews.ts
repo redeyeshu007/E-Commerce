@@ -1,5 +1,5 @@
 /**
- * Customer Reviews Configuration — JAVIX JEWELLERY
+ * Customer Reviews Configuration — PERALAGAE
  *
  * Typed configuration and sample review fixtures for the Customer Reviews
  * carousel section.

@@ -1,5 +1,5 @@
 /**
- * New Collection Configuration — JAVIX JEWELLERY
+ * New Collection Configuration — PERALAGAE
  *
  * Strongly typed configuration for the New Collection carousel section.
  * Configures the heading, subtitle, auto-rotate interval, and the eight

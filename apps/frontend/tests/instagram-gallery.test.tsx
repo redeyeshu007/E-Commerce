@@ -27,12 +27,12 @@ describe("Instagram Gallery Suite", () => {
       render(
         <InstagramGalleryItemCard
           item={item}
-          profileUrl="https://instagram.com/javixjewellery"
+          profileUrl="https://instagram.com/peralagae"
         />
       );
 
       const link = screen.getByRole("link");
-      expect(link).toHaveAttribute("href", "https://instagram.com/javixjewellery");
+      expect(link).toHaveAttribute("href", "https://instagram.com/peralagae");
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
     });
@@ -69,19 +69,19 @@ describe("Instagram Gallery Suite", () => {
 
       const handle = screen.getByTestId("instagram-handle-text");
       expect(handle).toBeInTheDocument();
-      expect(handle).toHaveTextContent("@yourjavixhandle");
+      expect(handle).toHaveTextContent("@peralagaeofficial");
     });
 
     it("renders handle as link when profileUrl is configured", () => {
       const configWithUrl: InstagramGalleryConfig = {
         ...defaultInstagramConfig,
-        profileUrl: "https://instagram.com/javixjewellery",
+        profileUrl: "https://instagram.com/peralagae",
       };
       render(<InstagramGallerySection config={configWithUrl} />);
 
       const link = screen.getByTestId("instagram-handle-link");
       expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute("href", "https://instagram.com/javixjewellery");
+      expect(link).toHaveAttribute("href", "https://instagram.com/peralagae");
     });
 
     it("handles empty items array gracefully", () => {
@@ -98,18 +98,18 @@ describe("Instagram Gallery Suite", () => {
     it("supports custom heading and handle override", () => {
       const customConfig: InstagramGalleryConfig = {
         ...defaultInstagramConfig,
-        heading: "Follow JAVIX on Instagram",
-        handle: "@javixofficial",
+        heading: "Follow PERALAGAE on Instagram",
+        handle: "@peralagaeofficial",
       };
       render(<InstagramGallerySection config={customConfig} />);
 
       expect(
         screen.getByRole("heading", {
-          name: "Follow JAVIX on Instagram",
+          name: "Follow PERALAGAE on Instagram",
           level: 2,
         })
       ).toBeInTheDocument();
-      expect(screen.getByText("@javixofficial")).toBeInTheDocument();
+      expect(screen.getByText("@peralagaeofficial")).toBeInTheDocument();
     });
   });
 });

@@ -164,7 +164,7 @@ export interface CustomerReviewsSectionProps {
 }
 
 /**
- * CustomerReviewsSection Component — JAVIX JEWELLERY
+ * CustomerReviewsSection Component — PERALAGAE
  *
  * Implements:
  * 1. Exact Section Heading: "Customer Reviews" (centred, elegant dark charcoal)

@@ -196,7 +196,7 @@ export function FooterAccordionSection({
 }
 
 /* -------------------------------------------------------------------------
- * Component: FooterLinkGroup (Columns 2 & 3: Explore JAVIX, Shopping & More)
+ * Component: FooterLinkGroup (Columns 2 & 3: Explore Peralagae, Shopping & More)
  * ------------------------------------------------------------------------- */
 
 export interface FooterLinkGroupProps {
@@ -530,13 +530,13 @@ export interface SiteFooterProps {
 }
 
 /**
- * SiteFooter Component — JAVIX JEWELLERY
+ * SiteFooter Component — PERALAGAE
  *
  * Implements:
  * - Desktop: Spacious 5-column luxury layout matching the design reference.
  * - Mobile: Interactive collapsible accordions with smooth transitions and rotating chevrons.
- *   - Column 1: JAVIX JEWELLERY brand wordmark & timeless elegance tagline
- *   - Column 2: Explore JAVIX (Shop Our Collections, New Arrivals, Necklaces, Rings, Bracelets, Earrings)
+ *   - Column 1: PERALAGAE brand wordmark & timeless elegance tagline
+ *   - Column 2: Explore Peralagae (Shop Our Collections, New Arrivals, Necklaces, Rings, Bracelets, Earrings)
  *   - Column 3: Shopping & More (Charms & Bangles, Gift Ideas, Find Store, Services, Subscribe)
  *   - Column 4: Store Details (Headset icon, Need Any Help?, phone, address, email)
  *   - Column 5: Follow Us (Facebook, X, Pinterest, Instagram)
@@ -551,6 +551,7 @@ export function SiteFooter({
 }: SiteFooterProps) {
   const {
     brand,
+    explorePeralagae,
     exploreJavix,
     shoppingAndMore,
     storeDetails,
@@ -559,6 +560,8 @@ export function SiteFooter({
     backToTop,
     paymentMethods,
   } = config;
+
+  const exploreColumn = explorePeralagae ?? exploreJavix;
 
   return (
     <footer
@@ -569,7 +572,7 @@ export function SiteFooter({
       {/* Main Grid: 5-column on desktop, smooth collapsible accordions on mobile */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-24 pb-8 sm:pb-12 lg:pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-12 items-start">
-          {/* Column 1: JAVIX JEWELLERY Brand */}
+          {/* Column 1: PERALAGAE Brand */}
           <FooterBrand
             name={brand.name}
             tagline={brand.tagline}
@@ -577,8 +580,8 @@ export function SiteFooter({
             className="mb-4 sm:mb-6 lg:mb-0"
           />
 
-          {/* Column 2: Explore JAVIX */}
-          <FooterLinkGroup column={exploreJavix} />
+          {/* Column 2: Explore Peralagae */}
+          {exploreColumn && <FooterLinkGroup column={exploreColumn} />}
 
           {/* Column 3: Shopping & More */}
           <FooterLinkGroup column={shoppingAndMore} />

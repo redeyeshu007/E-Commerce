@@ -8,7 +8,7 @@ import { NewCollectionSection } from "@/components/home/new-collection";
 import { defaultNewCollectionConfig } from "@/config/new-collection";
 import { StorefrontProvider } from "@/providers/storefront-provider";
 
-describe("JAVIX New Collection Component Suite", () => {
+describe("PERALAGAE New Collection Component Suite", () => {
   describe("Currency Formatter (formatInr)", () => {
     it("formats Indian Rupee prices with ₹ symbol and en-IN thousand separators", () => {
       expect(formatInr(1299)).toBe("₹1,299");

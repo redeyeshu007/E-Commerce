@@ -1,10 +1,10 @@
 /**
- * Instagram Gallery Configuration — JAVIX JEWELLERY
+ * Instagram Gallery Configuration — PERALAGAE
  *
  * Configurable settings for the "Follow Us on Instagram" homepage section.
  *
  * NOTE: The official Instagram profile URL is currently pending confirmation from
- * the business. The handle `@yourjavixhandle` is a configurable placeholder.
+ * the business. The handle `@peralagaeofficial` is a configurable placeholder.
  */
 
 export interface InstagramGalleryItem {
@@ -32,7 +32,7 @@ export interface InstagramGalleryConfig {
 
 export const defaultInstagramConfig: InstagramGalleryConfig = {
   heading: "Follow Us on Instagram",
-  handle: "@yourjavixhandle",
+  handle: "@peralagaeofficial",
   profileUrl: null, // Official Instagram account destination is pending verification
   items: [
     {

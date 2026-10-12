@@ -114,11 +114,11 @@ export interface InstagramGallerySectionProps {
 }
 
 /**
- * InstagramGallerySection Component — JAVIX JEWELLERY
+ * InstagramGallerySection Component — PERALAGAE
  *
  * Implements:
  * 1. Centred exact heading: "Follow Us on Instagram"
- * 2. Muted grey configurable handle beneath heading (e.g. "@yourjavixhandle")
+ * 2. Muted grey configurable handle beneath heading (e.g. "@peralagaeofficial")
  * 3. Exactly six separate jewellery images in a single row on desktop (lg:grid-cols-6)
  * 4. Responsive arrangement (2 columns on mobile, 3 on tablet, 6 on desktop)
  * 5. Clean editorial photography without captions, prices, or card borders
@@ -129,7 +129,7 @@ export function InstagramGallerySection({
 }: InstagramGallerySectionProps) {
   const {
     heading = "Follow Us on Instagram",
-    handle = "@yourjavixhandle",
+    handle = "@peralagaeofficial",
     profileUrl,
     items = [],
   } = config;

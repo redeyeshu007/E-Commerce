@@ -8,7 +8,7 @@ import { MainNavbar } from "@/components/navbar/main-navbar";
 import { MobileBottomBar } from "@/components/navbar/mobile-bottom-bar";
 import { defaultNavigationConfig } from "@/config/navigation";
 
-describe("JAVIX Premium Navbar Component Suite", () => {
+describe("PERALAGAE Premium Navbar Component Suite", () => {
   describe("Row 1: AnnouncementBar", () => {
     it("renders the exact promotional announcement text with soft pink background", () => {
       render(<AnnouncementBar config={defaultNavigationConfig.announcement} />);
@@ -70,15 +70,15 @@ describe("JAVIX Premium Navbar Component Suite", () => {
   });
 
   describe("Row 3: MainNavbar", () => {
-    it("renders the JAVIX brand wordmark pointing to / without taglines or extra logos", () => {
+    it("renders the PERALAGAE brand wordmark pointing to / without taglines or extra logos", () => {
       render(<MainNavbar config={defaultNavigationConfig} />);
 
       const brandLink = screen.getByRole("link", {
-        name: "JAVIX Fine Jewellery — Home",
+        name: "PERALAGAE Fine Jewellery — Home",
       });
       expect(brandLink).toBeInTheDocument();
       expect(brandLink).toHaveAttribute("href", "/");
-      expect(brandLink).toHaveTextContent("JAVIX");
+      expect(brandLink).toHaveTextContent("PERALAGAE");
     });
 
     it("renders exactly 4 primary navigation items: Home, Shop, Contact, New Arrivals in order", () => {
@@ -216,7 +216,7 @@ describe("JAVIX Premium Navbar Component Suite", () => {
       expect(screen.getByText("+91 98765 43210")).toBeInTheDocument();
 
       // Row 3
-      expect(screen.getByRole("link", { name: /JAVIX Fine Jewellery/ })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /PERALAGAE Fine Jewellery/ })).toBeInTheDocument();
 
       // Mobile Bottom Bar
       expect(

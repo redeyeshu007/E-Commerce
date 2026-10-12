@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("JAVIX JEWELLERY Footer Comprehensive E2E & QA Suite", () => {
+test.describe("PERALAGAE Footer Comprehensive E2E & QA Suite", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Wait for luxury preloader to complete
@@ -19,16 +19,16 @@ test.describe("JAVIX JEWELLERY Footer Comprehensive E2E & QA Suite", () => {
     const footer = page.locator('footer[data-testid="site-footer"]');
     await expect(footer).toBeVisible();
 
-    // Column 1: JAVIX JEWELLERY Brand & Tagline
+    // Column 1: PERALAGAE Brand & Tagline
     const brandCol = footer.getByTestId("footer-brand-column");
-    await expect(brandCol.getByRole("link", { name: "JAVIX JEWELLERY", exact: true })).toBeVisible();
+    await expect(brandCol.getByRole("link", { name: "PERALAGAE", exact: true })).toBeVisible();
     await expect(
       brandCol.getByText("Designed in India. Crafted with timeless elegance.")
     ).toBeVisible();
 
-    // Column 2: Explore JAVIX with exact 6 links
-    const exploreCol = footer.getByTestId("footer-column-explore-javix");
-    await expect(exploreCol.getByText("Explore JAVIX", { exact: true })).toBeVisible();
+    // Column 2: Explore Peralagae with exact 6 links
+    const exploreCol = footer.getByTestId("footer-column-explore-peralagae");
+    await expect(exploreCol.getByText("Explore Peralagae", { exact: true })).toBeVisible();
     const exploreLinks = [
       { name: "Shop Our Collections", href: "/#shop-our-collections" },
       { name: "New Arrivals", href: "/#new-collection" },
@@ -65,7 +65,7 @@ test.describe("JAVIX JEWELLERY Footer Comprehensive E2E & QA Suite", () => {
     await expect(storeCol.getByText("Need Any Help?")).toBeVisible();
     await expect(storeCol.getByText("123 45678 90")).toBeVisible();
     await expect(storeCol.getByText(/502 New Design Str, Melbourne, Australia/i)).toBeVisible();
-    await expect(storeCol.getByText("contact@javixjewellery.com")).toBeVisible();
+    await expect(storeCol.getByText("contact@peralagae.com")).toBeVisible();
 
     // Column 5: Follow Us
     const followCol = footer.getByTestId("footer-column-follow-us");
@@ -86,7 +86,7 @@ test.describe("JAVIX JEWELLERY Footer Comprehensive E2E & QA Suite", () => {
     // Centered Copyright Notice
     const copyright = footer.getByTestId("footer-copyright");
     await expect(copyright).toBeVisible();
-    await expect(copyright).toHaveText("© 2026 JAVIX JEWELLERY. All Rights Reserved.");
+    await expect(copyright).toHaveText("© 2026 PERALAGAE. All Rights Reserved.");
 
     // Zero horizontal overflow
     const footerOverflow = await page.evaluate(() => {
@@ -104,7 +104,7 @@ test.describe("JAVIX JEWELLERY Footer Comprehensive E2E & QA Suite", () => {
 
     const footer = page.locator('footer[data-testid="site-footer"]');
     await expect(footer).toBeVisible();
-    await expect(footer.getByText("Explore JAVIX", { exact: true })).toBeVisible();
+    await expect(footer.getByText("Explore Peralagae", { exact: true })).toBeVisible();
     await expect(footer.getByText("Shopping & More", { exact: true })).toBeVisible();
     await expect(footer.getByText("Store Details", { exact: true })).toBeVisible();
     await expect(footer.getByText("Follow Us", { exact: true })).toBeVisible();
@@ -130,8 +130,8 @@ test.describe("JAVIX JEWELLERY Footer Comprehensive E2E & QA Suite", () => {
     await expect(footer).toBeVisible();
 
     // Verify all columns and triggers exist
-    await expect(footer.getByText("JAVIX JEWELLERY", { exact: true })).toBeVisible();
-    await expect(footer.getByText("Explore JAVIX", { exact: true })).toBeVisible();
+    await expect(footer.getByText("PERALAGAE", { exact: true })).toBeVisible();
+    await expect(footer.getByText("Explore Peralagae", { exact: true })).toBeVisible();
     await expect(footer.getByText("Shopping & More", { exact: true })).toBeVisible();
 
     const footerOverflow = await page.evaluate(() => {
@@ -154,7 +154,7 @@ test.describe("JAVIX JEWELLERY Footer Comprehensive E2E & QA Suite", () => {
     const footer = page.locator('footer[data-testid="site-footer"]');
     await expect(footer).toBeVisible();
 
-    const exploreTrigger = footer.getByTestId("accordion-trigger-explore-javix");
+    const exploreTrigger = footer.getByTestId("accordion-trigger-explore-peralagae");
     await expect(exploreTrigger).toBeVisible();
     await expect(exploreTrigger).toHaveAttribute("aria-expanded", "false");
 
@@ -184,13 +184,13 @@ test.describe("JAVIX JEWELLERY Footer Comprehensive E2E & QA Suite", () => {
     await expect(footer).toBeVisible();
 
     // Brand and tagline are visible at top
-    await expect(footer.getByText("JAVIX JEWELLERY", { exact: true })).toBeVisible();
+    await expect(footer.getByText("PERALAGAE", { exact: true })).toBeVisible();
     await expect(
       footer.getByText("Designed in India. Crafted with timeless elegance.")
     ).toBeVisible();
 
     // All 4 collapsible accordions start collapsed
-    const exploreTrigger = footer.getByTestId("accordion-trigger-explore-javix");
+    const exploreTrigger = footer.getByTestId("accordion-trigger-explore-peralagae");
     const shoppingTrigger = footer.getByTestId("accordion-trigger-shopping-and-more");
     const storeTrigger = footer.getByTestId("accordion-trigger-store-details");
     const followTrigger = footer.getByTestId("accordion-trigger-follow-us");

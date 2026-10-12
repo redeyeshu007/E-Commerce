@@ -1,5 +1,5 @@
 /**
- * Navigation & Header Configuration — JAVIX JEWELLERY
+ * Navigation & Header Configuration — PERALAGAE
  *
  * Configuration-driven architecture allowing easy future integration
  * with backend content management systems or dynamic tenant configurations
@@ -85,7 +85,7 @@ export interface NavigationConfig {
 }
 
 /**
- * Default JAVIX JEWELLERY navigation configuration.
+ * Default PERALAGAE navigation configuration.
  * Faithfully mirrors the reference proportions, typography, and items.
  */
 export const defaultNavigationConfig: NavigationConfig = {
@@ -119,7 +119,7 @@ export const defaultNavigationConfig: NavigationConfig = {
     ],
   },
   brand: {
-    name: "JAVIX",
+    name: "PERALAGAE",
     href: "/",
   },
   primaryNav: [

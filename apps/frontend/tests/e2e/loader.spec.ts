@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("JAVIX Reusable Loader System E2E", () => {
+test.describe("PERALAGAE Reusable Loader System E2E", () => {
   test("preserves LuxuryPreloader on initial load and allows page to settle", async ({
     page,
   }) => {
     await page.goto("/");
 
     // 1. Initial luxury preloader is active on initial load
-    const brandPreloader = page.getByRole("status", { name: "JAVIX JEWELLERY" });
+    const brandPreloader = page.getByRole("status", { name: "PERALAGAE" });
     if (await brandPreloader.isVisible()) {
       await expect(brandPreloader).not.toBeAttached({ timeout: 6000 });
     }

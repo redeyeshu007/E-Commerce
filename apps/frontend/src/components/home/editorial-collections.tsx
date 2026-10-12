@@ -102,7 +102,7 @@ export interface EditorialCollectionsSectionProps {
 }
 
 /**
- * EditorialCollectionsSection Component — JAVIX JEWELLERY
+ * EditorialCollectionsSection Component — PERALAGAE
  *
  * Implements:
  * 1. Centred Top Brand Tagline: "Designed in India. Crafted with timeless elegance."

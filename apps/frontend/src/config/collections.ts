@@ -1,5 +1,5 @@
 /**
- * Shop Our Collections Configuration — JAVIX JEWELLERY
+ * Shop Our Collections Configuration — PERALAGAE
  *
  * Configuration-driven architecture separating collection metadata,
  * image references, routes, and ordering from presentation components.
@@ -45,7 +45,7 @@ export interface CollectionsSectionConfig {
 }
 
 /**
- * Default JAVIX JEWELLERY collections configuration.
+ * Default PERALAGAE collections configuration.
  * Strictly reproduces the 6 categories in required order with
  * uniform light-grey catalogue imagery.
  */

@@ -16,14 +16,14 @@ export interface MainNavbarProps {
 /**
  * Row Three: Main Navigation Bar.
  *
- * Responsive Architecture matching the Alukas & Co reference:
+ * Responsive Architecture matching the design reference:
  * - Desktop:
- *   - Left: JAVIX brand wordmark
+ *   - Left: PERALAGAE brand wordmark
  *   - Centre: Primary Navigation (Home, Shop, Contact, New Arrivals)
  *   - Right: Action Icons (Search, Account, Wishlist, Cart)
  * - Mobile (< lg):
  *   - Left: Hamburger Menu trigger
- *   - Centre: JAVIX brand wordmark (optically centered)
+ *   - Centre: PERALAGAE brand wordmark (optically centered)
  *   - Right: Shopping Cart icon with circular "0" count badge
  */
 export function MainNavbar({ config }: MainNavbarProps) {

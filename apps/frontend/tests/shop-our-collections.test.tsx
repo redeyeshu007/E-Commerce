@@ -10,7 +10,7 @@ import {
   type CollectionsSectionConfig,
 } from "@/config/collections";
 
-describe("JAVIX Shop Our Collections Component Suite", () => {
+describe("PERALAGAE Shop Our Collections Component Suite", () => {
   describe("CollectionCard", () => {
     it("renders collection item with square image container, alt text, and uppercase title", () => {
       const item = defaultCollectionsConfig.items[0]; // NECKLACES

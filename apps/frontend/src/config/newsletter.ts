@@ -1,5 +1,5 @@
 /**
- * Newsletter Section Configuration — JAVIX JEWELLERY
+ * Newsletter Section Configuration — PERALAGAE
  *
  * Configurable content and copy for the "Sign up now & get 10% off"
  * newsletter subscription section.

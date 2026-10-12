@@ -1,5 +1,5 @@
 /**
- * Hero & Promotional Banner Configuration — JAVIX JEWELLERY
+ * Hero & Promotional Banner Configuration — PERALAGAE
  *
  * Configuration-driven architecture separating promotional content,
  * imagery, and routing from presentation components.
@@ -51,7 +51,7 @@ export interface HeroBannersConfig {
 }
 
 /**
- * Default promotional banner content matching the JAVIX JEWELLERY
+ * Default promotional banner content matching the PERALAGAE
  * reference composition and styling.
  */
 export const defaultHeroBannersConfig: HeroBannersConfig = {
@@ -66,7 +66,7 @@ export const defaultHeroBannersConfig: HeroBannersConfig = {
     },
     image: {
       src: "/images/hero/banner-necklaces.jpg",
-      alt: "Necklaces & Body Jewels - JAVIX JEWELLERY",
+      alt: "Necklaces & Body Jewels - PERALAGAE",
       objectPosition: "80% top",
     },
     priority: true,
@@ -81,7 +81,7 @@ export const defaultHeroBannersConfig: HeroBannersConfig = {
     },
     image: {
       src: "/images/hero/banner-desk-hals.jpg",
-      alt: "Just Lunched Desk The Hals - JAVIX JEWELLERY",
+      alt: "Just Lunched Desk The Hals - PERALAGAE",
       objectPosition: "85% top",
     },
     priority: false,
@@ -96,7 +96,7 @@ export const defaultHeroBannersConfig: HeroBannersConfig = {
     },
     image: {
       src: "/images/hero/banner-charm-bracelets.jpg",
-      alt: "Jewelry & Charm Bracelets - JAVIX JEWELLERY",
+      alt: "Jewelry & Charm Bracelets - PERALAGAE",
       objectPosition: "90% top",
     },
     priority: false,

@@ -8,7 +8,7 @@ export interface BrandWordmarkProps {
 }
 
 /**
- * JAVIX brand wordmark.
+ * PERALAGAE brand wordmark.
  *
  * Characteristics:
  * - Pure typographic understated luxury wordmark (replaces "ALUKAS & CO").

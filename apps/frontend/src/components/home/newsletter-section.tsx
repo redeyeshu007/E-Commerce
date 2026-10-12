@@ -183,7 +183,7 @@ export interface NewsletterSignupSectionProps {
 }
 
 /**
- * NewsletterSignupSection Component — JAVIX JEWELLERY
+ * NewsletterSignupSection Component — PERALAGAE
  *
  * Implements:
  * 1. Exact Section Heading: "Sign up now & get 10% off" (large, centred, dark charcoal)

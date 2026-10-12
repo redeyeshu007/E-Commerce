@@ -17,7 +17,7 @@ import { NewsletterSignupSection } from "@/components/home/newsletter-section";
 import { defaultNewsletterConfig } from "@/config/newsletter";
 
 /**
- * JAVIX JEWELLERY Storefront Homepage
+ * PERALAGAE Storefront Homepage
  *
  * Renders:
  * 1. Promotional hero banners featuring luxury fine jewellery

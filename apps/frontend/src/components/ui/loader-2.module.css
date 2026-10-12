@@ -11,8 +11,8 @@
 }
 
 .loaderItem {
-  --path: var(--javix-loader-path, #2f3545);
-  --dot: var(--javix-loader-dot, #5628ee);
+  --path: var(--peralagae-loader-path, var(--javix-loader-path, #2f3545));
+  --dot: var(--peralagae-loader-dot, var(--javix-loader-dot, #5628ee));
   --duration: 3s;
   width: 44px;
   height: 44px;

@@ -7,7 +7,7 @@ import { MorphingText } from "@/components/ui/morphing-text";
 export interface LuxuryPreloaderProps {
   /**
    * Words to morph through in order.
-   * Defaults to ["Javix", "Jewellery"] matching the bold sans-serif design.
+   * Defaults to ["Peralagae", "Jewellery"] matching the bold sans-serif design.
    */
   texts?: string[];
   /**
@@ -27,7 +27,7 @@ export interface LuxuryPreloaderProps {
    */
   cooldownTime?: number;
   /**
-   * Time in seconds to hold the initial word ("Javix") before morphing begins.
+   * Time in seconds to hold the initial word ("Peralagae") before morphing begins.
    * Defaults to 0.5s.
    */
   initialCooldown?: number;
@@ -37,14 +37,14 @@ export interface LuxuryPreloaderProps {
   onComplete?: () => void;
 }
 
-const PRELOADER_TEXTS = ["Javix", "Jewellery"];
+const PRELOADER_TEXTS = ["Peralagae", "Jewellery"];
 
 /**
- * Luxury Liquid Morphing Preloader for JAVIX JEWELLERY.
+ * Luxury Liquid Morphing Preloader for PERALAGAE.
  *
  * Sequence:
- * 1. Initial appearance: "Javix" appears in bold neo-grotesque sans-serif typography (Inter Bold).
- * 2. Liquid morphing: "Javix" smoothly melts and morphs into "Jewellery" using the SVG threshold matrix.
+ * 1. Initial appearance: "Peralagae" appears in bold neo-grotesque sans-serif typography (Inter Bold).
+ * 2. Liquid morphing: "Peralagae" smoothly melts and morphs into "Jewellery" using the SVG threshold matrix.
  * 3. Final appreciation hold: "Jewellery" settles into razor-sharp focus.
  * 4. Smooth dissolve exit: overlay fades out smoothly (opacity 1 -> 0), revealing the website.
  */
@@ -100,9 +100,9 @@ export function LuxuryPreloader({
     >
       {isVisible && (
         <motion.div
-          key="javix-liquid-preloader-overlay"
+          key="peralagae-liquid-preloader-overlay"
           role="status"
-          aria-label="JAVIX JEWELLERY"
+          aria-label="PERALAGAE"
           aria-live="polite"
           initial={{ opacity: 1 }}
           exit={{
@@ -132,7 +132,7 @@ export function LuxuryPreloader({
                 letterSpacing: "normal",
               }}
             >
-              Javix Jewellery
+              PERALAGAE
             </div>
           ) : (
             <MorphingText

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("JAVIX Premium Navbar E2E Suite", () => {
+test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Wait for the custom luxury preloader to finish and unmount cleanly
@@ -24,9 +24,9 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     await expect(utility).toContainText("+91 98765 43210");
 
     // Row 3: Main Navbar Brand
-    const brand = page.locator("a[aria-label*='JAVIX Fine Jewellery']");
+    const brand = page.locator("a[aria-label*='PERALAGAE Fine Jewellery']");
     await expect(brand).toBeVisible();
-    await expect(brand).toHaveText("JAVIX");
+    await expect(brand).toHaveText("PERALAGAE");
 
     // Desktop Primary Nav items
     await expect(header.getByRole("link", { name: "Home", exact: true })).toBeVisible();
@@ -51,7 +51,7 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     await expect(announcement).not.toBeAttached();
   });
 
-  test("renders mobile view matching reference: top bar (Menu | JAVIX | Cart) and sticky bottom bar", async ({
+  test("renders mobile view matching reference: top bar (Menu | PERALAGAE | Cart) and sticky bottom bar", async ({
     page,
   }) => {
     // Set viewport to mobile screen (iPhone / Android)
@@ -71,8 +71,8 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     const hamburgerBtn = page.getByRole("button", { name: "Open navigation menu" });
     await expect(hamburgerBtn).toBeVisible();
 
-    // Center: JAVIX brand
-    const brand = page.locator("a[aria-label*='JAVIX Fine Jewellery']");
+    // Center: PERALAGAE brand
+    const brand = page.locator("a[aria-label*='PERALAGAE Fine Jewellery']");
     await expect(brand).toBeVisible();
 
     // Right: Cart icon with "0" badge
@@ -99,7 +99,7 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     await hamburgerBtn.click();
     const drawer = page.getByRole("dialog", { name: "Mobile Navigation Menu" });
     await expect(drawer).toBeVisible();
-    await expect(drawer).toContainText("JAVIX");
+    await expect(drawer).toContainText("PERALAGAE");
 
     // Drawer tabs
     const menuTab = drawer.getByRole("tab", { name: "Menu" });

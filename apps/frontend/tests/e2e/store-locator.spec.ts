@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("JAVIX Store Locator Banner E2E Suite", () => {
+test.describe("PERALAGAE Store Locator Banner E2E Suite", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Wait for preloader to complete

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Test B: JAVIX Luxury Preloader Lifecycle", () => {
+test.describe("Test B: PERALAGAE Luxury Preloader Lifecycle", () => {
   test("mounts on initial load, displays brand text, and unmounts to reveal main content", async ({
     page,
   }) => {
@@ -9,7 +9,7 @@ test.describe("Test B: JAVIX Luxury Preloader Lifecycle", () => {
     // 1. Preloader overlay appears on page load with status role and luxury aria-label
     const preloader = page.getByRole("status");
     await expect(preloader).toBeVisible();
-    await expect(preloader).toHaveAttribute("aria-label", "JAVIX JEWELLERY");
+    await expect(preloader).toHaveAttribute("aria-label", "PERALAGAE");
 
     // 2. Preloader finishes and unmounts from the DOM within timeout (< 4 seconds)
     await expect(preloader).not.toBeAttached({ timeout: 5000 });

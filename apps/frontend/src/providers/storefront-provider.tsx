@@ -36,8 +36,10 @@ export interface StorefrontContextValue {
 
 const StorefrontContext = createContext<StorefrontContextValue | null>(null);
 
-const STORAGE_KEY_WISHLIST = "javix_wishlist_ids";
-const STORAGE_KEY_CART = "javix_cart_items";
+const STORAGE_KEY_WISHLIST = "peralagae_wishlist_ids";
+const STORAGE_KEY_CART = "peralagae_cart_items";
+const LEGACY_STORAGE_KEY_WISHLIST = "javix_wishlist_ids";
+const LEGACY_STORAGE_KEY_CART = "javix_cart_items";
 
 export function StorefrontProvider({ children }: { children: React.ReactNode }) {
   const [wishlistIds, setWishlistIds] = useState<string[]>([]);
@@ -48,12 +50,16 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
   // Restore client-side state from localStorage on mount
   useEffect(() => {
     try {
-      const storedWishlist = localStorage.getItem(STORAGE_KEY_WISHLIST);
+      const storedWishlist =
+        localStorage.getItem(STORAGE_KEY_WISHLIST) ??
+        localStorage.getItem(LEGACY_STORAGE_KEY_WISHLIST);
       if (storedWishlist) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setWishlistIds(JSON.parse(storedWishlist));
       }
-      const storedCart = localStorage.getItem(STORAGE_KEY_CART);
+      const storedCart =
+        localStorage.getItem(STORAGE_KEY_CART) ??
+        localStorage.getItem(LEGACY_STORAGE_KEY_CART);
       if (storedCart) {
         setCartItems(JSON.parse(storedCart));
       }
