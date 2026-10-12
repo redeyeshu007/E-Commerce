@@ -133,7 +133,7 @@ export function FooterBrand({
               alt={name}
               width={logoWidth ?? 1308}
               height={logoHeight ?? 537}
-              className="h-8 sm:h-9 lg:h-10 w-auto max-w-[150px] sm:max-w-[170px] lg:max-w-[190px] object-contain"
+              className="h-12 sm:h-14 lg:h-16 w-auto max-w-[200px] sm:max-w-[230px] lg:max-w-[250px] object-contain"
             />
             <span className="sr-only">{name}</span>
           </>
