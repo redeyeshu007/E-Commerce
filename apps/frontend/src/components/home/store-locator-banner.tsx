@@ -47,6 +47,7 @@ export function StoreLocatorBanner({
 }: StoreLocatorBannerProps) {
   return (
     <section
+      id="store-locator"
       aria-labelledby="store-locator-heading"
       data-testid="store-locator-section"
       className={`w-full bg-white pb-14 sm:pb-20 lg:pb-24 ${className}`}

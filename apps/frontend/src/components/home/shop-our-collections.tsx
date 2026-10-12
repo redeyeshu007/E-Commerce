@@ -114,6 +114,7 @@ export function ShopOurCollections({
 
   return (
     <section
+      id="shop-our-collections"
       aria-labelledby="shop-our-collections-heading"
       className={`w-full bg-white pt-8 sm:pt-10 lg:pt-14 pb-12 sm:pb-16 lg:pb-20 ${className}`}
     >

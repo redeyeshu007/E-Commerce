@@ -5,6 +5,7 @@ import { Providers } from "@/providers/index";
 import { LuxuryPreloader } from "@/components/shared/luxury-preloader";
 import { AnimatedTabTitle } from "@/components/shared/animated-tab-title";
 import { SiteHeader } from "@/components/navbar/site-header";
+import { SiteFooter } from "@/components/layout/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <LuxuryPreloader />
           <SiteHeader />
           {children}
+          <SiteFooter />
         </Providers>
       </body>
     </html>

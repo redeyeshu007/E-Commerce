@@ -206,6 +206,7 @@ export function NewsletterSignupSection({
 
   return (
     <section
+      id="newsletter-section"
       aria-labelledby="newsletter-heading"
       data-testid="newsletter-section"
       className={`w-full pt-8 sm:pt-10 lg:pt-12 pb-16 sm:pb-20 lg:pb-24 ${className}`}

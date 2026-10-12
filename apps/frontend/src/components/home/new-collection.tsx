@@ -186,6 +186,7 @@ export function NewCollectionSection({
   return (
     <section
       ref={containerRef}
+      id="new-collection"
       aria-labelledby="new-collection-heading"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
