@@ -73,8 +73,8 @@ test.describe("PERALAGAE Footer Comprehensive E2E & QA Suite", () => {
     await expect(followCol.getByText("Follow Us", { exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "Facebook", exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "X (Twitter)", exact: true })).toBeVisible();
-    await expect(followCol.getByRole("link", { name: "Pinterest", exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "Instagram", exact: true })).toBeVisible();
+    await expect(followCol.getByRole("link", { name: "Pinterest", exact: true })).toHaveCount(0);
 
     // Payment Methods Row (Maestro, PayPal, Visa, MasterCard)
     const paymentMethods = footer.getByTestId("footer-payment-methods");

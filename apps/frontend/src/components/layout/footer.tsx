@@ -562,7 +562,7 @@ export interface SiteFooterProps {
  *   - Column 2: Explore Peralagae (Shop Our Collections, New Arrivals, Necklaces, Rings, Bracelets, Earrings)
  *   - Column 3: Shopping & More (Charms & Bangles, Gift Ideas, Find Store, Services, Subscribe)
  *   - Column 4: Store Details (Headset icon, Need Any Help?, phone, address, email)
- *   - Column 5: Follow Us (Facebook, X, Pinterest, Instagram)
+ *   - Column 5: Follow Us (Facebook, X, Instagram)
  * - Divider line
  * - Payment methods (Maestro, PayPal, Visa, MasterCard)
  * - Centered copyright notice

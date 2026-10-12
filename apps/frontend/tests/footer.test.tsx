@@ -114,14 +114,11 @@ describe("PERALAGAE Footer Unit Test Suite", () => {
         "href",
         "https://x.com"
       );
-      expect(screen.getByRole("link", { name: "Pinterest" })).toHaveAttribute(
-        "href",
-        "https://pinterest.com"
-      );
       expect(screen.getByRole("link", { name: "Instagram" })).toHaveAttribute(
         "href",
         "https://instagram.com"
       );
+      expect(screen.queryByRole("link", { name: "Pinterest" })).not.toBeInTheDocument();
     });
 
     it("renders centered copyright notice", () => {

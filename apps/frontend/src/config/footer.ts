@@ -127,7 +127,6 @@ export const defaultFooterConfig: FooterConfig = {
     links: [
       { id: "facebook", platform: "facebook", label: "Facebook", href: "https://facebook.com" },
       { id: "twitter", platform: "twitter", label: "X (Twitter)", href: "https://x.com" },
-      { id: "pinterest", platform: "pinterest", label: "Pinterest", href: "https://pinterest.com" },
       { id: "instagram", platform: "instagram", label: "Instagram", href: "https://instagram.com" },
     ],
   },
