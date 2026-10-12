@@ -24,7 +24,7 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
     // Column 2: Explore JAVIX (Replaced "About Alukas")
     const exploreCol = footer.getByTestId("footer-column-explore-javix");
     await expect(exploreCol).toBeVisible();
-    await expect(exploreCol.getByRole("heading", { name: "Explore JAVIX", exact: true })).toBeVisible();
+    await expect(exploreCol.getByText("Explore JAVIX", { exact: true })).toBeVisible();
 
     const expectedExploreLinks = [
       { name: "Shop Our Collections", href: "/#shop-our-collections" },
@@ -44,7 +44,7 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
     // Column 3: Shopping & More (Replaced "Our Company")
     const shoppingCol = footer.getByTestId("footer-column-shopping-and-more");
     await expect(shoppingCol).toBeVisible();
-    await expect(shoppingCol.getByRole("heading", { name: "Shopping & More", exact: true })).toBeVisible();
+    await expect(shoppingCol.getByText("Shopping & More", { exact: true })).toBeVisible();
 
     const expectedShoppingLinks = [
       { name: "Charms & Bangles", href: "/#shop-our-collections" },
@@ -63,7 +63,7 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
     // Column 4: Store Details
     const storeCol = footer.getByTestId("footer-column-store-details");
     await expect(storeCol).toBeVisible();
-    await expect(storeCol.getByRole("heading", { name: "Store Details", exact: true })).toBeVisible();
+    await expect(storeCol.getByText("Store Details", { exact: true })).toBeVisible();
     await expect(storeCol.getByText("Need Any Help?")).toBeVisible();
     await expect(storeCol.getByText("123 45678 90")).toBeVisible();
     await expect(storeCol.getByText(/502 New Design Str, Melbourne, Australia/i)).toBeVisible();
@@ -72,7 +72,7 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
     // Column 5: Follow Us
     const followCol = footer.getByTestId("footer-column-follow-us");
     await expect(followCol).toBeVisible();
-    await expect(followCol.getByRole("heading", { name: "Follow Us", exact: true })).toBeVisible();
+    await expect(followCol.getByText("Follow Us", { exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "Facebook", exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "X (Twitter)", exact: true })).toBeVisible();
     await expect(followCol.getByRole("link", { name: "Pinterest", exact: true })).toBeVisible();
@@ -121,17 +121,45 @@ test.describe("JAVIX JEWELLERY Footer E2E Suite", () => {
     }, { timeout: 5000 }).toBeLessThan(10);
   });
 
-  test("Mobile: reflows gracefully without horizontal overflow", async ({ page }) => {
+  test("Mobile: renders collapsible accordions and toggles with smooth transition", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
 
     const footer = page.locator('footer[data-testid="site-footer"]');
     await expect(footer).toBeVisible();
 
-    // Both columns 2 and 3 visible on mobile
-    await expect(footer.getByTestId("footer-column-explore-javix")).toBeVisible();
-    await expect(footer.getByTestId("footer-column-shopping-and-more")).toBeVisible();
+    // All 4 accordion triggers exist and start collapsed
+    const exploreTrigger = footer.getByTestId("accordion-trigger-explore-javix");
+    const shoppingTrigger = footer.getByTestId("accordion-trigger-shopping-and-more");
+    const storeTrigger = footer.getByTestId("accordion-trigger-store-details");
+    const followTrigger = footer.getByTestId("accordion-trigger-follow-us");
 
-    // Check footer itself does not overflow
+    await expect(exploreTrigger).toBeVisible();
+    await expect(shoppingTrigger).toBeVisible();
+    await expect(storeTrigger).toBeVisible();
+    await expect(followTrigger).toBeVisible();
+
+    await expect(exploreTrigger).toHaveAttribute("aria-expanded", "false");
+    await expect(shoppingTrigger).toHaveAttribute("aria-expanded", "false");
+    await expect(storeTrigger).toHaveAttribute("aria-expanded", "false");
+    await expect(followTrigger).toHaveAttribute("aria-expanded", "false");
+
+    // Click to expand "Explore JAVIX"
+    await exploreTrigger.click();
+    await expect(exploreTrigger).toHaveAttribute("aria-expanded", "true");
+
+    const necklacesLink = footer.getByRole("link", { name: "Necklaces", exact: true });
+    await expect(necklacesLink).toBeVisible();
+
+    // Click to collapse "Explore JAVIX"
+    await exploreTrigger.click();
+    await expect(exploreTrigger).toHaveAttribute("aria-expanded", "false");
+
+    // Click to expand "Store Details"
+    await storeTrigger.click();
+    await expect(storeTrigger).toHaveAttribute("aria-expanded", "true");
+    await expect(footer.getByText("123 45678 90")).toBeVisible();
+
+    // Check footer itself does not overflow horizontally
     const footerOverflow = await page.evaluate(() => {
       const footerEl = document.querySelector('footer[data-testid="site-footer"]');
       if (!footerEl) return false;

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowUp, Headphones } from "lucide-react";
+import { ArrowUp, Headphones, ChevronDown } from "lucide-react";
 import type {
   FooterConfig,
   FooterColumnConfig,
@@ -120,9 +120,77 @@ export function FooterBrand({
       >
         {name}
       </Link>
-      <p className="mt-3.5 sm:mt-4 text-xs sm:text-[13px] text-[#777777] leading-relaxed max-w-xs font-normal">
+      <p className="mt-2.5 sm:mt-3 text-xs sm:text-[13px] text-[#777777] leading-relaxed max-w-xs font-normal">
         {tagline}
       </p>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------
+ * Component: FooterAccordionSection (Mobile Collapsible with Smooth Transition)
+ * ------------------------------------------------------------------------- */
+
+export interface FooterAccordionSectionProps {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+  testId?: string;
+}
+
+export function FooterAccordionSection({
+  id,
+  title,
+  children,
+  className = "",
+  testId,
+}: FooterAccordionSectionProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot
+  );
+
+  return (
+    <div className={`flex flex-col ${className}`} data-testid={testId}>
+      {/* Accordion Trigger on mobile (< lg), Static Heading on Desktop (lg+) */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+        aria-controls={`footer-accordion-${id}`}
+        data-testid={`accordion-trigger-${id}`}
+        className="w-full flex items-center justify-between text-left py-2 sm:py-2.5 lg:py-0 lg:cursor-default lg:pointer-events-none mb-0 lg:mb-4 sm:lg:mb-5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black transition-colors group"
+      >
+        <span className="text-[15px] sm:text-base lg:text-xs lg:sm:text-[13px] font-semibold tracking-[0.02em] lg:tracking-[0.08em] uppercase text-[#111111] group-hover:text-black">
+          {title}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 text-[#444444] transition-transform ${
+            reducedMotion ? "duration-0" : "duration-300 ease-in-out"
+          } lg:hidden ${isOpen ? "rotate-180" : "rotate-0"}`}
+          aria-hidden="true"
+        />
+      </button>
+
+      {/* Collapsible Content with Smooth Grid-Template-Rows Transition */}
+      <div
+        id={`footer-accordion-${id}`}
+        data-testid={`accordion-content-${id}`}
+        className={`grid transition-[grid-template-rows,opacity] ${
+          reducedMotion ? "duration-0" : "duration-300 ease-in-out"
+        } ${
+          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        } lg:grid-rows-[1fr] lg:opacity-100`}
+      >
+        <div className="overflow-hidden">
+          <div className="pt-2 pb-3.5 lg:p-0">
+            {children}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -161,10 +229,12 @@ export function FooterLinkGroup({ column, className = "" }: FooterLinkGroupProps
   };
 
   return (
-    <div className={`flex flex-col ${className}`} data-testid={`footer-column-${column.id}`}>
-      <h3 className="text-xs sm:text-[13px] font-semibold tracking-[0.08em] uppercase text-[#111111] mb-4 sm:mb-5">
-        {column.title}
-      </h3>
+    <FooterAccordionSection
+      id={column.id}
+      title={column.title}
+      className={className}
+      testId={`footer-column-${column.id}`}
+    >
       <ul className="space-y-2.5 sm:space-y-3" role="list">
         {column.links.map((link) => (
           <li key={link.id}>
@@ -187,7 +257,7 @@ export function FooterLinkGroup({ column, className = "" }: FooterLinkGroupProps
           </li>
         ))}
       </ul>
-    </div>
+    </FooterAccordionSection>
   );
 }
 
@@ -205,11 +275,12 @@ export function FooterStoreDetails({
   className = "",
 }: FooterStoreDetailsProps) {
   return (
-    <div className={`flex flex-col ${className}`} data-testid="footer-column-store-details">
-      <h3 className="text-xs sm:text-[13px] font-semibold tracking-[0.08em] uppercase text-[#111111] mb-4 sm:mb-5">
-        {details.title}
-      </h3>
-
+    <FooterAccordionSection
+      id="store-details"
+      title={details.title}
+      className={className}
+      testId="footer-column-store-details"
+    >
       {/* Headset Icon & Help Callout */}
       <div className="flex items-center gap-3.5 mb-4 sm:mb-5">
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#EAEAEA] text-[#777777] shrink-0">
@@ -249,7 +320,7 @@ export function FooterStoreDetails({
           </a>
         </p>
       </div>
-    </div>
+    </FooterAccordionSection>
   );
 }
 
@@ -300,10 +371,12 @@ export function FooterFollowUs({
   className = "",
 }: FooterFollowUsProps) {
   return (
-    <div className={`flex flex-col ${className}`} data-testid="footer-column-follow-us">
-      <h3 className="text-xs sm:text-[13px] font-semibold tracking-[0.08em] uppercase text-[#111111] mb-4 sm:mb-5">
-        {followUs.title}
-      </h3>
+    <FooterAccordionSection
+      id="follow-us"
+      title={followUs.title}
+      className={className}
+      testId="footer-column-follow-us"
+    >
       <div className="flex items-center gap-4 text-[#222222]">
         {followUs.links.map((social) => (
           <a
@@ -318,7 +391,7 @@ export function FooterFollowUs({
           </a>
         ))}
       </div>
-    </div>
+    </FooterAccordionSection>
   );
 }
 
@@ -448,7 +521,7 @@ export function FooterBottom({
 }
 
 /* -------------------------------------------------------------------------
- * Component: SiteFooter (Five-Column Layout Matching Reference)
+ * Component: SiteFooter (Five-Column Desktop, Smooth Accordion Mobile)
  * ------------------------------------------------------------------------- */
 
 export interface SiteFooterProps {
@@ -459,14 +532,16 @@ export interface SiteFooterProps {
 /**
  * SiteFooter Component — JAVIX JEWELLERY
  *
- * Implements the 5-column layout reference:
- * - Column 1: JAVIX JEWELLERY brand wordmark & timeless elegance tagline
- * - Column 2: Explore JAVIX (Shop Our Collections, New Arrivals, Necklaces, Rings, Bracelets, Earrings)
- * - Column 3: Shopping & More (Charms & Bangles, Gift Ideas, Find Store, Services, Subscribe)
- * - Column 4: Store Details (Headset icon, Need Any Help?, phone, address, email)
- * - Column 5: Follow Us (Facebook, X, Pinterest, Instagram)
- * - Thin horizontal divider
- * - Centered payment methods (Maestro, PayPal, Visa, MasterCard)
+ * Implements:
+ * - Desktop: Spacious 5-column luxury layout matching the design reference.
+ * - Mobile: Interactive collapsible accordions with smooth transitions and rotating chevrons.
+ *   - Column 1: JAVIX JEWELLERY brand wordmark & timeless elegance tagline
+ *   - Column 2: Explore JAVIX (Shop Our Collections, New Arrivals, Necklaces, Rings, Bracelets, Earrings)
+ *   - Column 3: Shopping & More (Charms & Bangles, Gift Ideas, Find Store, Services, Subscribe)
+ *   - Column 4: Store Details (Headset icon, Need Any Help?, phone, address, email)
+ *   - Column 5: Follow Us (Facebook, X, Pinterest, Instagram)
+ * - Divider line
+ * - Payment methods (Maestro, PayPal, Visa, MasterCard)
  * - Centered copyright notice
  * - Bottom-right back-to-top button
  */
@@ -491,14 +566,15 @@ export function SiteFooter({
       data-testid="site-footer"
       className={`w-full bg-[#FAF8F5] text-black ${className}`}
     >
-      {/* Main 5-Column Grid */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-12 sm:pb-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 sm:gap-10 lg:gap-12 items-start">
+      {/* Main Grid: 5-column on desktop, smooth collapsible accordions on mobile */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-24 pb-8 sm:pb-12 lg:pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-12 items-start">
           {/* Column 1: JAVIX JEWELLERY Brand */}
           <FooterBrand
             name={brand.name}
             tagline={brand.tagline}
             href={brand.href}
+            className="mb-4 sm:mb-6 lg:mb-0"
           />
 
           {/* Column 2: Explore JAVIX */}

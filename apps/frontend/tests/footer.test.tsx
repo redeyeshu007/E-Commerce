@@ -4,6 +4,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import {
   SiteFooter,
   FooterLinkGroup,
+  FooterAccordionSection,
   BackToTopButton,
 } from "@/components/layout/footer";
 import { defaultFooterConfig } from "@/config/footer";
@@ -42,7 +43,7 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
     it("renders Column 2: Explore JAVIX with exact 6 links", () => {
       render(<SiteFooter />);
 
-      const exploreHeading = screen.getByRole("heading", { name: "Explore JAVIX" });
+      const exploreHeading = screen.getByText("Explore JAVIX");
       expect(exploreHeading).toBeInTheDocument();
 
       const expectedLinks = [
@@ -64,9 +65,7 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
     it("renders Column 3: Shopping & More with exact 5 links", () => {
       render(<SiteFooter />);
 
-      const shoppingHeading = screen.getByRole("heading", {
-        name: "Shopping & More",
-      });
+      const shoppingHeading = screen.getByText("Shopping & More");
       expect(shoppingHeading).toBeInTheDocument();
 
       const expectedLinks = [
@@ -87,9 +86,7 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
     it("renders Column 4: Store Details with phone, address, and email", () => {
       render(<SiteFooter />);
 
-      const storeHeading = screen.getByRole("heading", {
-        name: "Store Details",
-      });
+      const storeHeading = screen.getByText("Store Details");
       expect(storeHeading).toBeInTheDocument();
 
       expect(screen.getByText("Need Any Help?")).toBeInTheDocument();
@@ -103,9 +100,7 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
     it("renders Column 5: Follow Us with social media links", () => {
       render(<SiteFooter />);
 
-      const followHeading = screen.getByRole("heading", {
-        name: "Follow Us",
-      });
+      const followHeading = screen.getByText("Follow Us");
       expect(followHeading).toBeInTheDocument();
 
       expect(screen.getByRole("link", { name: "Facebook" })).toHaveAttribute(
@@ -145,6 +140,33 @@ describe("JAVIX JEWELLERY Footer Unit Test Suite", () => {
       expect(screen.getByRole("img", { name: "PayPal" })).toBeInTheDocument();
       expect(screen.getByRole("img", { name: "Visa" })).toBeInTheDocument();
       expect(screen.getByRole("img", { name: "MasterCard" })).toBeInTheDocument();
+    });
+  });
+
+  describe("FooterAccordionSection mobile collapsible", () => {
+    it("toggles aria-expanded and grid-rows when clicked on mobile", () => {
+      render(
+        <FooterAccordionSection id="test-accordion" title="Test Section">
+          <div>Accordion inner content</div>
+        </FooterAccordionSection>
+      );
+
+      const trigger = screen.getByTestId("accordion-trigger-test-accordion");
+      const content = screen.getByTestId("accordion-content-test-accordion");
+
+      // Initially closed
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      expect(content).toHaveClass("grid-rows-[0fr]");
+
+      // Click to open
+      fireEvent.click(trigger);
+      expect(trigger).toHaveAttribute("aria-expanded", "true");
+      expect(content).toHaveClass("grid-rows-[1fr]");
+
+      // Click to close
+      fireEvent.click(trigger);
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      expect(content).toHaveClass("grid-rows-[0fr]");
     });
   });
 
