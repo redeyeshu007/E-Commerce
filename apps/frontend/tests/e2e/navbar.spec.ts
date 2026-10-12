@@ -40,7 +40,7 @@ test.describe("JAVIX Premium Navbar E2E Suite", () => {
     // Action buttons visible on desktop
     await expect(page.getByRole("button", { name: "Search" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Account" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Wishlist" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Wishlist", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Cart" }).first()).toBeVisible();
   });
 

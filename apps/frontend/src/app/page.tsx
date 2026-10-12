@@ -9,6 +9,8 @@ import { StoreLocatorBanner } from "@/components/home/store-locator-banner";
 import { defaultStoreLocatorConfig } from "@/config/store-locator";
 import { EditorialCollectionsSection } from "@/components/home/editorial-collections";
 import { defaultEditorialCollectionsConfig } from "@/config/editorial-collections";
+import { CustomerReviewsSection } from "@/components/home/customer-reviews";
+import { defaultReviewsConfig } from "@/config/reviews";
 
 /**
  * JAVIX JEWELLERY Storefront Homepage
@@ -19,6 +21,7 @@ import { defaultEditorialCollectionsConfig } from "@/config/editorial-collection
  * 3. "New Collection" product carousel with quick-view, wishlist, and cart interactions
  * 4. "Find Jewelry Shops Near You" store locator banner
  * 5. Editorial collection banners ("Designed in India. Crafted with timeless elegance.")
+ * 6. "Customer Reviews" testimonial carousel section
  */
 export default function HomePage() {
   return (
@@ -40,6 +43,9 @@ export default function HomePage() {
 
       {/* Editorial Collection Banners Section */}
       <EditorialCollectionsSection config={defaultEditorialCollectionsConfig} />
+
+      {/* Customer Reviews Testimonials Carousel Section */}
+      <CustomerReviewsSection config={defaultReviewsConfig} />
     </main>
   );
 }
