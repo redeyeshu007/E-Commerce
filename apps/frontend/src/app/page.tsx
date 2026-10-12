@@ -5,6 +5,8 @@ import { ShopOurCollections } from "@/components/home/shop-our-collections";
 import { defaultCollectionsConfig } from "@/config/collections";
 import { NewCollectionSection } from "@/components/home/new-collection";
 import { defaultNewCollectionConfig } from "@/config/new-collection";
+import { StoreLocatorBanner } from "@/components/home/store-locator-banner";
+import { defaultStoreLocatorConfig } from "@/config/store-locator";
 
 /**
  * JAVIX JEWELLERY Storefront Homepage
@@ -13,6 +15,7 @@ import { defaultNewCollectionConfig } from "@/config/new-collection";
  * 1. Promotional hero banners featuring luxury fine jewellery
  * 2. "Shop Our Collections" category gallery section
  * 3. "New Collection" product carousel with quick-view, wishlist, and cart interactions
+ * 4. "Find Jewelry Shops Near You" store locator banner
  */
 export default function HomePage() {
   return (
@@ -28,6 +31,9 @@ export default function HomePage() {
 
       {/* New Collection Product Carousel Section */}
       <NewCollectionSection config={defaultNewCollectionConfig} />
+
+      {/* Find Jewelry Shops Near You Store Locator Banner */}
+      <StoreLocatorBanner config={defaultStoreLocatorConfig} />
     </main>
   );
 }
