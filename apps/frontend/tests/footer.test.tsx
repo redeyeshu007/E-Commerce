@@ -35,6 +35,9 @@ describe("PERALAGAE Footer Unit Test Suite", () => {
       expect(brandLink).toBeInTheDocument();
       expect(brandLink).toHaveAttribute("href", "/");
 
+      const logoImg = screen.getByRole("img", { name: /^PERALAGAE$/i });
+      expect(logoImg).toBeInTheDocument();
+
       expect(
         screen.getByText("Designed in India. Crafted with timeless elegance.")
       ).toBeInTheDocument();

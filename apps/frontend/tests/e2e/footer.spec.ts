@@ -22,6 +22,7 @@ test.describe("PERALAGAE Footer Comprehensive E2E & QA Suite", () => {
     // Column 1: PERALAGAE Brand & Tagline
     const brandCol = footer.getByTestId("footer-brand-column");
     await expect(brandCol.getByRole("link", { name: "PERALAGAE", exact: true })).toBeVisible();
+    await expect(brandCol.locator("img")).toBeVisible();
     await expect(
       brandCol.getByText("Designed in India. Crafted with timeless elegance.")
     ).toBeVisible();

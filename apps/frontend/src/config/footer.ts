@@ -58,6 +58,9 @@ export interface FooterConfig {
     name: string;
     tagline: string;
     href: string;
+    logoSrc?: string;
+    logoWidth?: number;
+    logoHeight?: number;
   };
   explorePeralagae: FooterColumnConfig;
   /** Backwards-compatible alias for explorePeralagae */
@@ -94,6 +97,9 @@ export const defaultFooterConfig: FooterConfig = {
     name: "PERALAGAE",
     tagline: "Designed in India. Crafted with timeless elegance.",
     href: "/",
+    logoSrc: "/images/logo/peralagae-logo.png",
+    logoWidth: 1308,
+    logoHeight: 537,
   },
   explorePeralagae: explorePeralagaeColumn,
   exploreJavix: explorePeralagaeColumn,

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUp, Headphones, ChevronDown } from "lucide-react";
 import type {
   FooterConfig,
@@ -103,6 +104,9 @@ export interface FooterBrandProps {
   name: string;
   tagline: string;
   href?: string;
+  logoSrc?: string;
+  logoWidth?: number;
+  logoHeight?: number;
   className?: string;
 }
 
@@ -110,15 +114,34 @@ export function FooterBrand({
   name,
   tagline,
   href = "/",
+  logoSrc,
+  logoWidth,
+  logoHeight,
   className = "",
 }: FooterBrandProps) {
   return (
     <div className={`flex flex-col ${className}`} data-testid="footer-brand-column">
       <Link
         href={href}
-        className="inline-block text-base sm:text-lg font-semibold tracking-[0.12em] text-[#111111] uppercase hover:text-black transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+        className="inline-block hover:opacity-85 transition-opacity focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+        aria-label={name}
       >
-        {name}
+        {logoSrc ? (
+          <>
+            <Image
+              src={logoSrc}
+              alt={name}
+              width={logoWidth ?? 1308}
+              height={logoHeight ?? 537}
+              className="h-8 sm:h-9 lg:h-10 w-auto max-w-[150px] sm:max-w-[170px] lg:max-w-[190px] object-contain"
+            />
+            <span className="sr-only">{name}</span>
+          </>
+        ) : (
+          <span className="text-base sm:text-lg font-semibold tracking-[0.12em] text-[#111111] uppercase">
+            {name}
+          </span>
+        )}
       </Link>
       <p className="mt-2.5 sm:mt-3 text-xs sm:text-[13px] text-[#777777] leading-relaxed max-w-xs font-normal">
         {tagline}
@@ -577,6 +600,9 @@ export function SiteFooter({
             name={brand.name}
             tagline={brand.tagline}
             href={brand.href}
+            logoSrc={brand.logoSrc}
+            logoWidth={brand.logoWidth}
+            logoHeight={brand.logoHeight}
             className="mb-4 sm:mb-6 lg:mb-0"
           />
 
