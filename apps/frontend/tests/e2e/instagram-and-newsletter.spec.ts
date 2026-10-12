@@ -67,7 +67,7 @@ test.describe("JAVIX Instagram Gallery and Newsletter Sections E2E Suite", () =>
       "newsletter-description"
     );
     await expect(nlDescription).toHaveText(
-      "Sign up to our Newsletter and get the discount code."
+      "A little luxury, delivered straight to your inbox."
     );
 
     const emailInput = newsletterSection.getByPlaceholder("Email Address");

@@ -116,7 +116,7 @@ describe("Newsletter Signup Suite", () => {
 
       const description = screen.getByTestId("newsletter-description");
       expect(description).toHaveTextContent(
-        "Sign up to our Newsletter and get the discount code."
+        "A little luxury, delivered straight to your inbox."
       );
     });
   });

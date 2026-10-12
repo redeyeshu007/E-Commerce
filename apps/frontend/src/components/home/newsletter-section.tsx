@@ -198,7 +198,7 @@ export function NewsletterSignupSection({
 }: NewsletterSignupSectionProps) {
   const {
     heading = "Sign up now & get 10% off",
-    description = "Sign up to our Newsletter and get the discount code.",
+    description = "A little luxury, delivered straight to your inbox.",
     inputPlaceholder = "Email Address",
     buttonLabel = "SUBSCRIBE",
     backgroundColor = "#FFFFFF",
