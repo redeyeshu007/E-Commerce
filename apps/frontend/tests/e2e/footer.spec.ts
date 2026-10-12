@@ -319,23 +319,17 @@ test.describe("PERALAGAE Footer Comprehensive E2E & QA Suite", () => {
    * 5. Back-to-Top Button Smooth Scroll
    * ------------------------------------------------------------------------- */
 
-  test("Back-to-top button: appears on scroll > 300px and returns to top", async ({
+  test("Back-to-top button: verified removed from the page per user request", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.emulateMedia({ reducedMotion: "reduce" });
 
     const backToTopBtn = page.getByTestId("back-to-top-button");
-    await expect(backToTopBtn).not.toBeVisible();
+    await expect(backToTopBtn).toHaveCount(0);
 
     await page.evaluate(() => window.scrollTo(0, 600));
-    await expect(backToTopBtn).toBeVisible({ timeout: 5000 });
-
-    await backToTopBtn.click();
-
-    await expect.poll(async () => {
-      return await page.evaluate(() => window.scrollY);
-    }, { timeout: 5000 }).toBeLessThan(10);
+    await page.waitForTimeout(300);
+    await expect(backToTopBtn).toHaveCount(0);
   });
 
   /* -------------------------------------------------------------------------

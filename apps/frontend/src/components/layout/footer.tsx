@@ -660,7 +660,7 @@ export function SiteFooter({
       />
 
       {/* Back-to-Top Button */}
-      <BackToTopButton label={backToTop.label} />
+      {backToTop?.enabled && <BackToTopButton label={backToTop.label} />}
     </footer>
   );
 }

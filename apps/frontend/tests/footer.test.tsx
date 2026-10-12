@@ -138,6 +138,11 @@ describe("PERALAGAE Footer Unit Test Suite", () => {
 
       expect(screen.queryByTestId("footer-payment-methods")).not.toBeInTheDocument();
     });
+
+    it("does not render back-to-top arrow button in SiteFooter by default", () => {
+      render(<SiteFooter />);
+      expect(screen.queryByTestId("back-to-top-button")).not.toBeInTheDocument();
+    });
   });
 
   describe("FooterAccordionSection mobile collapsible", () => {

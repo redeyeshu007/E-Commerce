@@ -78,8 +78,9 @@ export interface FooterConfig {
     label: string;
     href: string;
   };
-  backToTop: {
-    label: string;
+  backToTop?: {
+    enabled?: boolean;
+    label?: string;
   };
   paymentMethods?: PaymentMethodItem[];
 }
@@ -146,6 +147,7 @@ export const defaultFooterConfig: FooterConfig = {
     href: "https://javixtechnologies.com/",
   },
   backToTop: {
+    enabled: false,
     label: "Back to top",
   },
   paymentMethods: [],
