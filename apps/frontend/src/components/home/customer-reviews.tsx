@@ -1,59 +1,11 @@
 "use client";
 
-import React, {
-  useState,
-  useMemo,
-  useCallback,
-  useRef,
-  useSyncExternalStore,
-} from "react";
+import React from "react";
 import type {
   CustomerReviewsSectionConfig,
   ReviewItem,
 } from "@/config/reviews";
 import { defaultReviewsConfig } from "@/config/reviews";
-
-/* -------------------------------------------------------------------------
- * Responsive Breakpoint & Motion Subscriptions
- * ------------------------------------------------------------------------- */
-
-function subscribeBreakpoint(callback: () => void) {
-  if (typeof window === "undefined") return () => {};
-  window.addEventListener("resize", callback);
-  return () => window.removeEventListener("resize", callback);
-}
-
-function getBreakpointSnapshot(): number {
-  if (typeof window === "undefined") return 3;
-  if (window.innerWidth < 640) return 1;
-  if (window.innerWidth < 1024) return 2;
-  return 3;
-}
-
-function getBreakpointServerSnapshot(): number {
-  return 3;
-}
-
-function subscribeReducedMotion(callback: () => void) {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-    return () => {};
-  }
-  const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-  if (!mediaQuery.addEventListener) return () => {};
-  mediaQuery.addEventListener("change", callback);
-  return () => mediaQuery.removeEventListener("change", callback);
-}
-
-function getReducedMotionSnapshot() {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-    return false;
-  }
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function getReducedMotionServerSnapshot() {
-  return false;
-}
 
 /* -------------------------------------------------------------------------
  * Component: StarRating
@@ -105,17 +57,21 @@ export interface ReviewCardProps {
   review: ReviewItem;
   starColor?: string;
   className?: string;
+  "aria-hidden"?: boolean;
 }
 
 export function ReviewCard({
   review,
   starColor = "#D4A373",
   className = "",
+  "aria-hidden": ariaHidden,
 }: ReviewCardProps) {
   return (
     <article
       data-testid={`review-card-${review.id}`}
-      className={`bg-white rounded-none p-6 sm:p-7 md:p-8 flex flex-col justify-between h-full border border-black/[0.04] shadow-none transition-shadow duration-300 hover:shadow-sm ${className}`}
+      aria-hidden={ariaHidden}
+      className={`bg-white rounded-none p-6 sm:p-7 md:p-8 flex flex-col justify-between w-[310px] sm:w-[350px] lg:w-[390px] shrink-0 border border-black/[0.04] shadow-none select-none transition-shadow duration-300 hover:shadow-md ${className}`}
+      style={{ minHeight: "260px" }}
     >
       <div>
         {/* Circular dark quotation-mark icon near upper-left */}
@@ -155,7 +111,7 @@ export function ReviewCard({
 }
 
 /* -------------------------------------------------------------------------
- * Component: ReviewPagination
+ * Component: ReviewPagination (Kept for full backward-compatibility)
  * ------------------------------------------------------------------------- */
 
 export interface ReviewPaginationProps {
@@ -213,134 +169,21 @@ export interface CustomerReviewsSectionProps {
  * Implements:
  * 1. Exact Section Heading: "Customer Reviews" (centred, elegant dark charcoal)
  * 2. Soft muted blush-grey background (#F0E5E4) with subtle CSS concentric circles
- * 3. Review carousel presenting 3 cards on desktop, 2 on tablet, 1 on mobile
+ * 3. Continuous Infinite Marquee: Cards glide smoothly and endlessly in continuous motion
  * 4. Pure white minimal cards with quotation badge, headline, body, customer name, and 5-star rating
- * 5. Accessible pagination dots and keyboard arrow navigation
+ * 5. Full accessibility with zero duplicate screen-reader announcements & reduced-motion support
  */
 export function CustomerReviewsSection({
   config = defaultReviewsConfig,
   className = "",
 }: CustomerReviewsSectionProps) {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-
-  const itemsPerPage = useSyncExternalStore(
-    subscribeBreakpoint,
-    getBreakpointSnapshot,
-    getBreakpointServerSnapshot
-  );
-
-  const reducedMotion = useSyncExternalStore(
-    subscribeReducedMotion,
-    getReducedMotionSnapshot,
-    getReducedMotionServerSnapshot
-  );
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
-
   const {
     heading = "Customer Reviews",
     backgroundColor = "#F0E5E4",
     starColor = "#D4A373",
     reviews = [],
-    autoRotate = true,
-    autoRotateIntervalMs = 5000,
+    marqueeDurationSeconds = 45,
   } = config;
-
-  // Split reviews into pages based on responsive itemsPerPage
-  const pages = useMemo(() => {
-    if (!reviews || reviews.length === 0) return [];
-    const chunks: ReviewItem[][] = [];
-    for (let i = 0; i < reviews.length; i += itemsPerPage) {
-      chunks.push(reviews.slice(i, i + itemsPerPage));
-    }
-    return chunks;
-  }, [reviews, itemsPerPage]);
-
-  const totalPages = pages.length;
-  const activePage = Math.min(currentPage, Math.max(0, totalPages - 1));
-
-  const goToNextPage = useCallback(() => {
-    if (totalPages <= 1) return;
-    setCurrentPage((prev) => (prev + 1) % totalPages);
-  }, [totalPages]);
-
-  const goToPrevPage = useCallback(() => {
-    if (totalPages <= 1) return;
-    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
-  }, [totalPages]);
-
-  // Continuous auto-loop flow timer
-  React.useEffect(() => {
-    if (!autoRotate || reducedMotion || totalPages <= 1 || isPaused) {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      return;
-    }
-
-    timerRef.current = setInterval(() => {
-      goToNextPage();
-    }, autoRotateIntervalMs);
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [
-    autoRotate,
-    autoRotateIntervalMs,
-    goToNextPage,
-    totalPages,
-    isPaused,
-    reducedMotion,
-  ]);
-
-  // Pause on hover and focus so users can comfortably read reviews
-  const handleMouseEnter = () => setIsPaused(true);
-  const handleMouseLeave = () => setIsPaused(false);
-  const handleFocus = () => setIsPaused(true);
-  const handleBlur = (e: React.FocusEvent) => {
-    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
-      setIsPaused(false);
-    }
-  };
-
-  // Keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowLeft") {
-      goToPrevPage();
-    } else if (e.key === "ArrowRight") {
-      goToNextPage();
-    }
-  };
-
-  // Touch swipe handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStartX.current === null || touchEndX.current === null) return;
-    const distance = touchStartX.current - touchEndX.current;
-    if (distance > 45) {
-      goToNextPage();
-    } else if (distance < -45) {
-      goToPrevPage();
-    }
-    touchStartX.current = null;
-    touchEndX.current = null;
-  };
 
   // Graceful empty state: return null if no reviews provided
   if (!reviews || reviews.length === 0) {
@@ -349,23 +192,36 @@ export function CustomerReviewsSection({
 
   return (
     <section
-      ref={containerRef}
       aria-labelledby="customer-reviews-heading"
       data-testid="customer-reviews-section"
       className={`relative w-full py-16 sm:py-20 lg:py-24 overflow-hidden select-none ${className}`}
       style={{ backgroundColor }}
-      tabIndex={0}
       role="region"
-      aria-roledescription="carousel"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      aria-roledescription="marquee"
     >
+      {/* CSS Animation Keyframes for Smooth Infinite Marquee */}
+      <style>{`
+        @keyframes reviewsMarqueeAnim {
+          0% {
+            transform: translate3d(0, 0, 0);
+          }
+          100% {
+            transform: translate3d(-50%, 0, 0);
+          }
+        }
+        .reviews-marquee-track {
+          display: flex;
+          width: max-content;
+          animation: reviewsMarqueeAnim ${marqueeDurationSeconds}s linear infinite;
+          will-change: transform;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .reviews-marquee-track {
+            animation-play-state: paused;
+          }
+        }
+      `}</style>
+
       {/* Subtle, oversized concentric circular outlines in background */}
       <div
         className="pointer-events-none absolute inset-0 overflow-hidden flex items-center justify-center"
@@ -376,52 +232,49 @@ export function CustomerReviewsSection({
         <div className="absolute w-[1040px] h-[1040px] sm:w-[1400px] sm:h-[1400px] lg:w-[1740px] lg:h-[1740px] rounded-full border border-black/[0.025]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 w-full">
         {/* Exact Section Heading: Customer Reviews */}
         <h2
           id="customer-reviews-heading"
           data-testid="customer-reviews-heading"
-          className="text-center font-normal text-2xl sm:text-3xl md:text-[32px] lg:text-[36px] tracking-[-0.01em] text-[#111111] leading-tight mb-10 sm:mb-12 lg:mb-14"
+          className="text-center font-normal text-2xl sm:text-3xl md:text-[32px] lg:text-[36px] tracking-[-0.01em] text-[#111111] leading-tight mb-10 sm:mb-12 lg:mb-14 px-4"
         >
           {heading}
         </h2>
 
-        {/* Carousel Container */}
-        <div className="overflow-hidden w-full">
+        {/* Continuous Infinite Marquee Track with subtle gradient edge mask */}
+        <div
+          className="relative w-full overflow-hidden"
+          style={{
+            maskImage:
+              "linear-gradient(to right, transparent, black 3%, black 97%, transparent)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent, black 3%, black 97%, transparent)",
+          }}
+        >
           <div
-            className={`flex ${
-              reducedMotion ? "transition-none" : "transition-transform duration-500 ease-out"
-            }`}
-            style={{
-              transform: `translateX(-${activePage * 100}%)`,
-            }}
+            className="reviews-marquee-track flex gap-5 sm:gap-6 lg:gap-7 pl-4"
+            data-testid="reviews-marquee-track"
           >
-            {pages.map((pageReviews, pageIndex) => (
-              <div
-                key={`review-page-${pageIndex}`}
-                className="w-full shrink-0"
-                aria-hidden={pageIndex !== activePage}
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 items-stretch">
-                  {pageReviews.map((review) => (
-                    <ReviewCard
-                      key={review.id}
-                      review={review}
-                      starColor={starColor}
-                    />
-                  ))}
-                </div>
-              </div>
+            {/* Primary Set */}
+            {reviews.map((review) => (
+              <ReviewCard
+                key={`primary-${review.id}`}
+                review={review}
+                starColor={starColor}
+              />
+            ))}
+            {/* Duplicate Set for Seamless Continuous Infinite Loop */}
+            {reviews.map((review) => (
+              <ReviewCard
+                key={`loop-${review.id}`}
+                review={review}
+                starColor={starColor}
+                aria-hidden={true}
+              />
             ))}
           </div>
         </div>
-
-        {/* Pagination Dots */}
-        <ReviewPagination
-          totalPages={totalPages}
-          activePage={activePage}
-          onPageSelect={setCurrentPage}
-        />
       </div>
     </section>
   );

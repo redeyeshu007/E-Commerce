@@ -31,10 +31,8 @@ export interface CustomerReviewsSectionConfig {
   backgroundColor: string;
   /** Active star rating color hex code */
   starColor: string;
-  /** Automatic rotation flag to loop continuously */
-  autoRotate?: boolean;
-  /** Continuous auto-loop interval in milliseconds */
-  autoRotateIntervalMs?: number;
+  /** Continuous marquee loop duration in seconds */
+  marqueeDurationSeconds?: number;
   /** List of customer reviews */
   reviews: ReviewItem[];
 }
@@ -43,8 +41,7 @@ export const defaultReviewsConfig: CustomerReviewsSectionConfig = {
   heading: "Customer Reviews",
   backgroundColor: "#F0E5E4",
   starColor: "#D4A373", // Restrained warm muted gold/coral accent
-  autoRotate: true,
-  autoRotateIntervalMs: 5000,
+  marqueeDurationSeconds: 45,
   reviews: [
     {
       id: "rev-1",
