@@ -73,7 +73,7 @@ export function NewCollectionSection({
   config = defaultNewCollectionConfig,
   className = "",
 }: NewCollectionSectionProps) {
-  const { quickViewProduct, closeQuickView, openQuickView } = useStorefront();
+  const { quickViewProduct, closeQuickView } = useStorefront();
   const [currentPage, setCurrentPage] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const reducedMotion = useSyncExternalStore(
@@ -273,7 +273,6 @@ export function NewCollectionSection({
                       <ProductCard
                         key={product.id}
                         product={product}
-                        onQuickView={openQuickView}
                       />
                     ))}
                   </div>

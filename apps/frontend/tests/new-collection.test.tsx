@@ -95,18 +95,15 @@ describe("PERALAGAE New Collection Component Suite", () => {
       expect(screen.getByText(/Added to Bag/i)).toBeInTheDocument();
     });
 
-    it("triggers quick-view callback upon clicking quick-view button", () => {
-      const onQuickView = vi.fn();
+    it("renders wishlist button and does not render quick-view eye button", () => {
       render(
         <StorefrontProvider>
-          <ProductCard product={mockProduct} onQuickView={onQuickView} />
+          <ProductCard product={mockProduct} />
         </StorefrontProvider>,
       );
 
-      const quickViewBtn = screen.getByRole("button", { name: /Quick view/i });
-      fireEvent.click(quickViewBtn);
-
-      expect(onQuickView).toHaveBeenCalledWith(mockProduct);
+      expect(screen.getByRole("button", { name: /wishlist/i })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Quick view/i })).not.toBeInTheDocument();
     });
   });
 

@@ -64,7 +64,7 @@ test.describe("PERALAGAE New Collection E2E Suite", () => {
     await expect(dots.first()).toHaveAttribute("aria-selected", "true");
   });
 
-  test("Interactions: Quick View modal opens, displays details in INR, and closes via Escape", async ({
+  test("Interactions: Hover displays wishlist button and does not render quick-view eye button", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -72,20 +72,11 @@ test.describe("PERALAGAE New Collection E2E Suite", () => {
     const firstProduct = page.getByTestId("product-card-prod-solitaire-pendant");
     await firstProduct.hover();
 
+    const wishlistBtn = firstProduct.getByRole("button", { name: /wishlist/i });
+    await expect(wishlistBtn).toBeVisible();
+
     const quickViewBtn = firstProduct.getByRole("button", { name: /Quick view/i });
-    await expect(quickViewBtn).toBeVisible();
-    await quickViewBtn.click();
-
-    // Verify Quick View modal dialog
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: "Solitaire Diamond Pendant Necklace" })).toBeVisible();
-    await expect(dialog.getByText("₹24,999")).toBeVisible();
-    await expect(dialog.getByText("18k Yellow Gold & Platinum")).toBeVisible();
-
-    // Close via Escape key
-    await page.keyboard.press("Escape");
-    await expect(dialog).not.toBeVisible();
+    await expect(quickViewBtn).not.toBeAttached();
   });
 
   test("Interactions: Add to Cart updates cart count in navbar", async ({ page }) => {
