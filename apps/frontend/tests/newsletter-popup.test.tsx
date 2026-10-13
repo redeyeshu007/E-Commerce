@@ -53,23 +53,20 @@ describe("PERALAGAE Luxury Newsletter Subscription Popup Suite", () => {
   });
 
   describe("2. Popup Visual Structure & Content", () => {
-    it("renders the exact editorial content, brand accents, and jewellery photography", () => {
+    it("renders the exact reference heading, description, input, subscribe button, and dismissal checkbox", () => {
       render(
         <StorefrontProvider>
           <NewsletterPopup isOpen={true} onClose={vi.fn()} autoOpenDelayMs={null} />
         </StorefrontProvider>
       );
 
-      // Eyebrow
-      expect(screen.getByText("A LITTLE LUXURY")).toBeInTheDocument();
+      // Exact Heading
+      expect(screen.getByRole("heading", { name: "Join the our family" })).toBeInTheDocument();
 
-      // Heading
-      expect(screen.getByRole("heading", { name: "Join the PERALAGAE Circle" })).toBeInTheDocument();
-
-      // Description
+      // Exact Description
       expect(
         screen.getByText(
-          "Discover new collections, jewellery inspiration, and exclusive updates delivered to your inbox."
+          "Sign up to get all the latest fashion news, website updates, offers and promos."
         )
       ).toBeInTheDocument();
 
@@ -81,10 +78,10 @@ describe("PERALAGAE Luxury Newsletter Subscription Popup Suite", () => {
       // Subscribe button
       expect(screen.getByRole("button", { name: "SUBSCRIBE" })).toBeInTheDocument();
 
-      // Consent text
-      expect(
-        screen.getByText("By subscribing, you agree to receive updates from PERALAGAE.")
-      ).toBeInTheDocument();
+      // Dismissal preference checkbox & label
+      const checkbox = screen.getByLabelText("Do not show this window");
+      expect(checkbox).toBeInTheDocument();
+      expect(checkbox).not.toBeChecked();
 
       // Close button
       expect(screen.getByRole("button", { name: "Close newsletter popup" })).toBeInTheDocument();
@@ -154,6 +151,23 @@ describe("PERALAGAE Luxury Newsletter Subscription Popup Suite", () => {
 
       expect(screen.queryByTestId("newsletter-popup-content")).not.toBeInTheDocument();
     });
+
+    it("does not auto-open if permanently dismissed via 'Do not show this window'", () => {
+      vi.useFakeTimers();
+      localStorage.setItem("peralagae_newsletter_dismissed_permanently", "true");
+
+      render(
+        <StorefrontProvider>
+          <SiteHeader />
+        </StorefrontProvider>
+      );
+
+      act(() => {
+        vi.advanceTimersByTime(7000);
+      });
+
+      expect(screen.queryByTestId("newsletter-popup-content")).not.toBeInTheDocument();
+    });
   });
 
   describe("4. Navbar Subscribe Link Trigger", () => {
@@ -194,6 +208,27 @@ describe("PERALAGAE Luxury Newsletter Subscription Popup Suite", () => {
 
       expect(onClose).toHaveBeenCalledTimes(1);
       expect(sessionStorage.getItem("peralagae_newsletter_dismissed")).toBe("true");
+    });
+
+    it("stores permanent dismissal flag when 'Do not show this window' is checked", () => {
+      const onClose = vi.fn();
+      render(
+        <StorefrontProvider>
+          <NewsletterPopup isOpen={true} onClose={onClose} autoOpenDelayMs={null} />
+        </StorefrontProvider>
+      );
+
+      const checkbox = screen.getByLabelText("Do not show this window");
+      fireEvent.click(checkbox);
+      expect(checkbox).toBeChecked();
+      expect(localStorage.getItem("peralagae_newsletter_dismissed_permanently")).toBe("true");
+
+      const closeBtn = screen.getByRole("button", { name: "Close newsletter popup" });
+      fireEvent.click(closeBtn);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+      expect(sessionStorage.getItem("peralagae_newsletter_dismissed")).toBe("true");
+      expect(localStorage.getItem("peralagae_newsletter_dismissed_permanently")).toBe("true");
     });
 
     it("closes when Escape key is pressed", () => {

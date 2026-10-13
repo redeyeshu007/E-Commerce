@@ -326,13 +326,13 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     const popup = page.getByTestId("newsletter-popup-content");
     await expect(popup).toBeVisible();
 
-    await expect(popup.getByText("A LITTLE LUXURY")).toBeVisible();
-    await expect(popup.getByText("Join the PERALAGAE Circle")).toBeVisible();
+    await expect(popup.getByText("Join the our family")).toBeVisible();
     await expect(
       popup.getByText(
-        "Discover new collections, jewellery inspiration, and exclusive updates delivered to your inbox."
+        "Sign up to get all the latest fashion news, website updates, offers and promos."
       )
     ).toBeVisible();
+    await expect(popup.getByText("Do not show this window")).toBeVisible();
 
     // 3. Test inline email validation
     const emailInput = popup.getByTestId("newsletter-popup-email-input");
