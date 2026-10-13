@@ -107,4 +107,54 @@ test.describe("PERALAGAE Wishlist Page E2E Suite", () => {
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
   });
+
+  test("Desktop: All 6 columns align with headers and Add to Cart is exclusively in Action column", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    await page.goto("/wishlist");
+    await page.evaluate(() => {
+      localStorage.setItem("peralagae_wishlist_ids", JSON.stringify(["prod-solitaire-pendant"]));
+    });
+    await page.reload();
+    await page.waitForLoadState("domcontentloaded");
+
+    // 1. Check all 6 column headers in exact order
+    const tableHeaders = page.locator("table thead tr th");
+    await expect(tableHeaders).toHaveCount(6);
+    await expect(tableHeaders.nth(0)).toHaveText(/Remove/i);
+    await expect(tableHeaders.nth(1)).toHaveText(/Image/i);
+    await expect(tableHeaders.nth(2)).toHaveText(/Product Name/i);
+    await expect(tableHeaders.nth(3)).toHaveText(/Unit Price/i);
+    await expect(tableHeaders.nth(4)).toHaveText(/Stock Status/i);
+    await expect(tableHeaders.nth(5)).toHaveText(/Action/i);
+
+    // 2. Check product row cells
+    const row = page.locator('tr[data-testid="wishlist-row-prod-solitaire-pendant"]');
+    await expect(row).toBeVisible();
+    const cells = row.locator("td");
+    await expect(cells).toHaveCount(6);
+
+    // Cell 0: Remove button
+    await expect(cells.nth(0).locator('button[data-testid^="remove-wishlist-"]')).toBeVisible();
+
+    // Cell 1: Product image link
+    await expect(cells.nth(1).locator("img")).toBeVisible();
+
+    // Cell 2: Product Name
+    await expect(cells.nth(2).getByText("Solitaire Diamond Pendant")).toBeVisible();
+
+    // Cell 3: Unit Price
+    await expect(cells.nth(3).getByText("₹24,999")).toBeVisible();
+
+    // Cell 4: Stock Status
+    await expect(cells.nth(4).getByText("In Stock")).toBeVisible();
+
+    // Cell 5: Action (Add to Cart button)
+    const actionBtn = cells.nth(5).locator('button[data-testid^="add-to-cart-wishlist-"]');
+    await expect(actionBtn).toBeVisible();
+    await expect(actionBtn).toHaveText(/Add to Cart/i);
+  });
 });
+

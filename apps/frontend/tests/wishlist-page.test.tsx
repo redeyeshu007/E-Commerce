@@ -121,6 +121,16 @@ describe("PERALAGAE Wishlist Page Suite", () => {
       expect(screen.getAllByText("₹24,999").length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText("In Stock").length).toBeGreaterThanOrEqual(1);
 
+      // Verify all 6 column headers exist in correct order
+      const headers = screen.getAllByRole("columnheader");
+      expect(headers).toHaveLength(6);
+      expect(headers[0]).toHaveTextContent(/Remove/i);
+      expect(headers[1]).toHaveTextContent(/Image/i);
+      expect(headers[2]).toHaveTextContent(/Product Name/i);
+      expect(headers[3]).toHaveTextContent(/Unit Price/i);
+      expect(headers[4]).toHaveTextContent(/Stock Status/i);
+      expect(headers[5]).toHaveTextContent(/Action/i);
+
       // Desktop table row
       const desktopRow = screen.getByTestId("wishlist-row-prod-solitaire-pendant");
       expect(desktopRow).toBeInTheDocument();

@@ -42,36 +42,50 @@ export function WishlistTable({
        * 1. DESKTOP & TABLET VIEW (md+)
        * ========================================================================= */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse" aria-label="Wishlist Products Table">
+          <colgroup>
+            <col className="w-12" />
+            <col className="w-24" />
+            <col />
+            <col className="w-36 lg:w-44" />
+            <col className="w-36 lg:w-40" />
+            <col className="w-44 lg:w-48" />
+          </colgroup>
           <thead>
             <tr className="border-b border-[#EBEBEB]">
-              <th scope="col" className="w-12 py-4 pl-2 pr-1 text-center sr-only">
-                Remove
-              </th>
-              <th scope="col" className="w-24 py-4 px-2 text-center sr-only">
-                Image
+              <th
+                scope="col"
+                className="w-12 py-4 pl-2 pr-1 text-center text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
+              >
+                <span className="sr-only">Remove</span>
               </th>
               <th
                 scope="col"
-                className="py-4 px-4 text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
+                className="w-24 py-4 px-2 text-center text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
+              >
+                <span className="sr-only">Image</span>
+              </th>
+              <th
+                scope="col"
+                className="py-4 px-4 text-left text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
               >
                 Product Name
               </th>
               <th
                 scope="col"
-                className="py-4 px-4 text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
+                className="w-36 lg:w-44 py-4 px-4 text-left text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
               >
                 Unit Price
               </th>
               <th
                 scope="col"
-                className="py-4 px-4 text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
+                className="w-36 lg:w-40 py-4 px-4 text-left text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
               >
                 Stock Status
               </th>
               <th
                 scope="col"
-                className="py-4 px-4 text-right text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
+                className="w-44 lg:w-48 py-4 px-4 text-right text-xs font-medium tracking-[0.1em] uppercase text-[#777777]"
               >
                 Action
               </th>
@@ -89,7 +103,7 @@ export function WishlistTable({
                   className="transition-colors hover:bg-[#FAFAFA]/70"
                 >
                   {/* 1. Remove Action */}
-                  <td className="py-5 pl-2 pr-1 text-center align-middle">
+                  <td className="w-12 py-5 pl-2 pr-1 text-center align-middle">
                     <button
                       type="button"
                       onClick={() => onRemove(product)}
@@ -102,8 +116,8 @@ export function WishlistTable({
                   </td>
 
                   {/* 2. Product Image Thumbnail */}
-                  <td className="py-5 px-2 align-middle">
-                    <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden bg-[#F4F4F4]">
+                  <td className="w-24 py-5 px-2 text-center align-middle">
+                    <div className="relative h-20 w-20 mx-auto flex-shrink-0 overflow-hidden bg-[#F4F4F4]">
                       <Link href={`/product/${product.slug}`} aria-label={product.name}>
                         <Image
                           src={product.image.src}
@@ -117,7 +131,7 @@ export function WishlistTable({
                   </td>
 
                   {/* 3. Product Name & Category */}
-                  <td className="py-5 px-4 align-middle">
+                  <td className="py-5 px-4 text-left align-middle">
                     <span className="text-[10px] uppercase tracking-wider text-[#888888] block">
                       {product.category}
                     </span>
@@ -132,7 +146,7 @@ export function WishlistTable({
                   </td>
 
                   {/* 4. Unit Price */}
-                  <td className="py-5 px-4 align-middle whitespace-nowrap">
+                  <td className="w-36 lg:w-44 py-5 px-4 text-left align-middle whitespace-nowrap">
                     <span className="text-sm font-semibold text-[#111111]">
                       {formatInr(product.priceInr)}
                     </span>
@@ -144,7 +158,7 @@ export function WishlistTable({
                   </td>
 
                   {/* 5. Stock Status */}
-                  <td className="py-5 px-4 align-middle whitespace-nowrap">
+                  <td className="w-36 lg:w-40 py-5 px-4 text-left align-middle whitespace-nowrap">
                     {isInStock ? (
                       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#2E7D32]">
                         <span className="h-2 w-2 rounded-full bg-[#2E7D32]" aria-hidden="true" />
@@ -159,7 +173,7 @@ export function WishlistTable({
                   </td>
 
                   {/* 6. Add to Cart Action */}
-                  <td className="py-5 px-4 align-middle text-right whitespace-nowrap">
+                  <td className="w-44 lg:w-48 py-5 px-4 text-right align-middle whitespace-nowrap">
                     {isInStock ? (
                       <button
                         type="button"
