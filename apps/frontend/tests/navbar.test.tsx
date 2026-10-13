@@ -260,7 +260,7 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
       expect(homeLink).toHaveAttribute("href", "/");
       expect(shopLink).toHaveAttribute("href", "/shop");
       expect(contactLink).toHaveAttribute("href", "/contact");
-      expect(newArrivalsLink).toHaveAttribute("href", "/new-arrivals");
+      expect(newArrivalsLink).toHaveAttribute("href", "/#new-arrivals");
     });
 
     it("activates Home with aria-current='page', active class and gold text when on '/'", () => {
@@ -304,18 +304,23 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
       expect(contactLink).toHaveClass("text-[#C5A572]");
     });
 
-    it("activates New Arrivals when on '/new-arrivals'", () => {
+    it("activates New Arrivals when on '/#new-arrivals'", () => {
       render(
         <PrimaryNavigation
           items={defaultNavigationConfig.primaryNav}
-          currentPath="/new-arrivals"
+          currentPath="/#new-arrivals"
         />,
       );
 
+      const homeLink = screen.getByRole("link", { name: /Home/i });
       const newArrivalsLink = screen.getByRole("link", { name: /New Arrivals/i });
       expect(newArrivalsLink).toHaveAttribute("aria-current", "page");
       expect(newArrivalsLink).toHaveClass("active");
       expect(newArrivalsLink).toHaveClass("text-[#C5A572]");
+
+      // Home should not be active when New Arrivals is active
+      expect(homeLink).not.toHaveAttribute("aria-current");
+      expect(homeLink).not.toHaveClass("active");
     });
 
     it("renders the refined champagne gold underline element under each navigation link", () => {

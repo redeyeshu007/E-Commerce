@@ -183,10 +183,34 @@ export function NewCollectionSection({
     touchEndX.current = null;
   };
 
+  // Smooth scroll to New Arrivals section when URL hash matches #new-arrivals or #new-collection
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const scrollToSection = () => {
+      const hash = window.location.hash;
+      if (hash === "#new-arrivals" || hash === "#new-collection") {
+        if (containerRef.current) {
+          const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          requestAnimationFrame(() => {
+            containerRef.current?.scrollIntoView({
+              behavior: prefersReduced ? "auto" : "smooth",
+              block: "start",
+            });
+          });
+        }
+      }
+    };
+
+    scrollToSection();
+    window.addEventListener("hashchange", scrollToSection);
+    return () => window.removeEventListener("hashchange", scrollToSection);
+  }, []);
+
   return (
     <section
       ref={containerRef}
-      id="new-collection"
+      id="new-arrivals"
       aria-labelledby="new-collection-heading"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -198,7 +222,7 @@ export function NewCollectionSection({
       onTouchEnd={handleTouchEnd}
       className={`relative w-full overflow-hidden bg-white pt-10 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24 scroll-mt-24 sm:scroll-mt-28 ${className}`}
     >
-      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+      <div id="new-collection" className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         {/* 1. SECTION HEADER: Centred heading with flanking horizontal lines and subtitle */}
         <div className="flex flex-col items-center justify-center text-center mb-7 sm:mb-12 lg:mb-14">
           <div className="flex items-center justify-center w-full gap-3 sm:gap-6">

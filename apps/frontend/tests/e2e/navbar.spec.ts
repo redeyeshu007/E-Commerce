@@ -195,18 +195,21 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
       "aria-current"
     );
 
-    // 5. Navigate directly to /new-arrivals
-    await page.goto("/new-arrivals");
-    await expect(page.getByRole("status", { name: "PERALAGAE" })).not.toBeAttached({
-      timeout: 6000,
-    });
+    // 5. Navigate to New Arrivals (navigates to homepage and scrolls to #new-arrivals)
+    await expect(newArrivalsLink).toHaveAttribute("href", "/#new-arrivals");
+    await newArrivalsLink.click();
+    await page.waitForTimeout(500);
+
+    await expect(page).toHaveURL(/\/#new-arrivals/);
     await expect(header.getByRole("link", { name: "New Arrivals", exact: true })).toHaveAttribute(
       "aria-current",
       "page"
     );
-    await expect(header.getByRole("link", { name: "Contact", exact: true })).not.toHaveAttribute(
+    await expect(header.getByRole("link", { name: "Home", exact: true })).not.toHaveAttribute(
       "aria-current"
     );
+    const targetSection = page.locator("#new-arrivals");
+    await expect(targetSection).toBeVisible();
   });
 
   test("Mobile: Active route state is reflected in drawer navigation", async ({ page }) => {
@@ -229,6 +232,34 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     const shopDrawerLink = drawer.getByRole("link", { name: "Shop" });
     await expect(shopDrawerLink).toHaveAttribute("aria-current", "page");
     await expect(shopDrawerLink).toHaveClass(/text-\[#C5A572\]/);
+  });
+
+  test("New Arrivals: navigates to existing homepage section from another page and scrolls smoothly", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    // 1. Start on /shop
+    await page.goto("/shop");
+    await expect(page.getByRole("status", { name: "PERALAGAE" })).not.toBeAttached({
+      timeout: 6000,
+    });
+
+    // 2. Click New Arrivals in navbar
+    const header = page.locator("header");
+    const newArrivalsLink = header.getByRole("link", { name: "New Arrivals", exact: true });
+    await newArrivalsLink.click();
+
+    // 3. Verify URL is homepage with hash
+    await expect(page).toHaveURL(/\/#new-arrivals/);
+
+    // 4. Verify section exists on homepage and is visible
+    const newArrivalsSection = page.locator("#new-arrivals");
+    await expect(newArrivalsSection).toBeVisible();
+
+    // 5. Verify heading is in viewport
+    const heading = newArrivalsSection.locator("#new-collection-heading");
+    await expect(heading).toBeInViewport();
   });
 });
 

@@ -50,15 +50,109 @@ export function PrimaryNavigation({
     routerPath = "/";
   }
 
-  const activePath = currentPath ?? routerPath ?? "/";
+  const [activeHash, setActiveHash] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const updateHash = () => {
+      setActiveHash(window.location.hash || "");
+    };
+
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+    window.addEventListener("popstate", updateHash);
+
+    // Scroll listener on homepage: if user scrolls back to the very top, revert active item to Home
+    const handleScroll = () => {
+      if (routerPath === "/" && window.scrollY < 200) {
+        if (
+          window.location.hash === "#new-arrivals" ||
+          window.location.hash === "#new-collection"
+        ) {
+          window.history.replaceState(null, "", window.location.pathname);
+          setActiveHash("");
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("hashchange", updateHash);
+      window.removeEventListener("popstate", updateHash);
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [routerPath]);
+
+  const handleLinkClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href?: string
+  ) => {
+    if (href?.startsWith("/#") && typeof window !== "undefined") {
+      const targetId = href.replace("/#", "");
+      const targetElement = document.getElementById(targetId);
+
+      // If already on the homepage where target exists, smoothly scroll
+      if (targetElement) {
+        e.preventDefault();
+        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        targetElement.scrollIntoView({
+          behavior: prefersReduced ? "auto" : "smooth",
+          block: "start",
+        });
+        window.history.pushState(null, "", href);
+        setActiveHash(`#${targetId}`);
+      }
+    } else if (href === "/" && routerPath === "/" && typeof window !== "undefined") {
+      // If clicking Home while on homepage with an active section hash, scroll to top
+      if (window.location.hash) {
+        e.preventDefault();
+        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.scrollTo({
+          top: 0,
+          behavior: prefersReduced ? "auto" : "smooth",
+        });
+        window.history.pushState(null, "", "/");
+        setActiveHash("");
+      }
+    }
+
+    onItemClick?.();
+  };
 
   const isItemActive = (href?: string) => {
-    if (!activePath || !href) return false;
-    const cleanHref = href.split("?")[0].split("#")[0];
-    if (cleanHref === "/") {
-      return activePath === "/";
+    if (!href) return false;
+
+    // 1. Explicit path override passed (unit testing or specific routing harness)
+    if (currentPath) {
+      if (href === "/#new-arrivals") {
+        return (
+          currentPath === "/#new-arrivals" ||
+          currentPath === "#new-arrivals" ||
+          currentPath === "/new-arrivals"
+        );
+      }
+      if (href === "/") {
+        return currentPath === "/" && !currentPath.includes("#");
+      }
+      const cleanHref = href.split("?")[0].split("#")[0];
+      return currentPath === cleanHref || currentPath.startsWith(`${cleanHref}/`);
     }
-    return activePath === cleanHref || activePath.startsWith(`${cleanHref}/`);
+
+    // 2. Runtime route & hash matching
+    const onHomepage = routerPath === "/";
+
+    if (href === "/#new-arrivals") {
+      return onHomepage && (activeHash === "#new-arrivals" || activeHash === "#new-collection");
+    }
+
+    if (href === "/") {
+      return onHomepage && activeHash !== "#new-arrivals" && activeHash !== "#new-collection";
+    }
+
+    const cleanHref = href.split("?")[0].split("#")[0];
+    return routerPath === cleanHref || routerPath.startsWith(`${cleanHref}/`);
   };
 
   return (
@@ -71,7 +165,7 @@ export function PrimaryNavigation({
             <li key={item.id} className="relative flex items-center">
               <Link
                 href={item.href || "#"}
-                onClick={onItemClick}
+                onClick={(e) => handleLinkClick(e, item.href)}
                 aria-current={isActive ? "page" : undefined}
                 className={`peralagae-nav-link group relative inline-flex items-center py-2 text-sm lg:text-[15px] font-medium tracking-[0.05em] transition-colors duration-250 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A572] focus-visible:ring-offset-2 rounded-sm ${
                   isActive ? "active text-[#C5A572]" : "text-[#222222] hover:text-[#C5A572]"

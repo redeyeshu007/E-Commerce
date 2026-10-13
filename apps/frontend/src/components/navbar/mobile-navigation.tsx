@@ -50,12 +50,72 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
     currentPathname = "/";
   }
 
-  const isItemActive = (href?: string) => {
-    if (!currentPathname || !href) return false;
-    const cleanHref = href.split("?")[0].split("#")[0];
-    if (cleanHref === "/") {
-      return currentPathname === "/";
+  const [activeHash, setActiveHash] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const updateHash = () => {
+      setActiveHash(window.location.hash || "");
+    };
+
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+    window.addEventListener("popstate", updateHash);
+    return () => {
+      window.removeEventListener("hashchange", updateHash);
+      window.removeEventListener("popstate", updateHash);
+    };
+  }, []);
+
+  const handleLinkClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href?: string
+  ) => {
+    handleClose();
+
+    if (href?.startsWith("/#") && typeof window !== "undefined") {
+      const targetId = href.replace("/#", "");
+      const targetElement = document.getElementById(targetId);
+
+      if (targetElement) {
+        e.preventDefault();
+        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        targetElement.scrollIntoView({
+          behavior: prefersReduced ? "auto" : "smooth",
+          block: "start",
+        });
+        window.history.pushState(null, "", href);
+        setActiveHash(`#${targetId}`);
+      }
+    } else if (href === "/" && currentPathname === "/" && typeof window !== "undefined") {
+      if (window.location.hash) {
+        e.preventDefault();
+        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.scrollTo({
+          top: 0,
+          behavior: prefersReduced ? "auto" : "smooth",
+        });
+        window.history.pushState(null, "", "/");
+        setActiveHash("");
+      }
     }
+  };
+
+  const isItemActive = (href?: string) => {
+    if (!href) return false;
+
+    const onHomepage = currentPathname === "/";
+
+    if (href === "/#new-arrivals") {
+      return onHomepage && (activeHash === "#new-arrivals" || activeHash === "#new-collection");
+    }
+
+    if (href === "/") {
+      return onHomepage && activeHash !== "#new-arrivals" && activeHash !== "#new-collection";
+    }
+
+    const cleanHref = href.split("?")[0].split("#")[0];
     return currentPathname === cleanHref || currentPathname.startsWith(`${cleanHref}/`);
   };
 
@@ -249,7 +309,7 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
                     <li key={item.id}>
                       <Link
                         href={item.href || "#"}
-                        onClick={handleClose}
+                        onClick={(e) => handleLinkClick(e, item.href)}
                         aria-current={isActive ? "page" : undefined}
                         className={`group relative flex items-center justify-between py-2.5 text-[15px] font-medium tracking-wide transition-colors duration-250 ${
                           isActive

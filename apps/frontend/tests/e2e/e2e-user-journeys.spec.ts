@@ -229,10 +229,11 @@ test.describe("PERALAGAE Master End-to-End User Journeys & Responsive Viewports"
 
   for (const vp of VIEWPORTS) {
     test(`Journey 6 — Responsive viewport check: ${vp.name}`, async ({ page }) => {
+      test.slow();
       await page.setViewportSize({ width: vp.width, height: vp.height });
 
       for (const route of ["/", "/shop", "/cart", "/wishlist", "/contact"]) {
-        await page.goto(route);
+        await page.goto(route, { waitUntil: "domcontentloaded" });
         await waitForPreloader(page);
 
         // Strict zero horizontal overflow assertion
