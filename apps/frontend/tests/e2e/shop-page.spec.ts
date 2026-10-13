@@ -51,7 +51,8 @@ test.describe("PERALAGAE Shop Page E2E Suite", () => {
     await ringsBtn.click();
 
     // Toolbar count should update to Rings count
-    const status = page.getByRole("status");
+    const toolbar = page.getByRole("region", { name: /catalogue controls/i });
+    const status = toolbar.getByRole("status");
     await expect(status).toHaveText(/Showing 1–5 of 5 products/i);
 
     // All displayed cards should belong to RINGS category
@@ -109,4 +110,49 @@ test.describe("PERALAGAE Shop Page E2E Suite", () => {
     await closeBtn.click();
     await expect(drawer).not.toBeVisible();
   });
+
+  test("Price Filter: Single-track dual-thumb range slider updates products and resets cleanly", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const sidebar = page.getByLabel("Product Catalogue Filters");
+
+    // Exactly one slider track
+    const track = sidebar.getByTestId("dual-range-slider-track");
+    await expect(track).toBeVisible();
+
+    // Exactly two thumbs on that single track
+    const minThumb = sidebar.getByRole("slider", { name: "Minimum price" });
+    const maxThumb = sidebar.getByRole("slider", { name: "Maximum price" });
+    await expect(minThumb).toBeVisible();
+    await expect(maxThumb).toBeVisible();
+
+    // Min and Max labels and range text
+    await expect(sidebar.getByText(/Min:/i)).toBeVisible();
+    await expect(sidebar.getByText(/Max:/i)).toBeVisible();
+    await expect(sidebar.getByText("₹12,500 – ₹68,000")).toBeVisible();
+
+    // Focus max thumb and press PageDown repeatedly to lower max price
+    await maxThumb.focus();
+    await page.keyboard.press("PageDown");
+    await page.keyboard.press("PageDown");
+    await page.keyboard.press("PageDown");
+
+    // Product count in toolbar should update to reflect reduced range
+    const toolbar = page.getByRole("region", { name: /catalogue controls/i });
+    const status = toolbar.getByRole("status");
+    await expect(status).not.toHaveText(/Showing 1–12 of 24 products/i);
+
+    // Reset Price button appears
+    const resetPriceBtn = sidebar.getByRole("button", { name: /Reset Price/i });
+    await expect(resetPriceBtn).toBeVisible();
+
+    // Click Reset Price restores default bounds
+    await resetPriceBtn.click();
+    await expect(status).toHaveText(/Showing 1–12 of 24 products/i);
+    await expect(sidebar.getByText("₹12,500 – ₹68,000")).toBeVisible();
+    await expect(resetPriceBtn).not.toBeVisible();
+  });
 });
+

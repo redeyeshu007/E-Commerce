@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ChevronDown, RotateCcw, Check } from "lucide-react";
 import { formatInr } from "@/lib/utils";
+import { DualRangeSlider } from "./dual-range-slider";
 import {
   JEWELLERY_CATEGORIES,
   JEWELLERY_MATERIALS,
@@ -64,18 +65,21 @@ export function ShopSidebar({
     }
   };
 
-  // Price change handler
+  // Price range state & handlers
   const currentMinPrice = filters.minPrice ?? minCataloguePrice;
   const currentMaxPrice = filters.maxPrice ?? maxCataloguePrice;
+  const isPriceFiltered = filters.minPrice != null || filters.maxPrice != null;
 
-  const handleMinPriceChange = (val: number) => {
-    const safeMin = Math.min(Math.max(minCataloguePrice, val), currentMaxPrice);
-    onFilterChange({ ...filters, minPrice: safeMin });
-  };
-
-  const handleMaxPriceChange = (val: number) => {
-    const safeMax = Math.max(Math.min(maxCataloguePrice, val), currentMinPrice);
-    onFilterChange({ ...filters, maxPrice: safeMax });
+  const handlePriceRangeChange = (newMin: number, newMax: number) => {
+    if (newMin <= minCataloguePrice && newMax >= maxCataloguePrice) {
+      onFilterChange({ ...filters, minPrice: null, maxPrice: null });
+    } else {
+      onFilterChange({
+        ...filters,
+        minPrice: newMin,
+        maxPrice: newMax,
+      });
+    }
   };
 
   const handlePriceReset = () => {
@@ -211,52 +215,39 @@ export function ShopSidebar({
         </button>
 
         {openSections.price && (
-          <div id="filter-section-price" className="mt-4 flex flex-col gap-3">
-            {/* Visual Dual Sliders */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between text-xs text-[#555555]">
-                <span>Min: {formatInr(currentMinPrice)}</span>
-                <span>Max: {formatInr(currentMaxPrice)}</span>
-              </div>
-
-              {/* Slider Inputs */}
-              <div className="relative flex flex-col gap-2">
-                <input
-                  type="range"
-                  min={minCataloguePrice}
-                  max={maxCataloguePrice}
-                  step={500}
-                  value={currentMinPrice}
-                  onChange={(e) => handleMinPriceChange(Number(e.target.value))}
-                  aria-label="Minimum price in Indian Rupees"
-                  suppressHydrationWarning
-                  className="w-full accent-black cursor-pointer"
-                />
-                <input
-                  type="range"
-                  min={minCataloguePrice}
-                  max={maxCataloguePrice}
-                  step={500}
-                  value={currentMaxPrice}
-                  onChange={(e) => handleMaxPriceChange(Number(e.target.value))}
-                  aria-label="Maximum price in Indian Rupees"
-                  suppressHydrationWarning
-                  className="w-full accent-black cursor-pointer"
-                />
-              </div>
+          <div id="filter-section-price" className="mt-4 flex flex-col gap-2.5">
+            {/* Minimum & Maximum Selected Prices Aligned Left and Right */}
+            <div className="flex items-center justify-between text-xs text-[#555555]">
+              <span className="font-medium text-[#111111]">
+                Min: <span className="font-normal text-[#555555]">{formatInr(currentMinPrice)}</span>
+              </span>
+              <span className="font-medium text-[#111111]">
+                Max: <span className="font-normal text-[#555555]">{formatInr(currentMaxPrice)}</span>
+              </span>
             </div>
 
-            {/* Price Range Display & Reset Action */}
-            <div className="flex items-center justify-between mt-1 pt-2">
-              <span className="text-xs font-medium text-[#111111]">
+            {/* Exactly One Single-Track Dual-Thumb Range Slider */}
+            <DualRangeSlider
+              min={minCataloguePrice}
+              max={maxCataloguePrice}
+              step={500}
+              value={[currentMinPrice, currentMaxPrice]}
+              onChange={([newMin, newMax]) => handlePriceRangeChange(newMin, newMax)}
+              minLabel="Minimum price"
+              maxLabel="Maximum price"
+            />
+
+            {/* Selected Price Range Display Underneath & Reset Action */}
+            <div className="flex items-center justify-between pt-0.5">
+              <span className="text-xs font-semibold text-[#111111]">
                 {formatInr(currentMinPrice)} – {formatInr(currentMaxPrice)}
               </span>
-              {(filters.minPrice != null || filters.maxPrice != null) && (
+              {isPriceFiltered && (
                 <button
                   type="button"
                   onClick={handlePriceReset}
                   suppressHydrationWarning
-                  className="text-[11px] text-[#666666] hover:text-black underline transition-colors"
+                  className="text-[11px] font-medium text-[#666666] hover:text-black underline transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
                 >
                   Reset Price
                 </button>

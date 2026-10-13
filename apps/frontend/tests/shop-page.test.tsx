@@ -9,6 +9,7 @@ import { ShopProductCard } from "@/components/shop/shop-product-card";
 import { ShopPagination } from "@/components/shop/shop-pagination";
 import { ShopEmptyState } from "@/components/shop/shop-empty-state";
 import { ShopPageContent } from "@/components/shop/shop-page-content";
+import { DualRangeSlider } from "@/components/shop/dual-range-slider";
 import {
   getShopCatalogue,
   SHOP_PRODUCTS,
@@ -206,6 +207,173 @@ describe("PERALAGAE Shop Page Suite", () => {
       expect(clearBtn).toBeInTheDocument();
       fireEvent.click(clearBtn);
       expect(onClearAll).toHaveBeenCalled();
+    });
+
+    it("renders single-track dual-thumb price slider with Min, Max, and range underneath in INR", () => {
+      render(
+        <ShopSidebar
+          filters={mockFilters}
+          onFilterChange={vi.fn()}
+          onClearAll={vi.fn()}
+          categoryCounts={mockCounts}
+          materialCounts={mockMaterialCounts}
+          sizeCounts={mockSizeCounts}
+          minCataloguePrice={12500}
+          maxCataloguePrice={68000}
+        />
+      );
+
+      // Verify Min and Max labels
+      expect(screen.getByText(/Min:/i)).toBeInTheDocument();
+      expect(screen.getByText(/Max:/i)).toBeInTheDocument();
+
+      // Exactly two slider thumbs belonging to the single track
+      const sliders = screen.getAllByRole("slider");
+      expect(sliders).toHaveLength(2);
+      expect(sliders[0]).toHaveAttribute("aria-label", "Minimum price");
+      expect(sliders[1]).toHaveAttribute("aria-label", "Maximum price");
+
+      // Verify formatted range underneath
+      expect(screen.getByText("₹12,500 – ₹68,000")).toBeInTheDocument();
+    });
+
+    it("displays Reset Price when price filter is active and clears only price without affecting other filters", () => {
+      const onFilterChange = vi.fn();
+      render(
+        <ShopSidebar
+          filters={{ ...mockFilters, category: "rings", minPrice: 20000, maxPrice: 50000 }}
+          onFilterChange={onFilterChange}
+          onClearAll={vi.fn()}
+          categoryCounts={mockCounts}
+          materialCounts={mockMaterialCounts}
+          sizeCounts={mockSizeCounts}
+          minCataloguePrice={12500}
+          maxCataloguePrice={68000}
+        />
+      );
+
+      const resetPriceBtn = screen.getByRole("button", { name: /Reset Price/i });
+      expect(resetPriceBtn).toBeInTheDocument();
+      fireEvent.click(resetPriceBtn);
+
+      expect(onFilterChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "rings",
+          minPrice: null,
+          maxPrice: null,
+        })
+      );
+    });
+  });
+
+  describe("DualRangeSlider Component", () => {
+    it("renders exactly one track and two thumbs with accessible ARIA attributes", () => {
+      render(
+        <DualRangeSlider
+          min={12500}
+          max={68000}
+          step={500}
+          value={[12500, 68000]}
+          onChange={vi.fn()}
+        />
+      );
+
+      const track = screen.getByTestId("dual-range-slider-track");
+      expect(track).toBeInTheDocument();
+
+      const thumbs = screen.getAllByRole("slider");
+      expect(thumbs).toHaveLength(2);
+
+      const [minThumb, maxThumb] = thumbs;
+      expect(minThumb).toHaveAttribute("aria-label", "Minimum price");
+      expect(minThumb).toHaveAttribute("aria-valuemin", "12500");
+      expect(minThumb).toHaveAttribute("aria-valuemax", "68000");
+      expect(minThumb).toHaveAttribute("aria-valuenow", "12500");
+
+      expect(maxThumb).toHaveAttribute("aria-label", "Maximum price");
+      expect(maxThumb).toHaveAttribute("aria-valuemin", "12500");
+      expect(maxThumb).toHaveAttribute("aria-valuemax", "68000");
+      expect(maxThumb).toHaveAttribute("aria-valuenow", "68000");
+    });
+
+    it("supports keyboard navigation on minimum thumb and prevents crossing", () => {
+      const onChange = vi.fn();
+      render(
+        <DualRangeSlider
+          min={12500}
+          max={68000}
+          step={500}
+          value={[20000, 30000]}
+          onChange={onChange}
+        />
+      );
+
+      const minThumb = screen.getByRole("slider", { name: "Minimum price" });
+
+      // ArrowRight increases by step (500)
+      fireEvent.keyDown(minThumb, { key: "ArrowRight" });
+      expect(onChange).toHaveBeenCalledWith([20500, 30000]);
+
+      // ArrowLeft decreases by step (500)
+      fireEvent.keyDown(minThumb, { key: "ArrowLeft" });
+      expect(onChange).toHaveBeenCalledWith([19500, 30000]);
+
+      // Home sets to min bound
+      fireEvent.keyDown(minThumb, { key: "Home" });
+      expect(onChange).toHaveBeenCalledWith([12500, 30000]);
+
+      // End sets to current max value (prevents crossing)
+      fireEvent.keyDown(minThumb, { key: "End" });
+      expect(onChange).toHaveBeenCalledWith([30000, 30000]);
+    });
+
+    it("supports keyboard navigation on maximum thumb and prevents dropping below min", () => {
+      const onChange = vi.fn();
+      render(
+        <DualRangeSlider
+          min={12500}
+          max={68000}
+          step={500}
+          value={[20000, 30000]}
+          onChange={onChange}
+        />
+      );
+
+      const maxThumb = screen.getByRole("slider", { name: "Maximum price" });
+
+      // ArrowRight increases by step (500)
+      fireEvent.keyDown(maxThumb, { key: "ArrowRight" });
+      expect(onChange).toHaveBeenCalledWith([20000, 30500]);
+
+      // ArrowLeft decreases by step (500)
+      fireEvent.keyDown(maxThumb, { key: "ArrowLeft" });
+      expect(onChange).toHaveBeenCalledWith([20000, 29500]);
+
+      // End sets to max bound
+      fireEvent.keyDown(maxThumb, { key: "End" });
+      expect(onChange).toHaveBeenCalledWith([20000, 68000]);
+
+      // Home sets to current min value (prevents dropping below min)
+      fireEvent.keyDown(maxThumb, { key: "Home" });
+      expect(onChange).toHaveBeenCalledWith([20000, 20000]);
+    });
+
+    it("highlights the active track between min and max percentages", () => {
+      render(
+        <DualRangeSlider
+          min={0}
+          max={100}
+          step={1}
+          value={[25, 75]}
+          onChange={vi.fn()}
+        />
+      );
+
+      const activeTrack = screen.getByTestId("dual-range-slider-active-track");
+      expect(activeTrack).toHaveStyle({
+        left: "25%",
+        width: "50%",
+      });
     });
   });
 
