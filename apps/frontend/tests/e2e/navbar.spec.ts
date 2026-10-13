@@ -56,11 +56,11 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     await expect(header.getByText("Contact", { exact: true })).toBeVisible();
     await expect(header.getByText("New Arrivals", { exact: true })).toBeVisible();
 
-    // Action buttons visible on desktop
+    // Action buttons / links visible on desktop
     await expect(header.getByRole("button", { name: "Search" })).toBeVisible();
     await expect(header.getByRole("button", { name: "Account" })).toBeVisible();
     await expect(header.getByRole("button", { name: "Wishlist", exact: true })).toBeVisible();
-    await expect(header.getByRole("button", { name: "Cart" }).first()).toBeVisible();
+    await expect(header.getByRole("link", { name: "Cart" }).first()).toBeVisible();
   });
 
   test("dismisses announcement bar upon clicking close button", async ({ page }) => {

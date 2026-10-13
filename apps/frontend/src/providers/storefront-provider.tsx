@@ -21,6 +21,7 @@ export interface StorefrontContextValue {
   cartCount: number;
   subtotalInr: number;
   addToCart: (product: Product, quantity?: number) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
 
@@ -147,6 +148,17 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
     [cartItems, saveCart, showToast],
   );
 
+  const updateQuantity = useCallback(
+    (productId: string, quantity: number) => {
+      const safeQty = Math.max(1, quantity);
+      const next = cartItems.map((item) =>
+        item.product.id === productId ? { ...item, quantity: safeQty } : item
+      );
+      saveCart(next);
+    },
+    [cartItems, saveCart]
+  );
+
   const removeFromCart = useCallback(
     (productId: string) => {
       const next = cartItems.filter((item) => item.product.id !== productId);
@@ -198,6 +210,7 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
       cartCount,
       subtotalInr,
       addToCart,
+      updateQuantity,
       removeFromCart,
       clearCart,
       quickViewProduct,
@@ -220,6 +233,7 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
       cartCount,
       subtotalInr,
       addToCart,
+      updateQuantity,
       removeFromCart,
       clearCart,
       quickViewProduct,
@@ -247,6 +261,7 @@ const defaultStorefrontValue: StorefrontContextValue = {
   cartCount: 0,
   subtotalInr: 0,
   addToCart: () => {},
+  updateQuantity: () => {},
   removeFromCart: () => {},
   clearCart: () => {},
   quickViewProduct: null,

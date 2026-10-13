@@ -114,9 +114,10 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
       expect(screen.getByRole("button", { name: "Account" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Wishlist" })).toBeInTheDocument();
 
-      // Cart buttons exist for both mobile header and desktop actions
-      const cartButtons = screen.getAllByRole("button", { name: "Cart" });
-      expect(cartButtons.length).toBeGreaterThanOrEqual(1);
+      // Cart link exists for both mobile header and desktop actions
+      const cartLinks = screen.getAllByRole("link", { name: "Cart" });
+      expect(cartLinks.length).toBeGreaterThanOrEqual(1);
+      expect(cartLinks[0]).toHaveAttribute("href", "/cart");
     });
 
     it("opens and closes mobile menu drawer via hamburger button and close button", async () => {
