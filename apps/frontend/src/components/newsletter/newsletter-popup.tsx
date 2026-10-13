@@ -170,7 +170,7 @@ export function NewsletterPopup({
         <Dialog.Overlay
           data-testid="newsletter-popup-backdrop"
           onClick={handleClose}
-          className="newsletter-modal-backdrop fixed inset-0 z-50 bg-black/45 backdrop-blur-xs cursor-pointer"
+          className="newsletter-modal-backdrop fixed inset-0 z-50 bg-black/55 backdrop-blur-xs cursor-pointer"
         />
 
         {/* Centered Modal Container */}
@@ -186,55 +186,62 @@ export function NewsletterPopup({
             data-testid="newsletter-popup-content"
             aria-labelledby="newsletter-popup-title"
             aria-describedby="newsletter-popup-description"
-            className="newsletter-modal-content pointer-events-auto relative w-full max-w-[780px] md:max-w-[820px] max-h-[92vh] flex flex-col md:flex-row overflow-hidden rounded-none sm:rounded-[2px] border border-[#E5E0D8] bg-white shadow-xl focus:outline-none"
+            className="newsletter-modal-content pointer-events-auto relative w-full max-w-[1080px] max-h-[92vh] flex flex-col md:flex-row overflow-hidden rounded-none sm:rounded-[2px] border border-[#C5A572]/35 bg-white shadow-2xl focus:outline-none"
           >
-            {/* Accessible Close Button in Top-Right Corner */}
+            {/* Accessible Minimalist Close Button in Top-Right Corner */}
             <button
               type="button"
               onClick={handleClose}
+              disabled={isSubmitting}
               data-testid="newsletter-popup-close-btn"
               aria-label="Close newsletter popup"
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full text-[#777777] transition-colors hover:bg-black/5 hover:text-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 z-20 flex h-9 w-9 items-center justify-center rounded-full text-[#888888] transition-colors hover:bg-black/5 hover:text-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <X className="h-4.5 w-4.5 stroke-[1.5]" aria-hidden="true" />
+              <X className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
             </button>
 
-            {/* Left Column — Realistic Fine Jewellery Imagery */}
-            <div className="relative sm:w-5/12 md:w-1/2 min-h-[180px] sm:min-h-[440px] flex-none overflow-hidden bg-[#F7F5F0]">
+            {/* Left Column — Full-Bleed Luxury Jewellery Editorial Photography */}
+            <div className="relative w-full md:w-[48%] min-h-[260px] sm:min-h-[340px] md:min-h-[540px] flex-none overflow-hidden bg-[#F7F5F0]">
               <Image
-                src="/images/hero/banner-necklaces.jpg"
+                src="/images/editorial/garden-variety.jpg"
                 alt="PERALAGAE Fine Jewellery Collection"
                 fill
                 priority
-                sizes="(max-width: 640px) 100vw, 400px"
-                className="object-cover object-center"
+                sizes="(max-width: 768px) 100vw, 540px"
+                className="object-cover object-[center_top] select-none"
               />
             </div>
 
-            {/* Right Column — Editorial Content & Subscription Form */}
-            <div className="relative sm:w-7/12 md:w-1/2 p-6 sm:p-8 md:p-10 flex flex-col justify-center text-left bg-white">
+            {/* Right Column — Editorial Content & Premium Subscription Form */}
+            <div className="relative w-full md:w-[52%] p-8 sm:p-12 md:p-12 lg:p-14 flex flex-col justify-center text-left bg-white overflow-y-auto">
               {isSuccess ? (
                 /* Success Confirmation State */
                 <div data-testid="newsletter-popup-success" className="py-4 text-center sm:text-left">
-                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#FAF5F6] text-[#C5A572] mb-3">
-                    <Check className="h-5 w-5 stroke-[2.2]" aria-hidden="true" />
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#FAF5F0] text-[#C5A572] mb-4 border border-[#C5A572]/20">
+                    <Check className="h-6 w-6 stroke-[2.2]" aria-hidden="true" />
+                  </div>
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <span className="h-[1.5px] w-5 sm:w-6 bg-[#C5A572]" aria-hidden="true" />
+                    <span className="text-[11px] font-semibold tracking-[0.25em] text-[#C5A572] uppercase">
+                      WELCOME TO THE CIRCLE
+                    </span>
                   </div>
                   <h3
                     id="newsletter-popup-title"
-                    className="text-xl sm:text-2xl font-serif font-medium text-[#111111] leading-tight"
+                    className="text-2xl sm:text-3xl font-serif font-normal text-[#111111] leading-tight"
                   >
                     You&apos;re on the list.
                   </h3>
                   <p
                     id="newsletter-popup-description"
-                    className="mt-2 text-xs sm:text-sm text-[#666666] leading-relaxed"
+                    className="mt-3 text-xs sm:text-sm text-[#555555] leading-relaxed max-w-[420px]"
                   >
                     Thank you for joining the PERALAGAE Circle. Look forward to curated inspirations and private previews in your inbox.
                   </p>
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="mt-6 inline-flex h-11 items-center justify-center rounded-none sm:rounded-[2px] bg-[#111111] px-6 text-xs font-semibold tracking-[0.15em] uppercase text-white transition-colors hover:bg-[#C5A572] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                    className="mt-7 inline-flex h-12 sm:h-13 items-center justify-center rounded-none sm:rounded-[2px] bg-[#111111] px-8 text-xs font-semibold tracking-[0.2em] uppercase text-white transition-colors duration-300 hover:bg-[#C5A572] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
                   >
                     Continue Shopping
                   </button>
@@ -242,25 +249,34 @@ export function NewsletterPopup({
               ) : (
                 /* Subscription Form State */
                 <>
-                  <span className="text-[11px] font-semibold tracking-[0.2em] text-[#C5A572] uppercase">
-                    A LITTLE LUXURY
-                  </span>
+                  {/* Subtle Champagne Gold Eyebrow Accent */}
+                  <div className="flex items-center gap-2.5 mb-3 sm:mb-3.5">
+                    <span className="h-[1.5px] w-5 sm:w-6 bg-[#C5A572]" aria-hidden="true" />
+                    <span className="text-[11px] sm:text-xs font-semibold tracking-[0.25em] text-[#C5A572] uppercase">
+                      A LITTLE LUXURY
+                    </span>
+                  </div>
 
                   <h3
                     id="newsletter-popup-title"
-                    className="mt-2 text-xl sm:text-2xl font-serif font-medium text-[#111111] leading-tight"
+                    className="font-serif text-2xl sm:text-3xl lg:text-[34px] font-normal text-[#111111] leading-[1.18] tracking-tight"
                   >
                     Join the PERALAGAE Circle
                   </h3>
 
                   <p
                     id="newsletter-popup-description"
-                    className="mt-2 text-xs sm:text-sm text-[#666666] leading-relaxed"
+                    className="mt-3 sm:mt-3.5 text-xs sm:text-sm lg:text-[15px] text-[#555555] leading-relaxed max-w-[430px]"
                   >
                     Discover new collections, jewellery inspiration, and exclusive updates delivered to your inbox.
                   </p>
 
-                  <form onSubmit={handleSubmit} data-testid="newsletter-popup-form" className="mt-5 space-y-3" noValidate>
+                  <form
+                    onSubmit={handleSubmit}
+                    data-testid="newsletter-popup-form"
+                    className="mt-6 sm:mt-7 space-y-3.5 sm:space-y-4"
+                    noValidate
+                  >
                     <div>
                       <input
                         ref={inputRef}
@@ -274,7 +290,7 @@ export function NewsletterPopup({
                         aria-label="Email address"
                         data-testid="newsletter-popup-email-input"
                         disabled={isSubmitting}
-                        className="h-11 sm:h-12 w-full rounded-none sm:rounded-[2px] border border-[#DCD7CD] bg-white px-3.5 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] transition-colors focus:border-[#C5A572] focus:outline-none focus:ring-1 focus:ring-[#C5A572] disabled:opacity-60"
+                        className="h-[52px] sm:h-[56px] w-full rounded-none sm:rounded-[2px] border border-[#DCD7CD] bg-white px-4 sm:px-5 text-xs sm:text-sm text-[#111111] placeholder:text-[#999999] transition-all duration-200 focus:border-[#C5A572] focus:outline-none focus:ring-1 focus:ring-[#C5A572] disabled:opacity-60"
                         autoComplete="email"
                         spellCheck="false"
                       />
@@ -282,7 +298,7 @@ export function NewsletterPopup({
                         <p
                           role="alert"
                           data-testid="newsletter-popup-error"
-                          className="mt-1.5 text-xs text-[#D9383A] text-left"
+                          className="mt-2 text-xs text-[#D9383A] text-left font-medium"
                         >
                           {error}
                         </p>
@@ -293,7 +309,7 @@ export function NewsletterPopup({
                       type="submit"
                       disabled={isSubmitting}
                       data-testid="newsletter-popup-submit-btn"
-                      className="flex h-11 sm:h-12 w-full items-center justify-center rounded-none sm:rounded-[2px] bg-[#111111] text-xs font-semibold tracking-[0.18em] uppercase text-white transition-colors hover:bg-[#C5A572] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black disabled:cursor-not-allowed disabled:opacity-75"
+                      className="flex h-[52px] sm:h-[56px] w-full items-center justify-center rounded-none sm:rounded-[2px] bg-[#111111] text-xs sm:text-[13px] font-medium tracking-[0.22em] uppercase text-white transition-colors duration-300 hover:bg-[#C5A572] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black disabled:cursor-not-allowed disabled:opacity-75"
                     >
                       {isSubmitting ? (
                         <span className="flex items-center gap-2">
@@ -305,7 +321,7 @@ export function NewsletterPopup({
                       )}
                     </button>
 
-                    <p className="text-[10px] sm:text-[11px] text-[#888888] leading-normal pt-1">
+                    <p className="text-[11px] sm:text-xs text-[#888888] leading-normal pt-0.5">
                       By subscribing, you agree to receive updates from PERALAGAE.
                     </p>
                   </form>
