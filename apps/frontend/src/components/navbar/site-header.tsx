@@ -39,7 +39,7 @@ export function SiteHeader({ config = defaultNavigationConfig, className = "" }:
 
   return (
     <>
-      <header className={`sticky top-0 w-full z-40 bg-white text-black ${className}`} role="banner">
+      <header className={`relative w-full z-30 bg-white text-black ${className}`} role="banner">
         {/* Row One: Announcement Bar */}
         <AnnouncementBar config={config.announcement} />
 

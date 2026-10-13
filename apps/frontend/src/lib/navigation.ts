@@ -39,19 +39,21 @@ export function isProgrammaticScrollActive(): boolean {
  * remain fully visible below the header on desktop, tablet, and mobile.
  */
 export function getStickyHeaderOffset(): number {
-  if (typeof window === "undefined") return 100;
+  if (typeof window === "undefined") return 24;
 
   const header =
     document.querySelector("header[role='banner']") ||
     document.querySelector("header");
 
-  if (header) {
-    const rect = header.getBoundingClientRect();
-    // Return header height plus 16px of comfortable visual breathing room
-    return Math.max(Math.round(rect.height), 80) + 16;
+  if (header && typeof window.getComputedStyle === "function") {
+    const style = window.getComputedStyle(header);
+    if (style.position === "fixed" || style.position === "sticky") {
+      const rect = header.getBoundingClientRect();
+      return Math.max(Math.round(rect.height), 80) + 16;
+    }
   }
 
-  return 116;
+  return 24;
 }
 
 /**
