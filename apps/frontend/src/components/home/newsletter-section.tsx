@@ -130,6 +130,7 @@ export function NewsletterSignupForm({
                   ? "newsletter-status"
                   : undefined
               }
+              suppressHydrationWarning
               className="w-full bg-white border border-[#CCCCCC] focus:border-[#111111] focus:ring-1 focus:ring-[#111111] rounded-none px-4 sm:px-5 py-3.5 sm:py-4 text-sm sm:text-base text-[#111111] placeholder:text-[#999999] outline-none transition-colors"
             />
           </div>
@@ -138,6 +139,7 @@ export function NewsletterSignupForm({
             type="submit"
             disabled={isSubmitting}
             data-testid="newsletter-submit-button"
+            suppressHydrationWarning
             className="rounded-none bg-[#111111] hover:bg-black text-white px-7 sm:px-9 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold tracking-wider uppercase transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
           >
             {isSubmitting ? "SUBSCRIBING..." : buttonLabel}

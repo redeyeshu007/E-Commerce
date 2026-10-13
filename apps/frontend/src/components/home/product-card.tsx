@@ -92,6 +92,7 @@ export function ProductCard({ product, className = "" }: ProductCardProps) {
             onClick={handleWishlistClick}
             aria-label={isFavorite ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
             aria-pressed={isFavorite}
+            suppressHydrationWarning
             className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white shadow-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
               isFavorite ? "text-[#D9383A]" : "text-[#222222] hover:text-[#D9383A]"
             }`}
@@ -110,6 +111,7 @@ export function ProductCard({ product, className = "" }: ProductCardProps) {
             type="button"
             onClick={handleAddToCartClick}
             aria-label={`Add ${product.name} to cart`}
+            suppressHydrationWarning
             className={`w-full py-2 sm:py-2.5 px-3 sm:px-4 text-[11px] sm:text-xs font-semibold tracking-[0.08em] uppercase transition-colors duration-200 flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
               justAdded
                 ? "bg-[#111111] text-white"

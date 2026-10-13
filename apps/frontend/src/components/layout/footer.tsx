@@ -89,6 +89,7 @@ export function BackToTopButton({
       onClick={scrollToTop}
       aria-label={label}
       data-testid="back-to-top-button"
+      suppressHydrationWarning
       className={`fixed bottom-20 right-4 sm:right-6 lg:bottom-8 lg:right-8 z-30 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-none bg-[#111111] text-white transition-all duration-300 hover:bg-[#C5A572] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black shadow-sm ${className}`}
     >
       <ArrowUp className="h-4 w-4 sm:h-4.5 sm:w-4.5 stroke-[2]" aria-hidden="true" />
@@ -185,6 +186,7 @@ export function FooterAccordionSection({
         aria-expanded={isOpen}
         aria-controls={`footer-accordion-${id}`}
         data-testid={`accordion-trigger-${id}`}
+        suppressHydrationWarning
         className="w-full flex items-center justify-between text-left py-2 sm:py-2.5 lg:py-0 lg:cursor-default lg:pointer-events-none mb-0 lg:mb-4 sm:lg:mb-5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black transition-colors group"
       >
         <span className="text-[15px] sm:text-base lg:text-xs lg:sm:text-[13px] font-semibold tracking-[0.02em] lg:tracking-[0.08em] uppercase text-[#111111] group-hover:text-black">

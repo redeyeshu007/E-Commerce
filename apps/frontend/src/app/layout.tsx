@@ -60,7 +60,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-white text-black">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window !== 'undefined') {
+                  try {
+                    var observer = new MutationObserver(function(mutations) {
+                      for (var i = 0; i < mutations.length; i++) {
+                        var m = mutations[i];
+                        if (m.type === 'attributes' && m.attributeName === 'fdprocessedid') {
+                          m.target.removeAttribute('fdprocessedid');
+                        }
+                      }
+                    });
+                    observer.observe(document.documentElement, {
+                      attributes: true,
+                      attributeFilter: ['fdprocessedid'],
+                      subtree: true
+                    });
+                  } catch (e) {}
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-white text-black" suppressHydrationWarning>
         <Providers>
           <AnimatedTabTitle baseTitle={brandConfig.metaTitle} />
           <LuxuryPreloader />

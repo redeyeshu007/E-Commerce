@@ -236,6 +236,7 @@ export function NewCollectionSection({
               type="button"
               onClick={goToPrevPage}
               aria-label="Previous products"
+              suppressHydrationWarning
               className="hidden sm:flex absolute -left-3 sm:-left-5 lg:-left-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-white text-[#222222] shadow-md border border-neutral-100 transition-all duration-200 hover:bg-black hover:text-white hover:border-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             >
               <ChevronLeft className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
@@ -248,6 +249,7 @@ export function NewCollectionSection({
               type="button"
               onClick={goToNextPage}
               aria-label="Next products"
+              suppressHydrationWarning
               className="hidden sm:flex absolute -right-3 sm:-right-5 lg:-right-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-white text-[#222222] shadow-md border border-neutral-100 transition-all duration-200 hover:bg-black hover:text-white hover:border-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             >
               <ChevronRight className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
@@ -297,6 +299,7 @@ export function NewCollectionSection({
                 aria-selected={idx === activePage}
                 aria-label={`Go to carousel page ${idx + 1}`}
                 onClick={() => setCurrentPage(idx)}
+                suppressHydrationWarning
                 className={`h-2 w-2 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
                   idx === activePage
                     ? "bg-[#222222] border border-[#222222]"
