@@ -41,4 +41,12 @@ export interface Product {
   description?: string;
   /** Precious metal / gemstone material specification */
   material?: string;
+  /** Categorized material tags (e.g. ["Gold", "Diamond", "Platinum", "Silver", "Rose Gold"]) */
+  materials?: string[];
+  /** Available sizes (e.g. ["6", "7", "8", "9", "10"] for rings, ["16\"", "18\""] for necklaces) */
+  sizes?: string[];
+  /** Creation ISO date for 'Newest First' sorting */
+  createdAt?: string;
+  /** In-stock status */
+  inStock?: boolean;
 }

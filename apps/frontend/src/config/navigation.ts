@@ -129,7 +129,7 @@ export const defaultNavigationConfig: NavigationConfig = {
   },
   primaryNav: [
     { id: "home", label: "Home", href: "/", isImplemented: true },
-    { id: "shop", label: "Shop", href: "/shop", isImplemented: false },
+    { id: "shop", label: "Shop", href: "/shop", isImplemented: true },
     { id: "contact", label: "Contact", href: "/contact", isImplemented: false },
     { id: "new-arrivals", label: "New Arrivals", href: "/new-arrivals", isImplemented: false },
   ],
