@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useStorefront } from "@/providers/storefront-provider";
 import type { UtilityConfig, UtilityLinkItem } from "@/config/navigation";
 
 export interface UtilityBarProps {
@@ -13,11 +14,20 @@ export interface UtilityBarProps {
  * Handles unimplemented routes gracefully without dead links or broken 404 navigation.
  */
 export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
-  const handleAnchorClick = (
+  const storefront = useStorefront();
+
+  const handleLinkClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    href: string
+    item: UtilityLinkItem
   ) => {
-    if (href.startsWith("/#") && typeof window !== "undefined") {
+    if (item.id === "subscribe") {
+      e.preventDefault();
+      storefront.openNewsletter();
+      return;
+    }
+
+    const href = item.href;
+    if (href && href.startsWith("/#") && typeof window !== "undefined") {
       const targetId = href.replace("/#", "");
       const targetElement = document.getElementById(targetId);
       if (targetElement) {
@@ -38,7 +48,8 @@ export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
           {item.isImplemented && item.href ? (
             <Link
               href={item.href}
-              onClick={(e) => handleAnchorClick(e, item.href!)}
+              data-testid={item.id === "subscribe" ? "navbar-subscribe-link" : undefined}
+              onClick={(e) => handleLinkClick(e, item)}
               className="text-black transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
             >
               {item.label}

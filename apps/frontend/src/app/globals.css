@@ -94,6 +94,23 @@ body {
   animation: authBackdropFadeOut 220ms ease-in forwards;
 }
 
+/* PERALAGAE Luxury Newsletter Popup Animations */
+.newsletter-modal-content[data-state="open"] {
+  animation: authModalSlideInFromTop 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.newsletter-modal-content[data-state="closed"] {
+  animation: authModalSlideOutToTop 250ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.newsletter-modal-backdrop[data-state="open"] {
+  animation: authBackdropFadeIn 300ms ease-out forwards;
+}
+
+.newsletter-modal-backdrop[data-state="closed"] {
+  animation: authBackdropFadeOut 250ms ease-in forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-modal-content[data-state="open"],
   .auth-modal-content[data-state="closed"],
@@ -102,7 +119,11 @@ body {
   .search-overlay-content[data-state="open"],
   .search-overlay-content[data-state="closed"],
   .search-overlay-backdrop[data-state="open"],
-  .search-overlay-backdrop[data-state="closed"] {
+  .search-overlay-backdrop[data-state="closed"],
+  .newsletter-modal-content[data-state="open"],
+  .newsletter-modal-content[data-state="closed"],
+  .newsletter-modal-backdrop[data-state="open"],
+  .newsletter-modal-backdrop[data-state="closed"] {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }

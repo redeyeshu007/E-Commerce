@@ -7,6 +7,7 @@ import { MainNavbar } from "./main-navbar";
 import { MobileBottomBar } from "./mobile-bottom-bar";
 import { AuthModal } from "@/components/auth";
 import { SearchOverlay } from "@/components/search";
+import { NewsletterPopup } from "@/components/newsletter";
 import { useStorefront } from "@/providers/storefront-provider";
 import { defaultNavigationConfig, type NavigationConfig } from "@/config/navigation";
 
@@ -63,6 +64,12 @@ export function SiteHeader({ config = defaultNavigationConfig, className = "" }:
       <SearchOverlay
         isOpen={storefront.isSearchOpen}
         onClose={storefront.closeSearch}
+      />
+
+      {/* Premium Newsletter Subscription Popup */}
+      <NewsletterPopup
+        isOpen={storefront.isNewsletterOpen}
+        onClose={storefront.closeNewsletter}
       />
     </>
   );

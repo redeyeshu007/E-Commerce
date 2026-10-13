@@ -310,5 +310,47 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     await page.keyboard.press("Escape");
     await expect(overlay).not.toBeVisible();
   });
+
+  test("Newsletter: clicking navbar Subscribe link opens popup immediately, validates email, and closes cleanly", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    const subscribeLink = page.getByTestId("navbar-subscribe-link");
+    await expect(subscribeLink).toBeVisible();
+
+    // 1. Click Subscribe in navbar
+    await subscribeLink.click();
+
+    // 2. Verify popup is immediately visible
+    const popup = page.getByTestId("newsletter-popup-content");
+    await expect(popup).toBeVisible();
+
+    await expect(popup.getByText("A LITTLE LUXURY")).toBeVisible();
+    await expect(popup.getByText("Join the PERALAGAE Circle")).toBeVisible();
+    await expect(
+      popup.getByText(
+        "Discover new collections, jewellery inspiration, and exclusive updates delivered to your inbox."
+      )
+    ).toBeVisible();
+
+    // 3. Test inline email validation
+    const emailInput = popup.getByTestId("newsletter-popup-email-input");
+    const submitBtn = popup.getByTestId("newsletter-popup-submit-btn");
+
+    await submitBtn.click();
+    const errorAlert = popup.getByTestId("newsletter-popup-error");
+    await expect(errorAlert).toHaveText("Please enter your email address.");
+
+    await emailInput.fill("invalid-email-address");
+    await submitBtn.click();
+    await expect(errorAlert).toHaveText("Please enter a valid email address.");
+
+    // 4. Close via close button
+    const closeBtn = popup.getByTestId("newsletter-popup-close-btn");
+    await closeBtn.click();
+    await expect(popup).not.toBeVisible();
+  });
 });
+
 

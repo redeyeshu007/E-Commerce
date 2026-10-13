@@ -45,6 +45,11 @@ export interface StorefrontContextValue {
   isSearchOpen: boolean;
   openSearch: () => void;
   closeSearch: () => void;
+
+  // Newsletter Modal
+  isNewsletterOpen: boolean;
+  openNewsletter: () => void;
+  closeNewsletter: () => void;
 }
 
 const StorefrontContext = createContext<StorefrontContextValue | null>(null);
@@ -62,6 +67,7 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalView, setAuthModalView] = useState<"login" | "register" | "forgot-password">("login");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
 
   // Restore client-side state from localStorage on mount
   useEffect(() => {
@@ -214,6 +220,14 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
     setIsSearchOpen(false);
   }, []);
 
+  const openNewsletter = useCallback(() => {
+    setIsNewsletterOpen(true);
+  }, []);
+
+  const closeNewsletter = useCallback(() => {
+    setIsNewsletterOpen(false);
+  }, []);
+
   const value = useMemo<StorefrontContextValue>(
     () => ({
       wishlistIds,
@@ -240,6 +254,9 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
       isSearchOpen,
       openSearch,
       closeSearch,
+      isNewsletterOpen,
+      openNewsletter,
+      closeNewsletter,
     }),
     [
       wishlistIds,
@@ -266,6 +283,9 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
       isSearchOpen,
       openSearch,
       closeSearch,
+      isNewsletterOpen,
+      openNewsletter,
+      closeNewsletter,
     ],
   );
 
@@ -297,6 +317,9 @@ const defaultStorefrontValue: StorefrontContextValue = {
   isSearchOpen: false,
   openSearch: () => {},
   closeSearch: () => {},
+  isNewsletterOpen: false,
+  openNewsletter: () => {},
+  closeNewsletter: () => {},
 };
 
 export function useStorefront(): StorefrontContextValue {
