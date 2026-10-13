@@ -4,7 +4,9 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     // Wait for the custom luxury preloader to finish and unmount cleanly
-    await expect(page.getByRole("status")).not.toBeAttached({ timeout: 6000 });
+    await expect(page.getByRole("status", { name: "PERALAGAE" })).not.toBeAttached({
+      timeout: 6000,
+    });
   });
 
   test("renders the three-row header with announcement, utility, and main navbar on desktop", async ({
@@ -59,7 +61,7 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     // Action buttons / links visible on desktop
     await expect(header.getByRole("button", { name: "Search" })).toBeVisible();
     await expect(header.getByRole("button", { name: "Account" })).toBeVisible();
-    await expect(header.getByRole("button", { name: "Wishlist", exact: true })).toBeVisible();
+    await expect(header.getByRole("link", { name: "Wishlist", exact: true })).toBeVisible();
     await expect(header.getByRole("link", { name: "Cart" }).first()).toBeVisible();
   });
 
@@ -110,7 +112,7 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     // Contains HOME, SEARCH, WISHLIST, ACCOUNT
     await expect(bottomNav.getByRole("link", { name: "Home" })).toBeVisible();
     await expect(bottomNav.getByRole("button", { name: "Search" })).toBeVisible();
-    await expect(bottomNav.getByRole("button", { name: "Wishlist" })).toBeVisible();
+    await expect(bottomNav.getByRole("link", { name: "Wishlist" })).toBeVisible();
     await expect(bottomNav.getByRole("button", { name: "Account" })).toBeVisible();
 
     // Wishlist has "0" count badge
@@ -149,4 +151,84 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     await page.keyboard.press("Escape");
     await expect(drawer).not.toBeAttached();
   });
+
+  test("Desktop: Hover animation and route-aware active state across pages", async ({ page }) => {
+    // 1. Initial Home Route (/)
+    const header = page.locator("header[role='banner']");
+    const homeLink = header.getByRole("link", { name: "Home", exact: true });
+    const shopLink = header.getByRole("link", { name: "Shop", exact: true });
+    const contactLink = header.getByRole("link", { name: "Contact", exact: true });
+    const newArrivalsLink = header.getByRole("link", { name: "New Arrivals", exact: true });
+
+    // Home is active
+    await expect(homeLink).toHaveAttribute("aria-current", "page");
+    await expect(homeLink).toHaveClass(/active/);
+    await expect(shopLink).not.toHaveAttribute("aria-current");
+
+    // 2. Hover over inactive link (Shop)
+    await shopLink.hover();
+    // Home retains active underline while Shop is hovered
+    await expect(homeLink).toHaveAttribute("aria-current", "page");
+    await expect(homeLink).toHaveClass(/active/);
+
+    // 3. Navigate to /shop
+    await shopLink.click();
+    await page.waitForURL("**/shop");
+    await expect(header.getByRole("link", { name: "Shop", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    await expect(header.getByRole("link", { name: "Home", exact: true })).not.toHaveAttribute(
+      "aria-current"
+    );
+
+    // 4. Navigate directly to /contact
+    await page.goto("/contact");
+    await expect(page.getByRole("status", { name: "PERALAGAE" })).not.toBeAttached({
+      timeout: 6000,
+    });
+    await expect(header.getByRole("link", { name: "Contact", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    await expect(header.getByRole("link", { name: "Shop", exact: true })).not.toHaveAttribute(
+      "aria-current"
+    );
+
+    // 5. Navigate directly to /new-arrivals
+    await page.goto("/new-arrivals");
+    await expect(page.getByRole("status", { name: "PERALAGAE" })).not.toBeAttached({
+      timeout: 6000,
+    });
+    await expect(header.getByRole("link", { name: "New Arrivals", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    await expect(header.getByRole("link", { name: "Contact", exact: true })).not.toHaveAttribute(
+      "aria-current"
+    );
+  });
+
+  test("Mobile: Active route state is reflected in drawer navigation", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+
+    // Visit /shop
+    await page.goto("/shop");
+    await expect(page.getByRole("status", { name: "PERALAGAE" })).not.toBeAttached({
+      timeout: 6000,
+    });
+
+    // Open drawer
+    const hamburgerBtn = page.getByRole("button", { name: "Open navigation menu" });
+    await hamburgerBtn.click();
+
+    const drawer = page.getByRole("dialog", { name: "Mobile Navigation Menu" });
+    await expect(drawer).toBeVisible();
+
+    // In drawer, Shop link has aria-current='page' and gold text
+    const shopDrawerLink = drawer.getByRole("link", { name: "Shop" });
+    await expect(shopDrawerLink).toHaveAttribute("aria-current", "page");
+    await expect(shopDrawerLink).toHaveClass(/text-\[#C5A572\]/);
+  });
 });
+

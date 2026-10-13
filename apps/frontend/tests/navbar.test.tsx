@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/navbar/site-header";
 import { AnnouncementBar } from "@/components/navbar/announcement-bar";
 import { UtilityBar } from "@/components/navbar/utility-bar";
 import { MainNavbar } from "@/components/navbar/main-navbar";
+import { PrimaryNavigation } from "@/components/navbar/primary-navigation";
 import { MobileBottomBar } from "@/components/navbar/mobile-bottom-bar";
 import { defaultNavigationConfig } from "@/config/navigation";
 
@@ -246,4 +247,93 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
       ).toBeInTheDocument();
     });
   });
+
+  describe("PrimaryNavigation: Luxury Hover & Active Navigation Animations", () => {
+    it("renders all 4 primary navigation items as semantic HTML links", () => {
+      render(<PrimaryNavigation items={defaultNavigationConfig.primaryNav} currentPath="/" />);
+
+      const homeLink = screen.getByRole("link", { name: /Home/i });
+      const shopLink = screen.getByRole("link", { name: /Shop/i });
+      const contactLink = screen.getByRole("link", { name: /Contact/i });
+      const newArrivalsLink = screen.getByRole("link", { name: /New Arrivals/i });
+
+      expect(homeLink).toHaveAttribute("href", "/");
+      expect(shopLink).toHaveAttribute("href", "/shop");
+      expect(contactLink).toHaveAttribute("href", "/contact");
+      expect(newArrivalsLink).toHaveAttribute("href", "/new-arrivals");
+    });
+
+    it("activates Home with aria-current='page', active class and gold text when on '/'", () => {
+      render(<PrimaryNavigation items={defaultNavigationConfig.primaryNav} currentPath="/" />);
+
+      const homeLink = screen.getByRole("link", { name: /Home/i });
+      const shopLink = screen.getByRole("link", { name: /Shop/i });
+
+      expect(homeLink).toHaveAttribute("aria-current", "page");
+      expect(homeLink).toHaveClass("active");
+      expect(homeLink).toHaveClass("text-[#C5A572]");
+
+      expect(shopLink).not.toHaveAttribute("aria-current");
+      expect(shopLink).not.toHaveClass("active");
+    });
+
+    it("activates Shop when on '/shop' or subroute, keeping other links inactive", () => {
+      render(<PrimaryNavigation items={defaultNavigationConfig.primaryNav} currentPath="/shop" />);
+
+      const homeLink = screen.getByRole("link", { name: /Home/i });
+      const shopLink = screen.getByRole("link", { name: /Shop/i });
+      const contactLink = screen.getByRole("link", { name: /Contact/i });
+
+      expect(shopLink).toHaveAttribute("aria-current", "page");
+      expect(shopLink).toHaveClass("active");
+      expect(shopLink).toHaveClass("text-[#C5A572]");
+
+      expect(homeLink).not.toHaveAttribute("aria-current");
+      expect(homeLink).not.toHaveClass("active");
+      expect(contactLink).not.toHaveAttribute("aria-current");
+    });
+
+    it("activates Contact when on '/contact'", () => {
+      render(
+        <PrimaryNavigation items={defaultNavigationConfig.primaryNav} currentPath="/contact" />,
+      );
+
+      const contactLink = screen.getByRole("link", { name: /Contact/i });
+      expect(contactLink).toHaveAttribute("aria-current", "page");
+      expect(contactLink).toHaveClass("active");
+      expect(contactLink).toHaveClass("text-[#C5A572]");
+    });
+
+    it("activates New Arrivals when on '/new-arrivals'", () => {
+      render(
+        <PrimaryNavigation
+          items={defaultNavigationConfig.primaryNav}
+          currentPath="/new-arrivals"
+        />,
+      );
+
+      const newArrivalsLink = screen.getByRole("link", { name: /New Arrivals/i });
+      expect(newArrivalsLink).toHaveAttribute("aria-current", "page");
+      expect(newArrivalsLink).toHaveClass("active");
+      expect(newArrivalsLink).toHaveClass("text-[#C5A572]");
+    });
+
+    it("renders the refined champagne gold underline element under each navigation link", () => {
+      const { container } = render(
+        <PrimaryNavigation items={defaultNavigationConfig.primaryNav} currentPath="/" />,
+      );
+
+      const underlines = container.querySelectorAll(".peralagae-nav-underline");
+      expect(underlines).toHaveLength(4);
+
+      // Verify active underline has scale-x-100 opacity-100
+      expect(underlines[0]).toHaveClass("scale-x-100");
+      expect(underlines[0]).toHaveClass("opacity-100");
+
+      // Verify inactive underlines have scale-x-0 opacity-0
+      expect(underlines[1]).toHaveClass("scale-x-0");
+      expect(underlines[1]).toHaveClass("opacity-0");
+    });
+  });
 });
+

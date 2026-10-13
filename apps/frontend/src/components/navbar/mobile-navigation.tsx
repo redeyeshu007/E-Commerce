@@ -3,6 +3,7 @@
 import React, { useEffect, useCallback, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { X, ChevronDown, Check } from "lucide-react";
 import type { NavigationConfig } from "@/config/navigation";
 
@@ -39,6 +40,24 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
 
   const langRef = useRef<HTMLDivElement>(null);
   const currencyRef = useRef<HTMLDivElement>(null);
+
+  let currentPathname = "/";
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const hookPath = usePathname();
+    if (hookPath) currentPathname = hookPath;
+  } catch {
+    currentPathname = "/";
+  }
+
+  const isItemActive = (href?: string) => {
+    if (!currentPathname || !href) return false;
+    const cleanHref = href.split("?")[0].split("#")[0];
+    if (cleanHref === "/") {
+      return currentPathname === "/";
+    }
+    return currentPathname === cleanHref || currentPathname.startsWith(`${cleanHref}/`);
+  };
 
   // Smooth slide-in animation when opened
   useEffect(() => {
@@ -223,17 +242,42 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
           {activeTab === "menu" ? (
             <nav aria-label="Mobile Menu Navigation">
               <ul className="space-y-1" role="list">
-                {config.primaryNav.map((item) => (
-                  <li key={item.id}>
-                    <Link
-                      href={item.href || "#"}
-                      onClick={handleClose}
-                      className="block py-2.5 text-[15px] font-medium tracking-wide text-[#111111] transition-colors hover:text-black"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
+                {config.primaryNav.map((item) => {
+                  const isActive = isItemActive(item.href);
+
+                  return (
+                    <li key={item.id}>
+                      <Link
+                        href={item.href || "#"}
+                        onClick={handleClose}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`group relative flex items-center justify-between py-2.5 text-[15px] font-medium tracking-wide transition-colors duration-250 ${
+                          isActive
+                            ? "text-[#C5A572] font-semibold"
+                            : "text-[#111111] hover:text-[#C5A572]"
+                        }`}
+                      >
+                        <span className="relative inline-block">
+                          {item.label}
+                          <span
+                            className={`absolute -bottom-1 left-0 h-[1.5px] w-full bg-[#C5A572] origin-left transition-all duration-300 ease-out motion-reduce:transition-none pointer-events-none ${
+                              isActive
+                                ? "scale-x-100 opacity-100"
+                                : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
+                            }`}
+                            aria-hidden="true"
+                          />
+                        </span>
+                        {isActive && (
+                          <span
+                            className="h-1.5 w-1.5 rounded-full bg-[#C5A572]"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
           ) : (
