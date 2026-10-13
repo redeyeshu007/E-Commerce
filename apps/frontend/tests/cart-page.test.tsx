@@ -3,6 +3,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { StorefrontProvider, type CartItem } from "@/providers/storefront-provider";
 import { CartBreadcrumb } from "@/components/cart/cart-breadcrumb";
+import { CartHero } from "@/components/cart/cart-hero";
 import { CartItemRow } from "@/components/cart/cart-item-row";
 import { CartItemsTable } from "@/components/cart/cart-items-table";
 import { CouponForm } from "@/components/cart/coupon-form";
@@ -175,6 +176,28 @@ describe("PERALAGAE Cart Page & Recommendations Suite", () => {
 
       const cartItem = screen.getByText("Cart", { selector: "span" });
       expect(cartItem).toBeInTheDocument();
+    });
+  });
+
+  /* -------------------------------------------------------------------------
+   * 3b. CartHero Component
+   * ------------------------------------------------------------------------- */
+  describe("CartHero Component", () => {
+    it("renders page title banner with jewellery photography background and breadcrumb", () => {
+      render(<CartHero title="Cart" />);
+
+      const hero = screen.getByTestId("cart-hero-banner");
+      expect(hero).toBeInTheDocument();
+
+      const heading = screen.getByRole("heading", { level: 1, name: "Cart" });
+      expect(heading).toBeInTheDocument();
+
+      const image = screen.getByAltText(/PERALAGAE Luxury Jewellery Shopping Bag Banner/i);
+      expect(image).toBeInTheDocument();
+      expect(image).toHaveAttribute("src", expect.stringContaining("banner-charm-bracelets.jpg"));
+
+      const nav = screen.getByRole("navigation", { name: "Breadcrumb" });
+      expect(nav).toBeInTheDocument();
     });
   });
 

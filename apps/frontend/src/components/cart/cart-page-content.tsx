@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useStorefront } from "@/providers/storefront-provider";
 import { validateCoupon, calculateDiscount, type Coupon } from "@/services/coupon-service";
-import { CartBreadcrumb } from "./cart-breadcrumb";
+import { CartHero } from "./cart-hero";
 import { CartItemsTable } from "./cart-items-table";
 import { CouponForm } from "./coupon-form";
 import { CartTotals } from "./cart-totals";
@@ -49,15 +49,8 @@ export function CartPageContent() {
 
   return (
     <div className="w-full bg-white text-black min-h-[calc(100vh-200px)]">
-      {/* Top Banner / Breadcrumb & Header Container */}
-      <div className="border-b border-[#EBEBEB] bg-[#FAFAFA] py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
-          <CartBreadcrumb />
-          <h1 className="mt-3 text-2xl sm:text-3xl md:text-4xl font-serif font-normal text-[#111111] tracking-wide">
-            Cart
-          </h1>
-        </div>
-      </div>
+      {/* Top Banner / Hero with Background Image & Breadcrumb */}
+      <CartHero />
 
       {/* Main Content Area */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
