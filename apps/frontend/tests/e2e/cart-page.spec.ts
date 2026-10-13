@@ -110,4 +110,42 @@ test.describe("PERALAGAE Cart Page & Recommendations E2E Suite", () => {
 
     await expect(page.getByTestId("cart-empty-state")).toBeVisible();
   });
+
+  test("Mobile: price and quantity controls are fully legible without clipping or horizontal overflow", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+
+    // 1. Add item to cart from shop
+    await page.goto("/shop");
+    await page.waitForLoadState("domcontentloaded");
+
+    const firstCard = page.locator('article[data-testid^="product-card-"]').first();
+    await firstCard.hover();
+    const addToCartBtn = firstCard.getByRole("button", { name: /Add.*to cart/i });
+    await addToCartBtn.click({ force: true });
+
+    // Wait for added feedback / persistence
+    await page.waitForTimeout(500);
+
+    // 2. Open Cart Page on 360px mobile viewport
+    await page.goto("/cart");
+    await page.waitForLoadState("domcontentloaded");
+
+    // 3. Verify card elements are properly visible
+    const cartCard = page.locator('[data-testid^="cart-item-card-"]').first();
+    await expect(cartCard).toBeVisible();
+
+    // Check quantity control and price
+    const quantityControl = cartCard.locator('[data-testid^="quantity-"]');
+    await expect(quantityControl).toBeVisible();
+
+    const priceText = cartCard.locator("text=₹").last();
+    await expect(priceText).toBeVisible();
+
+    // Verify card does not cause horizontal overflow
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
+  });
 });

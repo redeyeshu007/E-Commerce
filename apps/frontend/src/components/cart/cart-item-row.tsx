@@ -48,50 +48,52 @@ export function CartItemRow({
     return (
       <div
         data-testid={`cart-item-card-${product.id}`}
-        className="relative flex gap-4 p-4 border border-[#EBEBEB] bg-white transition-all hover:border-[#CCCCCC]"
+        className="relative flex gap-3 sm:gap-4 p-3.5 sm:p-4 border border-[#EBEBEB] bg-white transition-all hover:border-[#CCCCCC]"
       >
         {/* Remove Button (Top Right) */}
         <button
           type="button"
           onClick={() => onRemove(product.id)}
           aria-label={`Remove ${product.name} from cart`}
-          className="absolute top-3 right-3 p-1.5 text-[#888888] hover:text-[#111111] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+          className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 p-1.5 text-[#888888] hover:text-[#D9383A] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
         >
           <X className="h-4 w-4" />
         </button>
 
         {/* Thumbnail */}
-        <div className="relative h-24 w-24 flex-shrink-0 bg-[#F4F4F4] overflow-hidden">
+        <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 bg-[#F4F4F4] overflow-hidden">
           <Link href={`/product/${product.slug}`} aria-label={product.name}>
             <Image
               src={product.image.src}
               alt={product.image.alt}
               fill
-              sizes="96px"
+              sizes="(max-width: 640px) 80px, 96px"
               className="object-cover"
             />
           </Link>
         </div>
 
         {/* Content */}
-        <div className="flex flex-1 flex-col justify-between pr-6">
-          <div>
+        <div className="flex flex-1 flex-col justify-between min-w-0">
+          {/* Header & Product Information (padded on right for X button) */}
+          <div className="pr-6 sm:pr-7">
             <span className="text-[10px] uppercase tracking-wider text-[#888888]">
               {product.category}
             </span>
-            <h3 className="text-sm font-medium text-[#111111] leading-snug line-clamp-2 mt-0.5">
+            <h3 className="text-xs sm:text-sm font-medium text-[#111111] leading-snug line-clamp-2 mt-0.5">
               <Link href={`/product/${product.slug}`} className="hover:underline">
                 {product.name}
               </Link>
             </h3>
-            <p className="text-xs text-[#555555] mt-1 font-medium">
+            <p className="text-[11px] sm:text-xs text-[#666666] mt-1 font-normal">
               Unit: {formatInr(product.priceInr)}
             </p>
           </div>
 
-          <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#F0F0F0]">
+          {/* Bottom Actions: Quantity Selector & Line Subtotal */}
+          <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-[#F0F0F0]">
             {/* Quantity Selector */}
-            <div className="flex items-center border border-[#DDDDDD] bg-white">
+            <div className="flex items-center border border-[#DDDDDD] bg-white flex-shrink-0">
               <button
                 type="button"
                 onClick={handleDecrease}
@@ -103,7 +105,7 @@ export function CartItemRow({
               </button>
               <span
                 data-testid={`quantity-${product.id}`}
-                className="flex h-7 w-8 items-center justify-center text-xs font-medium text-[#111111]"
+                className="flex h-7 w-7 sm:w-8 items-center justify-center text-xs font-semibold text-[#111111]"
               >
                 {quantity}
               </span>
@@ -118,8 +120,8 @@ export function CartItemRow({
             </div>
 
             {/* Subtotal */}
-            <div className="text-right">
-              <span className="text-xs font-semibold text-[#111111]">
+            <div className="text-right whitespace-nowrap pl-2 flex-shrink-0">
+              <span className="text-xs sm:text-sm font-semibold text-[#111111]">
                 {formatInr(lineSubtotal)}
               </span>
             </div>
