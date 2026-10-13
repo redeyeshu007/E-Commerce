@@ -24,13 +24,9 @@ export interface SearchResult {
 
 export const SUGGESTED_SEARCHES = [
   "Rings",
-  "Gold Necklaces",
-  "Solitaire Diamond",
-  "Pavé Earrings",
-  "Bangles",
-  "18k Gold",
-  "Platinum",
-  "Rose Gold",
+  "Necklaces",
+  "Bracelets",
+  "Earrings",
 ] as const;
 
 /**
@@ -133,7 +129,7 @@ function computeProductScore(product: Product, rawQuery: string, tokens: string[
 export function searchCatalogue(
   query: string,
   catalogue: Product[] = SHOP_PRODUCTS,
-  limit = 8
+  limit = 6
 ): SearchResult {
   const trimmed = query.trim();
   if (!trimmed) {

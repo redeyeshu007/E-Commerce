@@ -38,7 +38,7 @@ export function SearchOverlay({
     }
   }, [isOpen]);
 
-  // Debounce search query by 150ms for snappy responsiveness
+  // Debounce search query by 150ms for smooth responsiveness
   useEffect(() => {
     if (!query.trim()) {
       setDebouncedQuery("");
@@ -129,12 +129,12 @@ export function SearchOverlay({
           className="search-overlay-backdrop fixed inset-0 z-50 bg-black/40 backdrop-blur-xs"
         />
 
-        {/* 2. Centered/Top Positioned Modal Content Container */}
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-5 md:pt-14 lg:pt-18 overflow-y-auto pointer-events-none">
+        {/* 2. Centered/Top Positioned Minimal Glass Panel */}
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-5 md:pt-16 lg:pt-20 overflow-y-auto pointer-events-none">
           <Dialog.Content
             data-testid="search-overlay-content"
             aria-label="Search jewellery catalogue"
-            className="search-overlay-content relative w-full max-w-5xl max-h-[88vh] flex flex-col rounded-2xl bg-[#FAF8F5]/95 sm:bg-white/95 backdrop-blur-xl border border-[#C5A572]/30 shadow-[0_30px_70px_rgba(0,0,0,0.18)] pointer-events-auto focus:outline-none overflow-hidden"
+            className="search-overlay-content relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-2xl bg-white/92 backdrop-blur-xl border border-[#C5A572]/30 shadow-[0_20px_50px_rgba(0,0,0,0.12)] pointer-events-auto focus:outline-none overflow-hidden transition-all"
           >
             {/* Top: Search Input Bar */}
             <SearchInput
@@ -146,8 +146,8 @@ export function SearchOverlay({
               inputRef={inputRef}
             />
 
-            {/* Middle: Scrollable Body (Results, Suggestions, or Empty State) */}
-            <div className="flex-1 overflow-y-auto max-h-[calc(88vh-80px)] overscroll-contain">
+            {/* Middle: Scrollable Content (Understated Suggestions or Live Results) */}
+            <div className="flex-1 overflow-y-auto max-h-[calc(85vh-72px)] overscroll-contain">
               {hasResults ? (
                 <SearchResults
                   products={searchResult.products}
@@ -160,14 +160,8 @@ export function SearchOverlay({
                   query={debouncedQuery}
                   onSelectSuggestion={handleSelectSuggestion}
                   onClear={handleClear}
-                  onClose={onClose}
                 />
               )}
-            </div>
-
-            {/* Bottom Bar: Subtle Brand Footer */}
-            <div className="border-t border-[#F0EBE3] bg-[#FCFBF8]/80 px-4 py-2.5 text-center text-[11px] text-[#888888]">
-              <span>PERALAGAE Fine Jewellery Catalogue · Prices shown in INR</span>
             </div>
           </Dialog.Content>
         </div>

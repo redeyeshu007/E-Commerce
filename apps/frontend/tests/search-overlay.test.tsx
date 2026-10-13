@@ -139,11 +139,15 @@ describe("PERALAGAE Premium Glass Search Overlay Suite", () => {
       );
 
       expect(screen.getByTestId("search-initial-suggestions")).toBeInTheDocument();
-      expect(screen.getByText("Popular Searches")).toBeInTheDocument();
+      expect(screen.getByText("POPULAR SEARCHES")).toBeInTheDocument();
+
+      // Verify all 4 required compact suggestions
+      expect(screen.getByTestId("suggested-search-rings")).toHaveTextContent("Rings");
+      expect(screen.getByTestId("suggested-search-necklaces")).toHaveTextContent("Necklaces");
+      expect(screen.getByTestId("suggested-search-bracelets")).toHaveTextContent("Bracelets");
+      expect(screen.getByTestId("suggested-search-earrings")).toHaveTextContent("Earrings");
 
       const ringsChip = screen.getByTestId("suggested-search-rings");
-      expect(ringsChip).toBeInTheDocument();
-
       await user.click(ringsChip);
 
       // Should fill the input and show matching products
