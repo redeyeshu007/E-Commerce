@@ -61,7 +61,7 @@ export function MobileBottomBar({
         {/* 2. SEARCH */}
         <button
           type="button"
-          onClick={onSearchClick}
+          onClick={onSearchClick ?? storefront.openSearch}
           aria-label="Search"
           className="flex flex-col items-center justify-center py-1 text-[#222222] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
         >

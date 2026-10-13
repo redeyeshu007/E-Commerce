@@ -40,6 +40,11 @@ export interface StorefrontContextValue {
   openAuthModal: (view?: "login" | "register" | "forgot-password") => void;
   closeAuthModal: () => void;
   setAuthModalView: (view: "login" | "register" | "forgot-password") => void;
+
+  // Search Overlay
+  isSearchOpen: boolean;
+  openSearch: () => void;
+  closeSearch: () => void;
 }
 
 const StorefrontContext = createContext<StorefrontContextValue | null>(null);
@@ -56,6 +61,7 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalView, setAuthModalView] = useState<"login" | "register" | "forgot-password">("login");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Restore client-side state from localStorage on mount
   useEffect(() => {
@@ -200,6 +206,14 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
     setIsAuthModalOpen(false);
   }, []);
 
+  const openSearch = useCallback(() => {
+    setIsSearchOpen(true);
+  }, []);
+
+  const closeSearch = useCallback(() => {
+    setIsSearchOpen(false);
+  }, []);
+
   const value = useMemo<StorefrontContextValue>(
     () => ({
       wishlistIds,
@@ -223,6 +237,9 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
       openAuthModal,
       closeAuthModal,
       setAuthModalView,
+      isSearchOpen,
+      openSearch,
+      closeSearch,
     }),
     [
       wishlistIds,
@@ -246,6 +263,9 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
       openAuthModal,
       closeAuthModal,
       setAuthModalView,
+      isSearchOpen,
+      openSearch,
+      closeSearch,
     ],
   );
 
@@ -274,6 +294,9 @@ const defaultStorefrontValue: StorefrontContextValue = {
   openAuthModal: () => {},
   closeAuthModal: () => {},
   setAuthModalView: () => {},
+  isSearchOpen: false,
+  openSearch: () => {},
+  closeSearch: () => {},
 };
 
 export function useStorefront(): StorefrontContextValue {

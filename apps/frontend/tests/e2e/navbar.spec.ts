@@ -261,5 +261,54 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     const heading = newArrivalsSection.locator("#new-collection-heading");
     await expect(heading).toBeInViewport();
   });
+
+  test("Search: opens glass overlay, performs live query, toggles wishlist, adds to bag, and closes on Escape", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    const header = page.locator("header");
+    const searchButton = header.getByRole("button", { name: "Search" });
+    await expect(searchButton).toBeVisible();
+
+    // 1. Open search overlay
+    await searchButton.click();
+
+    const overlay = page.getByTestId("search-overlay-content");
+    await expect(overlay).toBeVisible();
+
+    const input = page.getByTestId("search-overlay-input");
+    await expect(input).toBeVisible();
+
+    // 2. Type query
+    await input.fill("solitaire");
+
+    // 3. Verify results container and matching item
+    const resultsContainer = overlay.getByTestId("search-results-container");
+    await expect(resultsContainer).toBeVisible();
+    await expect(overlay.getByText("Solitaire Diamond Pendant Necklace")).toBeVisible();
+    await expect(overlay.getByText("₹24,999")).toBeVisible();
+
+    // 4. Toggle wishlist from search
+    const wishlistBtn = overlay.getByTestId("search-wishlist-prod-solitaire-pendant");
+    await wishlistBtn.click();
+
+    // Check navbar badge reflects 1
+    const wishlistBadge = page.getByTestId("wishlist-badge");
+    await expect(wishlistBadge).toHaveText("1");
+
+    // 5. Add to bag from search
+    const addToBagBtn = overlay.getByTestId("search-add-to-cart-prod-solitaire-pendant");
+    await addToBagBtn.click();
+    await expect(addToBagBtn).toContainText("Added");
+
+    // Check navbar cart badge reflects 1
+    const cartBadge = page.getByTestId("cart-badge").first();
+    await expect(cartBadge).toHaveText("1");
+
+    // 6. Close via Escape key
+    await page.keyboard.press("Escape");
+    await expect(overlay).not.toBeVisible();
+  });
 });
 

@@ -11,6 +11,7 @@ import { useStorefront } from "@/providers/storefront-provider";
 
 export interface MainNavbarProps {
   config: NavigationConfig;
+  onSearchClick?: () => void;
 }
 
 /**
@@ -26,7 +27,7 @@ export interface MainNavbarProps {
  *   - Centre: PERALAGAE brand wordmark (optically centered)
  *   - Right: Shopping Cart icon with circular "0" count badge
  */
-export function MainNavbar({ config }: MainNavbarProps) {
+export function MainNavbar({ config, onSearchClick }: MainNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const storefront = useStorefront();
   const cartAction = config.actions?.find((a) => a.id === "cart");
@@ -80,6 +81,7 @@ export function MainNavbar({ config }: MainNavbarProps) {
                 actions={config.actions}
                 cartCount={cartCount}
                 wishlistCount={wishlistCount}
+                onSearchClick={onSearchClick ?? storefront.openSearch}
                 onAccountClick={() => storefront.openAuthModal("login")}
               />
             </div>
