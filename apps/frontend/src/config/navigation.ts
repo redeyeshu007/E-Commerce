@@ -148,7 +148,7 @@ export const defaultNavigationConfig: NavigationConfig = {
   actions: [
     { id: "search", label: "Search", isImplemented: false },
     { id: "account", label: "Account", href: "/account", isImplemented: false },
-    { id: "wishlist", label: "Wishlist", href: "/wishlist", isImplemented: false },
+    { id: "wishlist", label: "Wishlist", href: "/wishlist", isImplemented: true },
     { id: "cart", label: "Cart", href: "/cart", isImplemented: true },
   ],
   badges: {

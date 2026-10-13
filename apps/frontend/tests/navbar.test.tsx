@@ -112,7 +112,10 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
 
       expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Account" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Wishlist" })).toBeInTheDocument();
+      
+      const wishlistLink = screen.getByRole("link", { name: "Wishlist" });
+      expect(wishlistLink).toBeInTheDocument();
+      expect(wishlistLink).toHaveAttribute("href", "/wishlist");
 
       // Cart link exists for both mobile header and desktop actions
       const cartLinks = screen.getAllByRole("link", { name: "Cart" });
@@ -210,7 +213,8 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
       expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();
 
       // WISHLIST with badge
-      expect(screen.getByRole("button", { name: "Wishlist" })).toBeInTheDocument();
+      const wishlistLink = screen.getByRole("link", { name: "Wishlist" });
+      expect(wishlistLink).toHaveAttribute("href", "/wishlist");
       expect(screen.getByTestId("mobile-wishlist-badge")).toHaveTextContent("0");
 
       // ACCOUNT
