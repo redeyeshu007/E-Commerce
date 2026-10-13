@@ -2,8 +2,10 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useStorefront } from "@/providers/storefront-provider";
 import type { UtilityConfig, UtilityLinkItem } from "@/config/navigation";
+import { scrollToSectionId } from "@/lib/navigation";
 
 export interface UtilityBarProps {
   config: UtilityConfig;
@@ -15,6 +17,14 @@ export interface UtilityBarProps {
  */
 export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
   const storefront = useStorefront();
+  let pathname = "/";
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const hookPath = usePathname();
+    if (hookPath) pathname = hookPath;
+  } catch {
+    pathname = "/";
+  }
 
   const handleLinkClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -29,12 +39,13 @@ export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
     const href = item.href;
     if (href && href.startsWith("/#") && typeof window !== "undefined") {
       const targetId = href.replace("/#", "");
-      const targetElement = document.getElementById(targetId);
-      if (targetElement) {
-        e.preventDefault();
-        targetElement.scrollIntoView({ behavior: "smooth" });
-        window.history.pushState(null, "", href);
+      if (pathname === "/") {
+        const scrolled = scrollToSectionId(targetId);
+        if (scrolled) {
+          e.preventDefault();
+        }
       }
+      // If not on homepage, let Next.js Link navigate to `/#${targetId}`
     }
   };
 

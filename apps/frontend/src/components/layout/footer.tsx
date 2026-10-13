@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { ArrowUp, Headphones, ChevronDown } from "lucide-react";
+import { scrollToSectionId } from "@/lib/navigation";
 import type {
   FooterConfig,
   FooterColumnConfig,
@@ -230,11 +232,14 @@ export interface FooterLinkGroupProps {
 }
 
 export function FooterLinkGroup({ column, className = "" }: FooterLinkGroupProps) {
-  const reducedMotion = useSyncExternalStore(
-    subscribeReducedMotion,
-    getReducedMotionSnapshot,
-    getReducedMotionServerSnapshot
-  );
+  let pathname = "/";
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const hookPath = usePathname();
+    if (hookPath) pathname = hookPath;
+  } catch {
+    pathname = "/";
+  }
 
   const handleAnchorClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -242,14 +247,13 @@ export function FooterLinkGroup({ column, className = "" }: FooterLinkGroupProps
   ) => {
     if (href.startsWith("/#") && typeof window !== "undefined") {
       const targetId = href.replace("/#", "");
-      const targetElement = document.getElementById(targetId);
-      if (targetElement) {
-        e.preventDefault();
-        targetElement.scrollIntoView({
-          behavior: reducedMotion ? "auto" : "smooth",
-        });
-        window.history.pushState(null, "", href);
+      if (pathname === "/") {
+        const scrolled = scrollToSectionId(targetId);
+        if (scrolled) {
+          e.preventDefault();
+        }
       }
+      // If on another route, allow Next.js Link to navigate to `/#${targetId}`
     }
   };
 

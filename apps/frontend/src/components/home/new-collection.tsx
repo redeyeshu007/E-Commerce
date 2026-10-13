@@ -10,6 +10,7 @@ import {
   defaultNewCollectionConfig,
 } from "@/config/new-collection";
 import { useStorefront } from "@/providers/storefront-provider";
+import { scrollToSectionId } from "@/lib/navigation";
 
 function subscribeReducedMotion(callback: () => void) {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -190,21 +191,19 @@ export function NewCollectionSection({
     const scrollToSection = () => {
       const hash = window.location.hash;
       if (hash === "#new-arrivals" || hash === "#new-collection") {
-        if (containerRef.current) {
-          const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-          requestAnimationFrame(() => {
-            containerRef.current?.scrollIntoView({
-              behavior: prefersReduced ? "auto" : "smooth",
-              block: "start",
-            });
-          });
-        }
+        requestAnimationFrame(() => {
+          scrollToSectionId("new-arrivals", { updateHash: false });
+        });
       }
     };
 
     scrollToSection();
     window.addEventListener("hashchange", scrollToSection);
-    return () => window.removeEventListener("hashchange", scrollToSection);
+    window.addEventListener("popstate", scrollToSection);
+    return () => {
+      window.removeEventListener("hashchange", scrollToSection);
+      window.removeEventListener("popstate", scrollToSection);
+    };
   }, []);
 
   return (
@@ -220,7 +219,7 @@ export function NewCollectionSection({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className={`relative w-full overflow-hidden bg-white pt-10 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24 scroll-mt-24 sm:scroll-mt-28 ${className}`}
+      className={`relative w-full overflow-hidden bg-white pt-10 sm:pt-16 lg:pt-20 pb-14 sm:pb-20 lg:pb-24 scroll-mt-28 lg:scroll-mt-32 ${className}`}
     >
       <div id="new-collection" className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         {/* 1. SECTION HEADER: Centred heading with flanking horizontal lines and subtitle */}

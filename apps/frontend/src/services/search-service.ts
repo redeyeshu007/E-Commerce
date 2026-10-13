@@ -14,7 +14,9 @@
  */
 
 import type { Product } from "@/types/product";
-import { SHOP_PRODUCTS } from "@/services/product-service";
+import { SHOP_PRODUCTS, BLUE_STRIPES_PRODUCT } from "@/services/product-service";
+
+const ALL_SEARCH_PRODUCTS = [BLUE_STRIPES_PRODUCT, ...SHOP_PRODUCTS];
 
 export interface SearchResult {
   products: Product[];
@@ -128,7 +130,7 @@ function computeProductScore(product: Product, rawQuery: string, tokens: string[
  */
 export function searchCatalogue(
   query: string,
-  catalogue: Product[] = SHOP_PRODUCTS,
+  catalogue: Product[] = ALL_SEARCH_PRODUCTS,
   limit = 6
 ): SearchResult {
   const trimmed = query.trim();

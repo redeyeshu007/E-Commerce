@@ -164,3 +164,139 @@ export function getRecommendedProducts(
   // 8. Return top `limit` unique products
   return scored.slice(0, limit).map((s) => s.product);
 }
+
+export interface RelatedProductsOptions {
+  /** Maximum number of related products (default: 4) */
+  limit?: number;
+  /** Custom catalogue source for testing or API injection */
+  catalogue?: Product[];
+}
+
+/**
+ * Category-Aware Recommendation Algorithm — PERALAGAE Product Detail Page
+ *
+ * Computes deterministic, ranked related jewellery items using:
+ * 1. Subcategory match: +40 points
+ * 2. Category match: +30 points
+ * 3. Shared material / metal colour: +10 points per match
+ * 4. Shared stone / style attributes: +5 points per match
+ * 5. Same collection: +10 points
+ * 6. Similar price tier (±35% of target price): +5 points
+ *
+ * Rules:
+ * - Excludes current product (by ID)
+ * - Excludes out-of-stock items (when inStock === false)
+ * - Excludes duplicates
+ * - Stable tie-breaker based on catalog order
+ * - Deterministic, testable, backend-ready
+ */
+export function getRelatedProducts(
+  currentProduct: Product,
+  options: RelatedProductsOptions = {}
+): Product[] {
+  const { limit = 4, catalogue = SHOP_PRODUCTS } = options;
+
+  // 1. Exclude the current product and unavailable items
+  const eligibleCandidates = catalogue.filter(
+    (product) => product.id !== currentProduct.id && product.inStock !== false
+  );
+
+  if (eligibleCandidates.length === 0) {
+    return [];
+  }
+
+  const currentCat = normalizeCategory(currentProduct.category);
+  const currentSubcat = currentProduct.subcategory?.toLowerCase().trim();
+  const currentCollection = currentProduct.collection?.toLowerCase().trim();
+  const currentMaterials = new Set(
+    (currentProduct.materials || []).map((m) => m.toLowerCase().trim())
+  );
+  if (currentProduct.material) {
+    currentMaterials.add(currentProduct.material.toLowerCase().trim());
+  }
+
+  // Related complementary categories if pool needs backfill
+  const complementaryCategories = new Set(RELATED_CATEGORIES_MAP[currentCat] || []);
+
+  interface ScoredCandidate {
+    product: Product;
+    score: number;
+    originalIndex: number;
+  }
+
+  const scored: ScoredCandidate[] = eligibleCandidates.map((product, index) => {
+    let score = 0;
+    const candCat = normalizeCategory(product.category);
+    const candSubcat = product.subcategory?.toLowerCase().trim();
+    const candCollection = product.collection?.toLowerCase().trim();
+
+    // 1. Same Subcategory: +40 points
+    if (currentSubcat && candSubcat && currentSubcat === candSubcat) {
+      score += 40;
+    }
+
+    // 2. Category relevance: +30 points for same category; +15 for complementary jewellery category
+    if (candCat === currentCat) {
+      score += 30;
+    } else if (complementaryCategories.has(candCat)) {
+      score += 15;
+    }
+
+    // 3. Shared material or metal colour: +10 points per match
+    if (product.materials && product.materials.length > 0) {
+      for (const mat of product.materials) {
+        if (currentMaterials.has(mat.toLowerCase().trim())) {
+          score += 10;
+        }
+      }
+    } else if (product.material && currentMaterials.has(product.material.toLowerCase().trim())) {
+      score += 10;
+    }
+
+    // 4. Same Collection: +10 points
+    if (currentCollection && candCollection && currentCollection === candCollection) {
+      score += 10;
+    }
+
+    // 5. Shared stone / style / keyword attributes in name or description: +5 per match
+    const keywords = ["diamond", "solitaire", "gold", "platinum", "emerald", "bangle", "tennis", "pave", "chain"];
+    for (const kw of keywords) {
+      const currentHas =
+        currentProduct.name.toLowerCase().includes(kw) ||
+        (currentProduct.description && currentProduct.description.toLowerCase().includes(kw));
+      const candHas =
+        product.name.toLowerCase().includes(kw) ||
+        (product.description && product.description.toLowerCase().includes(kw));
+      if (currentHas && candHas) {
+        score += 5;
+        break; // Count top matched attribute to prevent inflation
+      }
+    }
+
+    // 6. Similar price range (within ±35%): +5 points
+    if (currentProduct.priceInr > 0) {
+      const priceRatio = Math.abs(product.priceInr - currentProduct.priceInr) / currentProduct.priceInr;
+      if (priceRatio <= 0.35) {
+        score += 5;
+      }
+    }
+
+    // Hot or New items receive subtle tie-break interest bonus
+    if (product.isHot) score += 2;
+    if (product.isNew) score += 1;
+
+    return { product, score, originalIndex: index };
+  });
+
+  // Sort deterministically: highest score first, stable catalogue index as tie-breaker
+  scored.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return a.originalIndex - b.originalIndex;
+  });
+
+  // Return top unique products up to limit
+  return scored.slice(0, limit).map((s) => s.product);
+}
+

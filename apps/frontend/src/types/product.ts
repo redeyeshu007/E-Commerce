@@ -16,6 +16,21 @@ export interface ProductImage {
   height?: number;
 }
 
+export interface ProductReview {
+  id: string;
+  author: string;
+  rating: number; // 1 to 5
+  date: string;
+  comment: string;
+  verified?: boolean;
+  avatar?: string;
+}
+
+export interface ProductSpec {
+  label: string;
+  value: string;
+}
+
 export interface Product {
   /** Stable unique product identifier */
   id: string;
@@ -23,12 +38,22 @@ export interface Product {
   slug: string;
   /** Display title of the fine jewellery item */
   name: string;
-  /** Product category label (e.g. "NECKLACES", "RINGS", "BRACELETS", "EARRINGS", "CHARMS & BANGLES") */
+  /** Product category label (e.g. "NECKLACES", "RINGS", "BRACELETS", "EARRINGS", "CHARMS & BANGLES", "GIFT IDEAS") */
   category: string;
-  /** High-resolution product imagery */
+  /** Optional subcategory (e.g. "Pendants", "Solitaires", "Bangles", "Studs") */
+  subcategory?: string;
+  /** Collection grouping (e.g. "Solitaire Radiance", "Heritage Gold", "Modern Classics") */
+  collection?: string;
+  /** Stock keeping unit / internal reference */
+  sku?: string;
+  /** High-resolution primary product imagery */
   image: ProductImage;
+  /** Optional multi-view gallery imagery (main, lifestyle, angle, macro) */
+  images?: ProductImage[];
   /** Numeric price in Indian Rupees (INR) */
   priceInr: number;
+  /** Optional formatted price string for custom display (e.g. "$249.00") */
+  priceDisplay?: string;
   /** Optional original compare-at price in INR (for discounted items) */
   compareAtPriceInr?: number;
   /** Whether product qualifies for "NEW" badge */
@@ -37,16 +62,30 @@ export interface Product {
   isHot?: boolean;
   /** Inventory availability status */
   isAvailable?: boolean;
+  /** In-stock status */
+  inStock?: boolean;
+  /** Inventory stock quantity count */
+  stockCount?: number;
   /** Detailed description for quick-view and product detail displays */
   description?: string;
+  /** Editorial in-depth story / description for the Description tab */
+  longDescription?: string;
   /** Precious metal / gemstone material specification */
   material?: string;
   /** Categorized material tags (e.g. ["Gold", "Diamond", "Platinum", "Silver", "Rose Gold"]) */
   materials?: string[];
   /** Available sizes (e.g. ["6", "7", "8", "9", "10"] for rings, ["16\"", "18\""] for necklaces) */
   sizes?: string[];
+  /** Structured specifications (Metal & Purity, Gemstone, Certification, Weight, Dimensions, Care) */
+  specs?: ProductSpec[];
+  /** Aggregate customer rating (1.0 to 5.0) */
+  rating?: number;
+  /** Total verified customer review count */
+  reviewCount?: number;
+  /** Active concurrent viewers count */
+  viewersCount?: number;
+  /** List of customer reviews */
+  reviews?: ProductReview[];
   /** Creation ISO date for 'Newest First' sorting */
   createdAt?: string;
-  /** In-stock status */
-  inStock?: boolean;
 }

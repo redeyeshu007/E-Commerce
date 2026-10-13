@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { NewsletterSectionConfig } from "@/config/newsletter";
 import { defaultNewsletterConfig } from "@/config/newsletter";
+import { scrollToSectionId } from "@/lib/navigation";
 
 /* -------------------------------------------------------------------------
  * Types & Service Interface
@@ -206,12 +207,32 @@ export function NewsletterSignupSection({
     backgroundColor = "#FFFFFF",
   } = config;
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleHash = () => {
+      if (window.location.hash === "#newsletter-section" || window.location.hash === "#newsletter") {
+        requestAnimationFrame(() => {
+          scrollToSectionId("newsletter-section", { updateHash: false });
+        });
+      }
+    };
+
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    window.addEventListener("popstate", handleHash);
+    return () => {
+      window.removeEventListener("hashchange", handleHash);
+      window.removeEventListener("popstate", handleHash);
+    };
+  }, []);
+
   return (
     <section
       id="newsletter-section"
       aria-labelledby="newsletter-heading"
       data-testid="newsletter-section"
-      className={`w-full pt-8 sm:pt-10 lg:pt-12 pb-10 sm:pb-12 lg:pb-14 scroll-mt-24 sm:scroll-mt-28 ${className}`}
+      className={`w-full pt-8 sm:pt-10 lg:pt-12 pb-10 sm:pb-12 lg:pb-14 scroll-mt-28 lg:scroll-mt-32 ${className}`}
       style={{ backgroundColor }}
     >
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">

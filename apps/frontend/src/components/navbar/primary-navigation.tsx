@@ -2,8 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { PrimaryNavItem } from "@/config/navigation";
+import {
+  scrollToSectionId,
+  scrollToTop,
+  isProgrammaticScrollActive,
+} from "@/lib/navigation";
 
 export interface PrimaryNavigationProps {
   items: PrimaryNavItem[];
@@ -38,7 +43,7 @@ export function PrimaryNavigation({
   onItemClick,
   currentPath,
 }: PrimaryNavigationProps) {
-  let routerPath = "";
+  let routerPath = "/";
   try {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const hookPath = usePathname();
@@ -50,8 +55,27 @@ export function PrimaryNavigation({
     routerPath = "/";
   }
 
-  const [activeHash, setActiveHash] = React.useState<string>("");
+  let router: ReturnType<typeof useRouter> | null = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    router = useRouter();
+  } catch {
+    router = null;
+  }
 
+  // If explicit currentPath override is provided, use it
+  if (currentPath) {
+    routerPath = currentPath.split("?")[0].split("#")[0] || "/";
+  }
+
+  const [activeHash, setActiveHash] = React.useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return window.location.hash || "";
+    }
+    return "";
+  });
+
+  // Synchronize hash with browser location and route changes
   React.useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -60,17 +84,56 @@ export function PrimaryNavigation({
     };
 
     updateHash();
+    const raf = requestAnimationFrame(updateHash);
+    const timeout = setTimeout(updateHash, 60);
+
     window.addEventListener("hashchange", updateHash);
     window.addEventListener("popstate", updateHash);
 
-    // Scroll listener on homepage: if user scrolls back to the very top, revert active item to Home
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timeout);
+      window.removeEventListener("hashchange", updateHash);
+      window.removeEventListener("popstate", updateHash);
+    };
+  }, [routerPath]);
+
+  // Scroll spy & intersection observer on homepage
+  React.useEffect(() => {
+    if (typeof window === "undefined" || routerPath !== "/") return;
+
+    // 1. Intersection observer for New Arrivals section
+    const newArrivalsEl = document.getElementById("new-arrivals");
+    let observer: IntersectionObserver | null = null;
+
+    if (newArrivalsEl && typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (isProgrammaticScrollActive()) return;
+
+          for (const entry of entries) {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
+              setActiveHash("#new-arrivals");
+            }
+          }
+        },
+        { threshold: [0.25, 0.5] }
+      );
+      observer.observe(newArrivalsEl);
+    }
+
+    // 2. Scroll listener on homepage: if user scrolls back to the very top, revert active item to Home
     const handleScroll = () => {
-      if (routerPath === "/" && window.scrollY < 200) {
+      if (isProgrammaticScrollActive()) return;
+
+      if (window.scrollY < 150) {
         if (
           window.location.hash === "#new-arrivals" ||
           window.location.hash === "#new-collection"
         ) {
-          window.history.replaceState(null, "", window.location.pathname);
+          window.history.replaceState(window.history.state, "", window.location.pathname);
+          setActiveHash("");
+        } else if (activeHash) {
           setActiveHash("");
         }
       }
@@ -79,43 +142,48 @@ export function PrimaryNavigation({
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener("hashchange", updateHash);
-      window.removeEventListener("popstate", updateHash);
+      observer?.disconnect();
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [routerPath]);
+  }, [routerPath, activeHash]);
 
   const handleLinkClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
     href?: string
   ) => {
-    if (href?.startsWith("/#") && typeof window !== "undefined") {
-      const targetId = href.replace("/#", "");
-      const targetElement = document.getElementById(targetId);
+    if (!href) {
+      onItemClick?.();
+      return;
+    }
 
-      // If already on the homepage where target exists, smoothly scroll
-      if (targetElement) {
+    if (href.startsWith("/#") && typeof window !== "undefined") {
+      const targetId = href.replace("/#", "");
+
+      if (routerPath === "/") {
+        // Already on the homepage: smooth scroll directly without full page reload
         e.preventDefault();
-        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        targetElement.scrollIntoView({
-          behavior: prefersReduced ? "auto" : "smooth",
-          block: "start",
-        });
-        window.history.pushState(null, "", href);
+        scrollToSectionId(targetId);
         setActiveHash(`#${targetId}`);
+      } else {
+        // Navigating to section from another route: navigate to homepage with target hash
+        e.preventDefault();
+        setActiveHash(`#${targetId}`);
+        if (router) {
+          router.push(href);
+        } else {
+          window.location.href = href;
+        }
       }
     } else if (href === "/" && routerPath === "/" && typeof window !== "undefined") {
-      // If clicking Home while on homepage with an active section hash, scroll to top
-      if (window.location.hash) {
+      // If clicking Home while on homepage with an active section hash or scrolled down, scroll to top
+      if (window.location.hash || window.scrollY > 50) {
         e.preventDefault();
-        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        window.scrollTo({
-          top: 0,
-          behavior: prefersReduced ? "auto" : "smooth",
-        });
-        window.history.pushState(null, "", "/");
+        scrollToTop();
         setActiveHash("");
       }
+    } else if (href.startsWith("/")) {
+      // Navigating to another route: reset active section hash
+      setActiveHash("");
     }
 
     onItemClick?.();
@@ -126,7 +194,7 @@ export function PrimaryNavigation({
 
     // 1. Explicit path override passed (unit testing or specific routing harness)
     if (currentPath) {
-      if (href === "/#new-arrivals") {
+      if (href === "/#new-arrivals" || href === "/#new-collection") {
         return (
           currentPath === "/#new-arrivals" ||
           currentPath === "#new-arrivals" ||
@@ -143,7 +211,7 @@ export function PrimaryNavigation({
     // 2. Runtime route & hash matching
     const onHomepage = routerPath === "/";
 
-    if (href === "/#new-arrivals") {
+    if (href === "/#new-arrivals" || href === "/#new-collection") {
       return onHomepage && (activeHash === "#new-arrivals" || activeHash === "#new-collection");
     }
 

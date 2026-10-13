@@ -15,6 +15,7 @@ import { InstagramGallerySection } from "@/components/home/instagram-gallery";
 import { defaultInstagramConfig } from "@/config/instagram";
 import { NewsletterSignupSection } from "@/components/home/newsletter-section";
 import { defaultNewsletterConfig } from "@/config/newsletter";
+import { HomePageAnchorManager } from "@/components/home/anchor-manager";
 
 /**
  * PERALAGAE Storefront Homepage
@@ -32,6 +33,9 @@ import { defaultNewsletterConfig } from "@/config/newsletter";
 export default function HomePage() {
   return (
     <main className="flex-1 bg-white text-black pb-12 lg:pb-0">
+      {/* Anchor scroll manager for in-page section navigation */}
+      <HomePageAnchorManager />
+
       {/* Semantic Top-Level Heading */}
       <h1 className="sr-only">Gold Commerce Platform</h1>
 

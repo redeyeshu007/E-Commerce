@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { Store } from "lucide-react";
 import {
   type StoreLocatorBannerConfig,
   defaultStoreLocatorConfig,
 } from "@/config/store-locator";
+import { scrollToSectionId } from "@/lib/navigation";
 
 export interface StoreLocatorBannerProps {
   /**
@@ -45,12 +46,32 @@ export function StoreLocatorBanner({
   className = "",
   onButtonClick,
 }: StoreLocatorBannerProps) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleHash = () => {
+      if (window.location.hash === "#store-locator" || window.location.hash === "#find-store") {
+        requestAnimationFrame(() => {
+          scrollToSectionId("store-locator", { updateHash: false });
+        });
+      }
+    };
+
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    window.addEventListener("popstate", handleHash);
+    return () => {
+      window.removeEventListener("hashchange", handleHash);
+      window.removeEventListener("popstate", handleHash);
+    };
+  }, []);
+
   return (
     <section
       id="store-locator"
       aria-labelledby="store-locator-heading"
       data-testid="store-locator-section"
-      className={`w-full bg-white pb-14 sm:pb-20 lg:pb-24 scroll-mt-24 sm:scroll-mt-28 ${className}`}
+      className={`w-full bg-white pb-14 sm:pb-20 lg:pb-24 scroll-mt-28 lg:scroll-mt-32 ${className}`}
     >
       <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         <div

@@ -72,6 +72,92 @@ export const JEWELLERY_SIZES = [
 ] as const;
 
 /**
+ * Featured Reference Product matching design mockups:
+ * "Blue Stripes & Stone Earrings"
+ */
+export const BLUE_STRIPES_PRODUCT: Product = {
+  id: "prod-blue-stripes-earrings",
+  slug: "blue-stripes-stone-earrings",
+  name: "Blue Stripes & Stone Earrings",
+  category: "EARRINGS",
+  image: {
+    src: "/images/products/product-earrings-blue-stripes.jpg",
+    alt: "Blue Stripes & Stone Earrings - 18k Yellow Gold Oval Hoop Earrings",
+  },
+  images: [
+    {
+      src: "/images/products/product-earrings-blue-stripes.jpg",
+      alt: "Blue Stripes & Stone Earrings - 18k Yellow Gold Oval Hoop Earrings",
+    },
+    {
+      src: "/images/products/product-earrings-blue-stripes-model.jpg",
+      alt: "Blue Stripes & Stone Earrings - Worn by Model",
+    },
+    {
+      src: "/images/products/product-earrings-blue-stripes-pair.jpg",
+      alt: "Blue Stripes & Stone Earrings - Pair of Hoop Earrings",
+    },
+    {
+      src: "/images/products/product-earrings-blue-stripes-detail.jpg",
+      alt: "Blue Stripes & Stone Earrings - Clasp and Metalwork Detail",
+    },
+  ],
+  priceInr: 20490,
+  priceDisplay: "$249.00",
+  isHot: true,
+  isAvailable: true,
+  inStock: true,
+  stockCount: 15,
+  rating: 5.0,
+  reviewCount: 3,
+  viewersCount: 22,
+  material: "Solid 18k Yellow Gold",
+  materials: ["Gold"],
+  createdAt: "2026-10-10T08:00:00Z",
+  description:
+    "This regulator has a rolled diaphragm and high flow rate with reduced pressure drop.It has an excellent degree of condensation.",
+  longDescription:
+    "Sculpted in solid 18k yellow gold, the Blue Stripes & Stone Earrings feature an elongated oval hoop architecture paired with a delicately suspended tapered drop bar. Precision mirror-polishing accentuates its warm glow, engineered with a secure hinge clasp for seamless all-day elegance.",
+  specs: [
+    { label: "Metal & Purity", value: "18k Solid Yellow Gold (750 Hallmarked)" },
+    { label: "Clasp Mechanism", value: "Comfort-click Hinge Wire" },
+    { label: "Dimensions", value: "32mm drop length × 14mm width" },
+    { label: "Approximate Weight", value: "4.85 grams" },
+    { label: "Certification", value: "BIS Hallmarked & Authenticity Certificate" },
+    { label: "Care Instructions", value: "Store in protective pouch; polish with dry microfibre cloth" },
+  ],
+  reviews: [
+    {
+      id: "rev-bs-1",
+      author: "Jessica William",
+      rating: 5,
+      date: "March 3, 2023",
+      verified: true,
+      comment:
+        "I recently purchased a ring from your store, and I am extremely happy with my purchase.",
+    },
+    {
+      id: "rev-bs-2",
+      author: "Megan Miller",
+      rating: 5,
+      date: "March 3, 2023",
+      verified: true,
+      comment:
+        "I will definitely be purchasing more from this store in the future, and I would highly recommend them to anyone who is looking for high-quality and stylish jewelry.",
+    },
+    {
+      id: "rev-bs-3",
+      author: "Richard William",
+      rating: 5,
+      date: "March 3, 2023",
+      verified: true,
+      comment:
+        "The craftsmanship on this piece is truly exquisite. The gold has a warm, radiant lustre that looks even more captivating in person.",
+    },
+  ],
+};
+
+/**
  * 24 Curated luxury jewellery catalogue items
  * covering all 6 approved categories, materials, and sizes.
  */
@@ -302,7 +388,7 @@ export const SHOP_PRODUCTS: Product[] = [
     name: "Diamond Cluster Floret Studs",
     category: "EARRINGS",
     image: {
-      src: "/images/collections/collection-earrings.jpg",
+      src: "/images/products/product-earrings-pave-diamond.jpg",
       alt: "Diamond Cluster Floret Studs - Seven-Stone Floral Motif",
     },
     priceInr: 22400,
@@ -686,3 +772,227 @@ export function getShopCatalogue(
     sizeCounts,
   };
 }
+
+/**
+ * Enrich a product with multiple gallery images, specifications, review data,
+ * subcategory, collection, and stock attributes if not already populated.
+ */
+export function enrichProductDetails(product: Product): Product {
+  const cat = (product.category || "").toUpperCase();
+
+  // Multi-view gallery
+  let images = product.images;
+  if (!images || images.length < 2) {
+    if (cat.includes("NECKLACE")) {
+      images = [
+        product.image,
+        { src: "/images/hero/banner-necklaces.jpg", alt: `${product.name} - Model Editorial View` },
+        { src: "/images/collections/collection-necklaces.jpg", alt: `${product.name} - Fine Jewellery Collection View` },
+        { src: "/images/instagram/insta-3-layered-necklaces.jpg", alt: `${product.name} - Layered Detail View` },
+      ];
+    } else if (cat.includes("RING")) {
+      images = [
+        product.image,
+        { src: "/images/hero/banner-statement-rings.jpg", alt: `${product.name} - Hand Lifestyle View` },
+        { src: "/images/collections/collection-rings.jpg", alt: `${product.name} - Studio Ring Profile` },
+        { src: "/images/instagram/insta-4-solitaire-ring.jpg", alt: `${product.name} - Detail Macro Silhouette` },
+      ];
+    } else if (cat.includes("BRACELET")) {
+      images = [
+        product.image,
+        { src: "/images/editorial/tennis-bracelets.jpg", alt: `${product.name} - Wrist Silhouette` },
+        { src: "/images/collections/collection-bracelets.jpg", alt: `${product.name} - Studio Collection View` },
+        { src: "/images/hero/banner-charm-bracelets.jpg", alt: `${product.name} - Editorial Detail View` },
+      ];
+    } else if (cat.includes("EARRING")) {
+      images = [
+        product.image,
+        { src: "/images/instagram/insta-2-diamond-earrings.jpg", alt: `${product.name} - Editorial Portrait View` },
+        { src: "/images/collections/collection-earrings.jpg", alt: `${product.name} - Coordinated Pair Presentation` },
+        { src: "/images/instagram/insta-5-gold-earrings.jpg", alt: `${product.name} - Earring Profile Silhouette` },
+      ];
+    } else if (cat.includes("CHARM") || cat.includes("BANGLE")) {
+      images = [
+        product.image,
+        { src: "/images/collections/collection-charms-bangles.jpg", alt: `${product.name} - Charm Collection Flatlay` },
+        { src: "/images/hero/banner-charm-bracelets.jpg", alt: `${product.name} - Stacked Lifestyle View` },
+        { src: "/images/instagram/insta-1-rings-bracelet.jpg", alt: `${product.name} - Wrist Detail View` },
+      ];
+    } else {
+      images = [
+        product.image,
+        { src: "/images/collections/collection-gift-ideas.jpg", alt: `${product.name} - Curated Gift Box Presentation` },
+        { src: "/images/editorial/lab-grown-diamonds.jpg", alt: `${product.name} - Luxury Editorial View` },
+        { src: "/images/instagram/insta-6-fashion-editorial.jpg", alt: `${product.name} - High Fashion Styling` },
+      ];
+    }
+  }
+
+  // Specifications
+  const specs = product.specs || [
+    { label: "Precious Metal", value: product.material || "18k Solid Yellow Gold (750 Purity)" },
+    {
+      label: "Gemstones",
+      value: product.materials?.includes("Diamond")
+        ? "Conflict-Free Round Brilliant Diamonds (VVS-VS Clarity, F-G Colour)"
+        : product.materials?.includes("Emerald")
+        ? "Natural Fine-Grade Colombian Emerald"
+        : "Certified Pure Natural Gemstone Setting",
+    },
+    { label: "Purity & Hallmarking", value: "BIS Hallmarked 750 (18 Karat) with Laser Assay Inscription" },
+    {
+      label: "Dimensions / Sizing",
+      value: cat.includes("RING")
+        ? "Available in standard Indian & International ring sizes 6 to 10"
+        : cat.includes("NECKLACE")
+        ? "16 to 18 inch adjustable fine trace chain with lobster clasp"
+        : cat.includes("BRACELET")
+        ? "Standard 7-inch circumference with concealed safety clasp"
+        : cat.includes("EARRING")
+        ? "Length: 16mm | Width: 6mm | Secure click-in huggie closure"
+        : "Standard luxury proportion with custom sizing available on request",
+    },
+    { label: "Approximate Metal Weight", value: "3.80 – 5.40 grams solid gold" },
+    { label: "Certification", value: "IGI / SGL Authenticity Certificate included with tamper-evident seal" },
+    {
+      label: "Jewellery Care Guide",
+      value: "Store inside the provided PERALAGAE anti-tarnish suede pouch. Protect from direct perfumes and chemicals. Clean gently with a lint-free polishing cloth.",
+    },
+  ];
+
+  // Verified Customer Reviews
+  const reviews = product.reviews || [
+    {
+      id: `rev-${product.id}-1`,
+      author: "Aditi S.",
+      rating: 5,
+      date: "18 September 2026",
+      comment:
+        "The craftsmanship on this piece is truly exquisite. The gold has a warm, radiant lustre that looks even more captivating in person. Arrived securely packaged with the certificate.",
+      verified: true,
+    },
+    {
+      id: `rev-${product.id}-2`,
+      author: "Rohan Kapoor",
+      rating: 5,
+      date: "04 October 2026",
+      comment:
+        "Purchased as an anniversary present. The understated luxury and attention to detail reflect true artistry. Prompt delivery and luxurious unboxing experience.",
+      verified: true,
+    },
+    {
+      id: `rev-${product.id}-3`,
+      author: "Meera Krishnan",
+      rating: 5,
+      date: "09 October 2026",
+      comment:
+        "Comfortable for daily wear, yet elevates any evening ensemble. The finish is flawlessly mirror-polished. Proud to wear PERALAGAE.",
+      verified: true,
+    },
+  ];
+
+  return {
+    ...product,
+    images,
+    specs,
+    reviews,
+    rating: product.rating ?? 5.0,
+    reviewCount: product.reviewCount ?? reviews.length,
+    stockCount: product.stockCount ?? 12,
+    inStock: product.inStock ?? true,
+    isAvailable: product.isAvailable ?? true,
+    sku: product.sku || `PRL-${product.id.toUpperCase().replace(/^PROD-/, "")}`,
+    subcategory:
+      product.subcategory ||
+      (cat.includes("RING")
+        ? "Rings & Bands"
+        : cat.includes("NECKLACE")
+        ? "Pendants & Chains"
+        : cat.includes("BRACELET")
+        ? "Bangles & Tennis"
+        : cat.includes("EARRING")
+        ? "Huggies & Drops"
+        : cat.includes("CHARM")
+        ? "Charms & Medallions"
+        : "Curated Gift Sets"),
+    collection:
+      product.collection ||
+      (product.materials?.includes("Diamond")
+        ? "Solitaire Radiance"
+        : product.materials?.includes("Platinum")
+        ? "Modern Platinum Classics"
+        : product.materials?.includes("Rose Gold")
+        ? "Aura Rose Elegance"
+        : "Heritage Gold 18k"),
+  };
+}
+
+/**
+ * Retrieve a single product by URL slug (or fallback to product ID).
+ * Returns fully enriched product data for the Product Detail Page.
+ */
+export function getProductBySlug(slug: string): Product | undefined {
+  if (!slug) return undefined;
+  const normalized = slug.trim().toLowerCase();
+  if (
+    normalized === "blue-stripes-stone-earrings" ||
+    normalized === "blue-stripes-and-stone-earrings" ||
+    normalized === "blue-stripes-earrings" ||
+    normalized === "prod-blue-stripes-earrings"
+  ) {
+    return enrichProductDetails(BLUE_STRIPES_PRODUCT);
+  }
+  const raw = SHOP_PRODUCTS.find(
+    (p) => p.slug.toLowerCase() === normalized || p.id.toLowerCase() === normalized
+  );
+  return raw ? enrichProductDetails(raw) : undefined;
+}
+
+/**
+ * Retrieve a single product by stable unique ID.
+ */
+export function getProductById(id: string): Product | undefined {
+  if (!id) return undefined;
+  if (id === "prod-blue-stripes-earrings") {
+    return enrichProductDetails(BLUE_STRIPES_PRODUCT);
+  }
+  const raw = SHOP_PRODUCTS.find((p) => p.id === id);
+  return raw ? enrichProductDetails(raw) : undefined;
+}
+
+/**
+ * Get adjacent (previous and next) products in the catalogue.
+ * Wraps around safely at catalogue boundaries so navigation arrows never break.
+ */
+export function getAdjacentProducts(productOrSlug: Product | string): {
+  prev: Product;
+  next: Product;
+} {
+  const currentSlug = typeof productOrSlug === "string" ? productOrSlug : productOrSlug.slug;
+  const currentIndex = SHOP_PRODUCTS.findIndex(
+    (p) => p.slug === currentSlug || p.id === currentSlug
+  );
+
+  if (currentIndex === -1 || SHOP_PRODUCTS.length <= 1) {
+    return {
+      prev: enrichProductDetails(SHOP_PRODUCTS[0]),
+      next: enrichProductDetails(SHOP_PRODUCTS[SHOP_PRODUCTS.length - 1]),
+    };
+  }
+
+  const prevIndex = (currentIndex - 1 + SHOP_PRODUCTS.length) % SHOP_PRODUCTS.length;
+  const nextIndex = (currentIndex + 1) % SHOP_PRODUCTS.length;
+
+  return {
+    prev: enrichProductDetails(SHOP_PRODUCTS[prevIndex]),
+    next: enrichProductDetails(SHOP_PRODUCTS[nextIndex]),
+  };
+}
+
+/**
+ * Get all available products in the catalogue.
+ */
+export function getAllProducts(): Product[] {
+  return SHOP_PRODUCTS.map(enrichProductDetails);
+}
+

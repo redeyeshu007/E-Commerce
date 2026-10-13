@@ -11,6 +11,7 @@ import { useStorefront } from "@/providers/storefront-provider";
 export interface ProductCardProps {
   product: Product;
   className?: string;
+  dataTestId?: string;
   onQuickView?: (product: Product) => void;
 }
 
@@ -18,13 +19,13 @@ export interface ProductCardProps {
  * ProductCard Component — PERALAGAE
  *
  * Implements the luxury jewellery catalogue card matching the reference:
- * - Square image container on uniform light-grey studio background (#F2F2F2)
+ * - Square image container on uniform light-grey studio background (#F2F2F2) with thin border
  * - Upper-left product badge (HOT / NEW)
- * - Upper-right action button (Wishlist)
+ * - Upper-right circular wishlist action button
  * - Slide-up Add to Cart action button on hover
- * - Category label, product name, and formatted Indian Rupee (INR) price
+ * - Left-aligned category label, product name, and formatted Indian Rupee (INR) price
  */
-export function ProductCard({ product, className = "" }: ProductCardProps) {
+export function ProductCard({ product, className = "", dataTestId }: ProductCardProps) {
   const { isWishlisted, toggleWishlist, addToCart } = useStorefront();
   const [justAdded, setJustAdded] = useState(false);
 
@@ -46,16 +47,16 @@ export function ProductCard({ product, className = "" }: ProductCardProps) {
 
   return (
     <article
-      data-testid={`product-card-${product.id}`}
+      data-testid={dataTestId || `product-card-${product.id}`}
       className={`group relative flex flex-col w-full text-left bg-white transition-all duration-300 ${className}`}
     >
       {/* 1. Square Image Container */}
-      <div className="relative aspect-square w-full overflow-hidden bg-[#F2F2F2]">
+      <div className="relative aspect-square w-full overflow-hidden bg-[#F2F2F2] border border-[#E5E5E5]">
         {/* Product Badge (HOT or NEW) */}
         {product.isHot && (
           <span
             data-testid="badge-hot"
-            className="absolute top-3 left-3 z-10 bg-[#D9383A] text-white text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
+            className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 bg-[#D9383A] text-white text-[9.5px] sm:text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
           >
             HOT
           </span>
@@ -63,7 +64,7 @@ export function ProductCard({ product, className = "" }: ProductCardProps) {
         {!product.isHot && product.isNew && (
           <span
             data-testid="badge-new"
-            className="absolute top-3 left-3 z-10 bg-[#111111] text-white text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
+            className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 bg-[#111111] text-white text-[9.5px] sm:text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
           >
             NEW
           </span>
@@ -77,7 +78,7 @@ export function ProductCard({ product, className = "" }: ProductCardProps) {
         >
           <Image
             src={product.image.src}
-            alt={product.image.alt}
+            alt={product.image.alt || product.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
@@ -85,7 +86,7 @@ export function ProductCard({ product, className = "" }: ProductCardProps) {
         </Link>
 
         {/* Action Controls: Circular white button on upper-right */}
-        <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-20 flex flex-col gap-1.5 sm:gap-2 opacity-0 sm:translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 focus-within:opacity-100 transition-all duration-300">
+        <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-20 flex flex-col gap-1.5">
           {/* Wishlist Button */}
           <button
             type="button"
@@ -93,12 +94,12 @@ export function ProductCard({ product, className = "" }: ProductCardProps) {
             aria-label={isFavorite ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
             aria-pressed={isFavorite}
             suppressHydrationWarning
-            className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white shadow-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
+            className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white shadow-sm border border-[#EAEAEA] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
               isFavorite ? "text-[#D9383A]" : "text-[#222222] hover:text-[#D9383A]"
             }`}
           >
             <Heart
-              className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isFavorite ? "fill-[#D9383A]" : ""}`}
+              className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isFavorite ? "fill-[#D9383A] text-[#D9383A]" : ""}`}
               strokeWidth={1.75}
               aria-hidden="true"
             />
@@ -130,15 +131,15 @@ export function ProductCard({ product, className = "" }: ProductCardProps) {
         </div>
       </div>
 
-      {/* 2. Text Details Underneath Image — Optically centered matching reference */}
-      <div className="flex flex-col pt-2.5 sm:pt-3 pb-1 text-center items-center">
+      {/* 2. Text Details Underneath Image — Left-aligned matching reference screenshot */}
+      <div className="flex flex-col pt-3 pb-1 text-left items-start w-full">
         {/* Category Label */}
-        <span className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.08em] text-[#777777] mb-1">
+        <span className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.1em] text-[#777777] mb-1">
           {product.category}
         </span>
 
         {/* Product Name */}
-        <h3 className="text-xs sm:text-[13.5px] font-normal text-[#111111] leading-snug line-clamp-1 truncate mb-1 max-w-full px-1">
+        <h3 className="text-xs sm:text-[13.5px] font-medium text-[#111111] leading-snug line-clamp-1 truncate mb-1 w-full text-left">
           <Link
             href={`/product/${product.slug}`}
             className="hover:underline transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
@@ -148,12 +149,12 @@ export function ProductCard({ product, className = "" }: ProductCardProps) {
         </h3>
 
         {/* Indian Rupee Price */}
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-0.5">
-          <span className="text-xs sm:text-sm font-semibold text-[#111111]">
+        <div className="flex items-center gap-2 mt-0.5 text-left">
+          <span className="text-xs sm:text-sm font-bold text-[#111111]">
             {formatInr(product.priceInr)}
           </span>
-          {product.compareAtPriceInr && (
-            <span className="text-[11px] sm:text-xs text-[#888888] line-through font-normal">
+          {product.compareAtPriceInr && product.compareAtPriceInr > product.priceInr && (
+            <span className="text-[11px] sm:text-xs text-[#999999] line-through font-normal">
               {formatInr(product.compareAtPriceInr)}
             </span>
           )}

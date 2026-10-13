@@ -3,9 +3,10 @@
 import React, { useEffect, useCallback, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { X, ChevronDown, Check } from "lucide-react";
 import type { NavigationConfig } from "@/config/navigation";
+import { scrollToSectionId, scrollToTop } from "@/lib/navigation";
 
 export interface MobileNavigationProps {
   isOpen: boolean;
@@ -50,7 +51,20 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
     currentPathname = "/";
   }
 
-  const [activeHash, setActiveHash] = useState<string>("");
+  let router: ReturnType<typeof useRouter> | null = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    router = useRouter();
+  } catch {
+    router = null;
+  }
+
+  const [activeHash, setActiveHash] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return window.location.hash || "";
+    }
+    return "";
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -60,13 +74,18 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
     };
 
     updateHash();
+    const raf = requestAnimationFrame(updateHash);
+    const timeout = setTimeout(updateHash, 60);
+
     window.addEventListener("hashchange", updateHash);
     window.addEventListener("popstate", updateHash);
     return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timeout);
       window.removeEventListener("hashchange", updateHash);
       window.removeEventListener("popstate", updateHash);
     };
-  }, []);
+  }, [currentPathname]);
 
   const handleLinkClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -74,31 +93,32 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
   ) => {
     handleClose();
 
-    if (href?.startsWith("/#") && typeof window !== "undefined") {
-      const targetId = href.replace("/#", "");
-      const targetElement = document.getElementById(targetId);
+    if (!href) return;
 
-      if (targetElement) {
+    if (href.startsWith("/#") && typeof window !== "undefined") {
+      const targetId = href.replace("/#", "");
+
+      if (currentPathname === "/") {
         e.preventDefault();
-        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        targetElement.scrollIntoView({
-          behavior: prefersReduced ? "auto" : "smooth",
-          block: "start",
-        });
-        window.history.pushState(null, "", href);
+        scrollToSectionId(targetId);
         setActiveHash(`#${targetId}`);
+      } else {
+        e.preventDefault();
+        setActiveHash(`#${targetId}`);
+        if (router) {
+          router.push(href);
+        } else {
+          window.location.href = href;
+        }
       }
     } else if (href === "/" && currentPathname === "/" && typeof window !== "undefined") {
-      if (window.location.hash) {
+      if (window.location.hash || window.scrollY > 50) {
         e.preventDefault();
-        const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        window.scrollTo({
-          top: 0,
-          behavior: prefersReduced ? "auto" : "smooth",
-        });
-        window.history.pushState(null, "", "/");
+        scrollToTop();
         setActiveHash("");
       }
+    } else if (href.startsWith("/")) {
+      setActiveHash("");
     }
   };
 
@@ -107,7 +127,7 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
 
     const onHomepage = currentPathname === "/";
 
-    if (href === "/#new-arrivals") {
+    if (href === "/#new-arrivals" || href === "/#new-collection") {
       return onHomepage && (activeHash === "#new-arrivals" || activeHash === "#new-collection");
     }
 

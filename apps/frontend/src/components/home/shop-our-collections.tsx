@@ -116,7 +116,7 @@ export function ShopOurCollections({
     <section
       id="shop-our-collections"
       aria-labelledby="shop-our-collections-heading"
-      className={`w-full bg-white pt-8 sm:pt-10 lg:pt-14 pb-12 sm:pb-16 lg:pb-20 scroll-mt-24 sm:scroll-mt-28 ${className}`}
+      className={`w-full bg-white pt-8 sm:pt-10 lg:pt-14 pb-12 sm:pb-16 lg:pb-20 scroll-mt-28 lg:scroll-mt-32 ${className}`}
     >
       <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
         {/* Centred Heading */}

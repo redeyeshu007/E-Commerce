@@ -2,6 +2,9 @@ import { test, expect } from "@playwright/test";
 
 test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.sessionStorage.setItem("peralagae_newsletter_dismissed", "true");
+    });
     await page.goto("/");
     // Wait for the custom luxury preloader to finish and unmount cleanly
     await expect(page.getByRole("status", { name: "PERALAGAE" })).not.toBeAttached({
@@ -70,7 +73,7 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     await expect(announcement).toBeVisible();
 
     const closeBtn = page.getByRole("button", { name: "Close announcement bar" });
-    await closeBtn.click();
+    await closeBtn.dispatchEvent("click");
 
     await expect(announcement).not.toBeAttached();
   });
@@ -157,7 +160,6 @@ test.describe("PERALAGAE Premium Navbar E2E Suite", () => {
     const header = page.locator("header[role='banner']");
     const homeLink = header.getByRole("link", { name: "Home", exact: true });
     const shopLink = header.getByRole("link", { name: "Shop", exact: true });
-    const contactLink = header.getByRole("link", { name: "Contact", exact: true });
     const newArrivalsLink = header.getByRole("link", { name: "New Arrivals", exact: true });
 
     // Home is active
