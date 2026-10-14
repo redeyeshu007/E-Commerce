@@ -32,7 +32,10 @@ import {
   fetchAdminNavbarHistory,
   restoreAdminNavbarVersion,
 } from "@/services/navbar-admin-service";
-import { NAVBAR_SETTINGS_QUERY_KEY } from "@/services/navbar-settings-service";
+import {
+  NAVBAR_SETTINGS_QUERY_KEY,
+  NAVBAR_SETTINGS_UPDATED_EVENT,
+} from "@/services/navbar-settings-service";
 import type {
   NavbarSettingsData,
   NavbarHistoryItem,
@@ -241,6 +244,9 @@ export default function AdminNavbarPage() {
       const newHistory = await fetchAdminNavbarHistory();
       setHistoryList(newHistory);
       queryClient.invalidateQueries({ queryKey: NAVBAR_SETTINGS_QUERY_KEY });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(NAVBAR_SETTINGS_UPDATED_EVENT));
+      }
     } catch (err) {
       setStatusMessage({
         type: "error",
@@ -308,6 +314,9 @@ export default function AdminNavbarPage() {
       const newHistory = await fetchAdminNavbarHistory();
       setHistoryList(newHistory);
       queryClient.invalidateQueries({ queryKey: NAVBAR_SETTINGS_QUERY_KEY });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(NAVBAR_SETTINGS_UPDATED_EVENT));
+      }
     } catch (err) {
       setStatusMessage({
         type: "error",
@@ -401,6 +410,9 @@ export default function AdminNavbarPage() {
       const newHistory = await fetchAdminNavbarHistory();
       setHistoryList(newHistory);
       queryClient.invalidateQueries({ queryKey: NAVBAR_SETTINGS_QUERY_KEY });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event(NAVBAR_SETTINGS_UPDATED_EVENT));
+      }
     } catch (err) {
       setStatusMessage({
         type: "error",

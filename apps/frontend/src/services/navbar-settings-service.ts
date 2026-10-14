@@ -1,9 +1,11 @@
-import React from "react";
-import { QueryClientContext, useQuery } from "@tanstack/react-query";
+"use client";
+
+import { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/lib/api-client";
 import { defaultNavbarSettingsData, type NavbarSettingsData } from "@/types/navbar";
 
 export const NAVBAR_SETTINGS_QUERY_KEY = ["navbar-settings"] as const;
+export const NAVBAR_SETTINGS_UPDATED_EVENT = "peralagae:navbar-settings-updated";
 
 /**
  * Fetches the currently published navbar configuration from the public endpoint.
@@ -36,27 +38,53 @@ export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData> {
 }
 
 /**
- * TanStack Query hook for storefront navbar settings.
- * Refetches on window focus and reconnect, with initialData from default configuration.
- * Safely defaults to baseline navigation data if QueryClientContext is not present.
+ * Prerender-safe hook for storefront navbar settings.
+ *
+ * Avoids evaluating unstable Date.now() / clocks during Next.js SSR/prerender passes.
+ * Uses initial baseline during prerendering, then asynchronously syncs latest published
+ * settings inside useEffect on the client.
  */
 export function useNavbarSettings(initialData?: NavbarSettingsData) {
-  const client = React.useContext(QueryClientContext);
+  const [data, setData] = useState<NavbarSettingsData>(initialData ?? defaultNavbarSettingsData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
-  if (!client) {
-    return {
-      data: initialData ?? defaultNavbarSettingsData,
-      isLoading: false,
-      isError: false,
+  useEffect(() => {
+    let isMounted = true;
+
+    async function load() {
+      setIsLoading(true);
+      try {
+        const settings = await fetchPublicNavbarSettings();
+        if (isMounted && settings) {
+          setData(settings);
+        }
+      } catch {
+        if (isMounted) {
+          setIsError(true);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    load();
+
+    const handleSync = () => {
+      load();
     };
-  }
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useQuery({
-    queryKey: NAVBAR_SETTINGS_QUERY_KEY,
-    queryFn: fetchPublicNavbarSettings,
-    initialData: initialData ?? defaultNavbarSettingsData,
-    staleTime: 1000 * 30, // 30 seconds
-    refetchOnWindowFocus: true,
-  });
+    window.addEventListener("focus", handleSync);
+    window.addEventListener(NAVBAR_SETTINGS_UPDATED_EVENT, handleSync);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("focus", handleSync);
+      window.removeEventListener(NAVBAR_SETTINGS_UPDATED_EVENT, handleSync);
+    };
+  }, []);
+
+  return { data, isLoading, isError };
 }

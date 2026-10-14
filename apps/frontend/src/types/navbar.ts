@@ -84,6 +84,6 @@ export const defaultNavbarSettingsData: NavbarSettingsData = {
     showLinks: true,
   },
   version: 1,
-  updatedAt: new Date().toISOString(),
+  updatedAt: "2026-01-01T00:00:00.000Z",
   updatedBy: "system",
 };
