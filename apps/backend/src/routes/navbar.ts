@@ -211,7 +211,8 @@ export function createNavbarRouter(env: EnvConfig): Router {
 
     try {
       const adminEmail = req.admin?.email || env.ADMIN_EMAIL;
-      const restored = await NavbarService.restoreHistory(historyId, adminEmail);
+      const explicitSection = req.body?.section as "top_bar" | "second_navbar" | "full" | undefined;
+      const restored = await NavbarService.restoreHistory(historyId, adminEmail, explicitSection);
 
       res.status(200).json({
         success: true,

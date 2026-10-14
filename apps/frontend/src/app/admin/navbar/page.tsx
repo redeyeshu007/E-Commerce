@@ -44,7 +44,7 @@ import type {
   SecondNavbarLinkItem,
 } from "@/types/navbar";
 
-type TabKey = "top_bar" | "second_navbar" | "history";
+type TabKey = "top_bar" | "second_navbar";
 
 export default function AdminNavbarPage() {
   const router = useRouter();
@@ -96,10 +96,26 @@ export default function AdminNavbarPage() {
   const [deleteConfirmLinkId, setDeleteConfirmLinkId] = useState<string | null>(null);
 
   // History & Restore Modal State
-  const [previewHistoryItem, setPreviewHistoryItem] = useState<NavbarHistoryItem | null>(null);
-  const [restoreConfirmItem, setRestoreConfirmItem] = useState<NavbarHistoryItem | null>(null);
+  const [previewItem, setPreviewItem] = useState<{
+    item: NavbarHistoryItem;
+    section: "top_bar" | "second_navbar";
+  } | null>(null);
+  const [restoreConfirmTarget, setRestoreConfirmTarget] = useState<{
+    item: NavbarHistoryItem;
+    section: "top_bar" | "second_navbar";
+  } | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
   const [modalPreviewDevice, setModalPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+
+  // Section-specific inline history filters
+  const topBarHistory = useMemo(
+    () => historyList.filter((item) => item.section === "top_bar" || item.section === "full"),
+    [historyList]
+  );
+  const secondNavbarHistory = useMemo(
+    () => historyList.filter((item) => item.section === "second_navbar" || item.section === "full"),
+    [historyList]
+  );
 
   // Live Preview Device View (desktop vs mobile)
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
@@ -380,21 +396,26 @@ export default function AdminNavbarPage() {
 
   // Restore Version Execution
   const handleExecuteRestore = async () => {
-    if (!restoreConfirmItem) return;
+    if (!restoreConfirmTarget) return;
+    const { item, section } = restoreConfirmTarget;
     setIsRestoring(true);
     setStatusMessage(null);
     try {
-      const restored = await restoreAdminNavbarVersion(restoreConfirmItem.id);
+      const restored = await restoreAdminNavbarVersion(item.id, section);
       setServerSettings(restored);
-      setTopBarForm({ ...restored.topBar });
-      setSecondNavbarForm({
-        ...restored.secondNavbar,
-        links: restored.secondNavbar.links.map((l) => ({ ...l })),
-      });
-      setRestoreConfirmItem(null);
+      if (section === "top_bar") {
+        setTopBarForm({ ...restored.topBar });
+      } else {
+        setSecondNavbarForm({
+          ...restored.secondNavbar,
+          links: restored.secondNavbar.links.map((l) => ({ ...l })),
+        });
+      }
+      setRestoreConfirmTarget(null);
+      const sectionName = section === "top_bar" ? "Top Bar" : "Second Navbar";
       setStatusMessage({
         type: "success",
-        text: `Version ${restoreConfirmItem.version} successfully restored and published as v${restored.version}! Pre-restore backup was automatically created in history.`,
+        text: `Version ${item.version} of the ${sectionName} successfully restored and published as v${restored.version}! Live storefront updated.`,
       });
 
       // Refresh history list and storefront cache
@@ -540,22 +561,6 @@ export default function AdminNavbarPage() {
               {hasSecondNavbarChanges && (
                 <span className="w-2 h-2 rounded-full bg-[#C5A572]" title="Unsaved changes" />
               )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("history")}
-              className={`py-3 px-1 text-sm font-medium border-b-2 flex items-center gap-2 transition-colors ${
-                activeTab === "history"
-                  ? "border-[#C5A572] text-[#111111] font-semibold"
-                  : "border-transparent text-[#666666] hover:text-[#111111] hover:border-gray-300"
-              }`}
-            >
-              <History className="w-4 h-4" />
-              <span>Version History</span>
-              <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-mono">
-                {historyList.length}
-              </span>
             </button>
           </nav>
         </div>
@@ -811,6 +816,143 @@ export default function AdminNavbarPage() {
                     <span>Save & Publish Changes</span>
                   </button>
                 </div>
+              </div>
+
+              {/* Top Bar Version History Section */}
+              <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                  <div>
+                    <h2 className="text-base font-medium text-[#111111]">
+                      Top Bar Version History
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Historical versions of the storefront announcement bar. Preview past versions or restore them directly to the live website.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Current Live: v{serverSettings?.version}</span>
+                    </span>
+                  </div>
+                </div>
+
+                {topBarHistory.length === 0 ? (
+                  <div className="py-12 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
+                    <History className="w-7 h-7 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-gray-700">
+                      No previous Top Bar versions recorded yet.
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      History will appear after the first successful publication.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50/75 text-gray-600 font-semibold uppercase tracking-wider">
+                          <th className="py-3 px-4">Version</th>
+                          <th className="py-3 px-4">Status</th>
+                          <th className="py-3 px-4">Announcement Text</th>
+                          <th className="py-3 px-4">Date & Time</th>
+                          <th className="py-3 px-4">Administrator</th>
+                          <th className="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {topBarHistory.map((item) => {
+                          const isCurrentLive =
+                            serverSettings && item.version === serverSettings.version;
+
+                          return (
+                            <tr
+                              key={item.id}
+                              className={`hover:bg-gray-50/80 transition-colors ${
+                                isCurrentLive ? "bg-emerald-50/20" : ""
+                              }`}
+                            >
+                              <td className="py-3.5 px-4 font-mono font-bold text-gray-900">
+                                v{item.version}
+                              </td>
+                              <td className="py-3.5 px-4 whitespace-nowrap">
+                                {isCurrentLive ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <Check className="w-3 h-3 text-emerald-600" />
+                                    Current Live Version
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                    Previous Version
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3.5 px-4 max-w-sm">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className="w-3.5 h-3.5 rounded border border-gray-300 shrink-0"
+                                    style={{ backgroundColor: item.snapshot.topBar.backgroundColor }}
+                                    title={`Color: ${item.snapshot.topBar.backgroundColor}`}
+                                  />
+                                  <span className="text-gray-800 truncate font-medium">
+                                    {item.snapshot.topBar.visible ? (
+                                      `"${item.snapshot.topBar.text}"`
+                                    ) : (
+                                      <span className="text-gray-400 italic">Hidden on Storefront</span>
+                                    )}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4 text-gray-600 whitespace-nowrap">
+                                <span className="flex items-center gap-1.5">
+                                  <Clock className="w-3 h-3 text-gray-400 shrink-0" />
+                                  {new Date(item.createdAt).toLocaleString(undefined, {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                  })}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 text-gray-500 font-mono text-[11px] whitespace-nowrap">
+                                {item.createdBy || "admin@peralagae.com"}
+                              </td>
+                              <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                                <div className="inline-flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewItem({ item, section: "top_bar" })}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                                    title="Preview Top Bar version"
+                                  >
+                                    <Eye className="w-3 h-3 text-gray-500" />
+                                    <span>Preview</span>
+                                  </button>
+
+                                  {isCurrentLive ? (
+                                    <span className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
+                                      Active Live
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => setRestoreConfirmTarget({ item, section: "top_bar" })}
+                                      disabled={isRestoring}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-black bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-gray-300 rounded transition disabled:opacity-40"
+                                      title="Restore this Top Bar version"
+                                    >
+                                      <RotateCcw className="w-3 h-3 text-[#C5A572]" />
+                                      <span>Restore</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1221,469 +1363,441 @@ export default function AdminNavbarPage() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* ─── TAB 3: VERSION HISTORY & RESTORE WORKFLOW ─────────────────────── */}
-        {activeTab === "history" && (
-          <div className="mt-8 space-y-6">
-            <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-                <div>
-                  <h2 className="text-base font-medium text-[#111111]">
-                    Version History
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Audit trail of all published navbar versions. Review historical snapshots, preview past storefront appearances, and restore previous versions with automated safety backups.
-                  </p>
-                </div>
+            {/* Second Navbar Version History Section */}
+              <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                  <div>
+                    <h2 className="text-base font-medium text-[#111111]">
+                      Second Navbar Version History
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Historical versions of the secondary navigation strip. Preview past versions or restore them directly to the live website.
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Current Live: v{serverSettings?.version}</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* History Entries */}
-              {historyList.length === 0 ? (
-                <div className="py-16 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
-                  <History className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-gray-700">
-                    No previous versions recorded yet.
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    History will appear after the first successful publication.
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50/75 text-gray-600 font-semibold uppercase tracking-wider">
-                        <th className="py-3 px-4">Version</th>
-                        <th className="py-3 px-4">Status</th>
-                        <th className="py-3 px-4">Scope</th>
-                        <th className="py-3 px-4">Content Summary</th>
-                        <th className="py-3 px-4">Saved Date & Time</th>
-                        <th className="py-3 px-4">Administrator</th>
-                        <th className="py-3 px-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {historyList.map((item) => {
-                        const isCurrentLive =
-                          serverSettings && item.version === serverSettings.version;
-
-                        return (
-                          <tr
-                            key={item.id}
-                            className={`hover:bg-gray-50/80 transition-colors ${
-                              isCurrentLive ? "bg-emerald-50/20" : ""
-                            }`}
-                          >
-                            <td className="py-3.5 px-4 font-mono font-bold text-gray-900">
-                              v{item.version}
-                            </td>
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              {isCurrentLive ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  <Check className="w-3 h-3 text-emerald-600" />
-                                  Current Live Version
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                  Previous Version
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <span
-                                className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium uppercase tracking-wider ${
-                                  item.section === "top_bar"
-                                    ? "bg-pink-100 text-pink-800"
-                                    : item.section === "second_navbar"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "bg-gray-100 text-gray-800"
-                                }`}
-                              >
-                                {item.section === "top_bar"
-                                  ? "Top Bar"
-                                  : item.section === "second_navbar"
-                                  ? "Second Navbar"
-                                  : "Full Navbar"}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 max-w-sm">
-                              <div className="space-y-1">
-                                {(item.section === "top_bar" || item.section === "full") && (
-                                  <div className="flex items-center gap-1.5 text-gray-700 truncate">
-                                    <span className="font-semibold text-gray-900 shrink-0">Top Bar:</span>
-                                    <span className="truncate">
-                                      {item.snapshot.topBar.visible
-                                        ? `"${item.snapshot.topBar.text}"`
-                                        : "Hidden"}
-                                    </span>
-                                  </div>
-                                )}
-                                {(item.section === "second_navbar" || item.section === "full") && (
-                                  <div className="flex items-center gap-1.5 text-gray-600 truncate text-[11px]">
-                                    <span className="font-semibold text-gray-900 shrink-0">Second Navbar:</span>
-                                    <span className="truncate">
-                                      {item.snapshot.secondNavbar.promoText
-                                        ? `"${item.snapshot.secondNavbar.promoText}"`
-                                        : "No promo"}
-                                      {item.snapshot.secondNavbar.phone
-                                        ? ` • Phone: ${item.snapshot.secondNavbar.phone}`
-                                        : ""}
-                                    </span>
-                                  </div>
-                                )}
-                                {item.description && (
-                                  <p className="text-[11px] text-gray-500 italic truncate">
-                                    {item.description}
-                                  </p>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3.5 px-4 text-gray-600 whitespace-nowrap">
-                              <span className="flex items-center gap-1.5">
-                                <Clock className="w-3 h-3 text-gray-400 shrink-0" />
-                                {new Date(item.createdAt).toLocaleString(undefined, {
-                                  dateStyle: "medium",
-                                  timeStyle: "short",
-                                })}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 text-gray-500 font-mono text-[11px] whitespace-nowrap">
-                              {item.createdBy || "admin@peralagae.com"}
-                            </td>
-                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                              <div className="inline-flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setPreviewHistoryItem(item)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
-                                  title="Preview this historical snapshot"
-                                >
-                                  <Eye className="w-3 h-3 text-gray-500" />
-                                  <span>Preview</span>
-                                </button>
-
-                                {isCurrentLive ? (
-                                  <span className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
-                                    Active Live
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => setRestoreConfirmItem(item)}
-                                    disabled={isRestoring}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-black bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-gray-300 rounded transition disabled:opacity-40"
-                                    title="Restore this version to live website"
-                                  >
-                                    <RotateCcw className="w-3 h-3 text-[#C5A572]" />
-                                    <span>Restore This Version</span>
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* ─── MODAL 1: PREVIEW HISTORICAL VERSION ────────────────────────────── */}
-      {previewHistoryItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] animate-fade-in">
-          <div className="bg-white rounded-lg max-w-4xl w-full p-6 shadow-xl border border-gray-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <Eye className="w-5 h-5 text-[#C5A572]" />
-                <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold text-[#111111]">
-                      Storefront Preview — Version v{previewHistoryItem.version}
-                    </h3>
-                    <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded bg-gray-100 text-gray-700">
-                      Historical Snapshot (Read-Only)
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Current Live: v{serverSettings?.version}</span>
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Saved on{" "}
-                    {new Date(previewHistoryItem.createdAt).toLocaleString(undefined, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}{" "}
-                    by <span className="font-mono">{previewHistoryItem.createdBy || "Administrator"}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {/* Device View Toggle */}
-                <div className="flex items-center border border-gray-200 rounded p-0.5 bg-gray-50">
-                  <button
-                    type="button"
-                    onClick={() => setModalPreviewDevice("desktop")}
-                    className={`p-1 rounded text-xs flex items-center gap-1 ${
-                      modalPreviewDevice === "desktop"
-                        ? "bg-white shadow-xs text-black font-medium"
-                        : "text-gray-400 hover:text-gray-600"
-                    }`}
-                    title="Desktop view"
-                  >
-                    <Monitor className="w-3.5 h-3.5" />
-                    <span className="text-[11px]">Desktop</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setModalPreviewDevice("mobile")}
-                    className={`p-1 rounded text-xs flex items-center gap-1 ${
-                      modalPreviewDevice === "mobile"
-                        ? "bg-white shadow-xs text-black font-medium"
-                        : "text-gray-400 hover:text-gray-600"
-                    }`}
-                    title="Mobile view"
-                  >
-                    <Smartphone className="w-3.5 h-3.5" />
-                    <span className="text-[11px]">Mobile</span>
-                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setPreviewHistoryItem(null)}
-                  className="text-gray-400 hover:text-black p-1 rounded"
-                  aria-label="Close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Preview Frame */}
-            <div className="bg-[#F8F8F8] p-4 rounded-lg border border-gray-200 flex justify-center">
-              <div
-                className={`transition-all duration-200 overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm ${
-                  modalPreviewDevice === "mobile" ? "w-[375px]" : "w-full"
-                }`}
-              >
-                {/* 1. Top Bar Announcement */}
-                {previewHistoryItem.snapshot.topBar.visible ? (
-                  <div
-                    className="py-2 px-4 text-center text-xs tracking-wider font-normal relative transition-colors"
-                    style={{
-                      backgroundColor: previewHistoryItem.snapshot.topBar.backgroundColor,
-                      color: previewHistoryItem.snapshot.topBar.textColor,
-                    }}
-                  >
-                    <span>{previewHistoryItem.snapshot.topBar.text}</span>
-                    {previewHistoryItem.snapshot.topBar.dismissible && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100 cursor-pointer">
-                        ✕
-                      </span>
-                    )}
+                {secondNavbarHistory.length === 0 ? (
+                  <div className="py-12 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
+                    <History className="w-7 h-7 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-gray-700">
+                      No previous Second Navbar versions recorded yet.
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      History will appear after the first successful publication.
+                    </p>
                   </div>
                 ) : (
-                  <div className="py-1 px-4 bg-gray-100 text-center text-[10px] text-gray-400 italic">
-                    Top Bar is hidden in this version
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50/75 text-gray-600 font-semibold uppercase tracking-wider">
+                          <th className="py-3 px-4">Version</th>
+                          <th className="py-3 px-4">Status</th>
+                          <th className="py-3 px-4">Content Summary</th>
+                          <th className="py-3 px-4">Date & Time</th>
+                          <th className="py-3 px-4">Administrator</th>
+                          <th className="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {secondNavbarHistory.map((item) => {
+                          const isCurrentLive =
+                            serverSettings && item.version === serverSettings.version;
+
+                          return (
+                            <tr
+                              key={item.id}
+                              className={`hover:bg-gray-50/80 transition-colors ${
+                                isCurrentLive ? "bg-emerald-50/20" : ""
+                              }`}
+                            >
+                              <td className="py-3.5 px-4 font-mono font-bold text-gray-900">
+                                v{item.version}
+                              </td>
+                              <td className="py-3.5 px-4 whitespace-nowrap">
+                                {isCurrentLive ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <Check className="w-3 h-3 text-emerald-600" />
+                                    Current Live Version
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                    Previous Version
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3.5 px-4 max-w-sm">
+                                <div className="space-y-1">
+                                  <div className="text-gray-800 font-medium truncate">
+                                    {item.snapshot.secondNavbar.promoText ? (
+                                      <span>&ldquo;{item.snapshot.secondNavbar.promoText}&rdquo;</span>
+                                    ) : (
+                                      <span className="text-gray-400 italic">No promotional text</span>
+                                    )}
+                                    {item.snapshot.secondNavbar.ctaText && (
+                                      <span className="text-gray-500 text-[11px] ml-1">
+                                        ({item.snapshot.secondNavbar.ctaText})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-gray-500 flex flex-wrap gap-2">
+                                    {item.snapshot.secondNavbar.phone && (
+                                      <span>Phone: {item.snapshot.secondNavbar.phone}</span>
+                                    )}
+                                    <span>•</span>
+                                    <span>{item.snapshot.secondNavbar.links.length} secondary link(s)</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4 text-gray-600 whitespace-nowrap">
+                                <span className="flex items-center gap-1.5">
+                                  <Clock className="w-3 h-3 text-gray-400 shrink-0" />
+                                  {new Date(item.createdAt).toLocaleString(undefined, {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                  })}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 text-gray-500 font-mono text-[11px] whitespace-nowrap">
+                                {item.createdBy || "admin@peralagae.com"}
+                              </td>
+                              <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                                <div className="inline-flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewItem({ item, section: "second_navbar" })}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                                    title="Preview Second Navbar version"
+                                  >
+                                    <Eye className="w-3 h-3 text-gray-500" />
+                                    <span>Preview</span>
+                                  </button>
+
+                                  {isCurrentLive ? (
+                                    <span className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
+                                      Active Live
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => setRestoreConfirmTarget({ item, section: "second_navbar" })}
+                                      disabled={isRestoring}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-black bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-gray-300 rounded transition disabled:opacity-40"
+                                      title="Restore this Second Navbar version"
+                                    >
+                                      <RotateCcw className="w-3 h-3 text-[#C5A572]" />
+                                      <span>Restore</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+        </main>
 
-                {/* 2. Second Navbar Strip */}
-                <div className="bg-white border-b border-gray-100 py-2 px-4 text-[11px] text-[#222222]">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center space-x-3 text-xs">
-                      {previewHistoryItem.snapshot.secondNavbar.showPhone && (
-                        <span>{previewHistoryItem.snapshot.secondNavbar.phone}</span>
-                      )}
-                      {previewHistoryItem.snapshot.secondNavbar.showPhone &&
-                        previewHistoryItem.snapshot.secondNavbar.showPromotion && (
-                          <span className="text-gray-300">|</span>
-                        )}
-                      {previewHistoryItem.snapshot.secondNavbar.showPromotion && (
-                        <span>
-                          {previewHistoryItem.snapshot.secondNavbar.promoText}{" "}
-                          <span className="font-semibold underline cursor-pointer">
-                            {previewHistoryItem.snapshot.secondNavbar.ctaText}
-                          </span>
-                        </span>
-                      )}
+        {/* ─── MODAL 1: PREVIEW HISTORICAL VERSION ────────────────────────────── */}
+        {previewItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] animate-fade-in">
+            <div className="bg-white rounded-lg max-w-4xl w-full p-6 shadow-xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-200">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-[#C5A572]" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-semibold text-[#111111]">
+                        Storefront Preview — {previewItem.section === "top_bar" ? "Top Bar" : "Second Navbar"} Version v{previewItem.item.version}
+                      </h3>
+                      <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded bg-gray-100 text-gray-700">
+                        Historical Snapshot (Read-Only)
+                      </span>
                     </div>
-
-                    {modalPreviewDevice === "desktop" &&
-                      previewHistoryItem.snapshot.secondNavbar.showLinks &&
-                      previewHistoryItem.snapshot.secondNavbar.links.length > 0 && (
-                        <div className="flex items-center space-x-5 text-gray-600">
-                          {previewHistoryItem.snapshot.secondNavbar.links.map((link) => (
-                            <span key={link.id} className="hover:text-black">
-                              {link.label}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Saved on{" "}
+                      {new Date(previewItem.item.createdAt).toLocaleString(undefined, {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}{" "}
+                      by <span className="font-mono">{previewItem.item.createdBy || "Administrator"}</span>
+                    </p>
                   </div>
                 </div>
 
-                {/* 3. Main Navbar Brand Mockup */}
-                <div className="px-4 py-3 bg-white border-b border-gray-100 flex items-center justify-between">
-                  <div className="font-serif tracking-[0.2em] font-semibold text-sm text-[#111111]">
-                    PERALAGAE
+                <div className="flex items-center gap-3">
+                  {/* Device View Toggle */}
+                  <div className="flex items-center border border-gray-200 rounded p-0.5 bg-gray-50">
+                    <button
+                      type="button"
+                      onClick={() => setModalPreviewDevice("desktop")}
+                      className={`p-1 rounded text-xs flex items-center gap-1 ${
+                        modalPreviewDevice === "desktop"
+                          ? "bg-white shadow-xs text-black font-medium"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                      title="Desktop view"
+                    >
+                      <Monitor className="w-3.5 h-3.5" />
+                      <span className="text-[11px]">Desktop</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setModalPreviewDevice("mobile")}
+                      className={`p-1 rounded text-xs flex items-center gap-1 ${
+                        modalPreviewDevice === "mobile"
+                          ? "bg-white shadow-xs text-black font-medium"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                      title="Mobile view"
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span className="text-[11px]">Mobile</span>
+                    </button>
                   </div>
-                  {modalPreviewDevice === "desktop" ? (
-                    <div className="flex items-center space-x-6 text-[11px] tracking-widest uppercase text-gray-500 font-medium">
-                      <span>Home</span>
-                      <span>Collections</span>
-                      <span>Shop</span>
-                      <span>About</span>
+
+                  <button
+                    type="button"
+                    onClick={() => setPreviewItem(null)}
+                    className="text-gray-400 hover:text-black p-1 rounded"
+                    aria-label="Close"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Preview Frame */}
+              <div className="bg-[#F8F8F8] p-4 rounded-lg border border-gray-200 flex justify-center">
+                <div
+                  className={`transition-all duration-200 overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm ${
+                    modalPreviewDevice === "mobile" ? "w-[375px]" : "w-full"
+                  }`}
+                >
+                  {/* 1. Top Bar Announcement */}
+                  {previewItem.section === "top_bar" || previewItem.item.section === "full" ? (
+                    previewItem.item.snapshot.topBar.visible ? (
+                      <div
+                        className="py-2 px-4 text-center text-xs tracking-wider font-normal relative transition-colors"
+                        style={{
+                          backgroundColor: previewItem.item.snapshot.topBar.backgroundColor,
+                          color: previewItem.item.snapshot.topBar.textColor,
+                        }}
+                      >
+                        <span>{previewItem.item.snapshot.topBar.text}</span>
+                        {previewItem.item.snapshot.topBar.dismissible && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100 cursor-pointer">
+                            ✕
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="py-1 px-4 bg-gray-100 text-center text-[10px] text-gray-400 italic">
+                        Top Bar is hidden in this version
+                      </div>
+                    )
+                  ) : null}
+
+                  {/* 2. Second Navbar Strip */}
+                  {previewItem.section === "second_navbar" || previewItem.item.section === "full" ? (
+                    <div className="bg-white border-b border-gray-100 py-2 px-4 text-[11px] text-[#222222]">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center space-x-3 text-xs">
+                          {previewItem.item.snapshot.secondNavbar.showPhone && (
+                            <span>{previewItem.item.snapshot.secondNavbar.phone}</span>
+                          )}
+                          {previewItem.item.snapshot.secondNavbar.showPhone &&
+                            previewItem.item.snapshot.secondNavbar.showPromotion && (
+                              <span className="text-gray-300">|</span>
+                            )}
+                          {previewItem.item.snapshot.secondNavbar.showPromotion && (
+                            <span>
+                              {previewItem.item.snapshot.secondNavbar.promoText}{" "}
+                              <span className="font-semibold underline cursor-pointer">
+                                {previewItem.item.snapshot.secondNavbar.ctaText}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+
+                        {modalPreviewDevice === "desktop" &&
+                          previewItem.item.snapshot.secondNavbar.showLinks &&
+                          previewItem.item.snapshot.secondNavbar.links.length > 0 && (
+                            <div className="flex items-center space-x-5 text-gray-600">
+                              {previewItem.item.snapshot.secondNavbar.links.map((link) => (
+                                <span key={link.id} className="hover:text-black">
+                                  {link.label}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-xs text-gray-500">Menu ☰</div>
-                  )}
-                  <div className="text-[11px] tracking-wider text-gray-400">
-                    Storefront Header
+                  ) : null}
+
+                  {/* 3. Main Navbar Brand Mockup */}
+                  <div className="px-4 py-3 bg-white border-b border-gray-100 flex items-center justify-between">
+                    <div className="font-serif tracking-[0.2em] font-semibold text-sm text-[#111111]">
+                      PERALAGAE
+                    </div>
+                    {modalPreviewDevice === "desktop" ? (
+                      <div className="flex items-center space-x-6 text-[11px] tracking-widest uppercase text-gray-500 font-medium">
+                        <span>Home</span>
+                        <span>Collections</span>
+                        <span>Shop</span>
+                        <span>About</span>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500">Menu ☰</div>
+                    )}
+                    <div className="text-[11px] tracking-wider text-gray-400">
+                      Storefront Context
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-xs text-gray-500">
-                Previewing does not modify the live website or change the currently published version.
+              <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-xs text-gray-500">
+                  Previewing does not modify the live website or change the currently published version.
+                </p>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewItem(null)}
+                    className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                  >
+                    Close Preview
+                  </button>
+
+                  {serverSettings && previewItem.item.version !== serverSettings.version && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = { ...previewItem };
+                        setPreviewItem(null);
+                        setRestoreConfirmTarget(target);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-[#C5A572]" />
+                      <span>Restore This Version</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── MODAL 2: CONFIRM RESTORE THIS VERSION ─────────────────────────── */}
+        {restoreConfirmTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] animate-fade-in">
+            <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl border border-gray-200">
+              <div className="flex items-center gap-3 text-amber-600 mb-3">
+                <div className="p-2 bg-amber-50 rounded-full border border-amber-200">
+                  <RotateCcw className="w-5 h-5 shrink-0 text-amber-600" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900">
+                  Restore This Version?
+                </h3>
+              </div>
+
+              <p className="text-xs text-gray-600 leading-relaxed">
+                {`You are about to restore this previous version of the ${
+                  restoreConfirmTarget.section === "top_bar" ? "Top Bar" : "Second Navbar"
+                }. The selected content will replace the current published content on the live PERALAGAE website. Your current live version will be saved in history before the restoration.`}
               </p>
 
-              <div className="flex items-center gap-3">
+              <div className="mt-4 p-3.5 bg-gray-50 rounded-md border border-gray-200 text-xs text-gray-700 space-y-2">
+                <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+                  <span className="font-semibold text-gray-900 font-mono text-sm">
+                    Version v{restoreConfirmTarget.item.version}
+                  </span>
+                  <span className="text-gray-500 text-[11px]">
+                    Published on{" "}
+                    {new Date(restoreConfirmTarget.item.createdAt).toLocaleString(undefined, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </span>
+                </div>
+
+                {restoreConfirmTarget.section === "top_bar" && (
+                  <div>
+                    <span className="font-semibold text-gray-800">Top Bar Announcement: </span>
+                    <span className="text-gray-600">
+                      &ldquo;{restoreConfirmTarget.item.snapshot.topBar.text}&rdquo;
+                    </span>
+                  </div>
+                )}
+
+                {restoreConfirmTarget.section === "second_navbar" && (
+                  <div>
+                    <span className="font-semibold text-gray-800">Second Navbar Content: </span>
+                    <span className="text-gray-600">
+                      &ldquo;{restoreConfirmTarget.item.snapshot.secondNavbar.promoText}&rdquo;
+                      {restoreConfirmTarget.item.snapshot.secondNavbar.phone
+                        ? ` • Phone: ${restoreConfirmTarget.item.snapshot.secondNavbar.phone}`
+                        : ""}
+                    </span>
+                  </div>
+                )}
+
+                {restoreConfirmTarget.item.createdBy && (
+                  <div className="pt-1 text-[11px] text-gray-500 font-mono">
+                    Administrator: {restoreConfirmTarget.item.createdBy}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded border border-emerald-200 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>
+                  Your current live version (v{serverSettings?.version}) will be saved in history before the restoration.
+                </span>
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setPreviewHistoryItem(null)}
-                  className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                  onClick={() => setRestoreConfirmTarget(null)}
+                  disabled={isRestoring}
+                  className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
                 >
-                  Close Preview
+                  Cancel
                 </button>
-
-                {serverSettings && previewHistoryItem.version !== serverSettings.version && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const item = previewHistoryItem;
-                      setPreviewHistoryItem(null);
-                      setRestoreConfirmItem(item);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-[#C5A572]" />
-                    <span>Restore This Version</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleExecuteRestore}
+                  disabled={isRestoring}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                >
+                  {isRestoring ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  )}
+                  <span>Confirm & Publish</span>
+                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ─── MODAL 2: CONFIRM RESTORE PREVIOUS VERSION ──────────────────────── */}
-      {restoreConfirmItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] animate-fade-in">
-          <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl border border-gray-200">
-            <div className="flex items-center gap-3 text-amber-600 mb-3">
-              <div className="p-2 bg-amber-50 rounded-full border border-amber-200">
-                <RotateCcw className="w-5 h-5 shrink-0 text-amber-600" />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900">
-                Restore Previous Version?
-              </h3>
-            </div>
-
-            <p className="text-xs text-gray-600 leading-relaxed">
-              You are about to restore this saved navbar version. The selected Top Bar and/or Second Navbar content will replace the currently published content on the live PERALAGAE website. Your current live version will be saved in history so you can restore it later.
-            </p>
-
-            <div className="mt-4 p-3.5 bg-gray-50 rounded-md border border-gray-200 text-xs text-gray-700 space-y-2">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-                <span className="font-semibold text-gray-900 font-mono text-sm">
-                  Version v{restoreConfirmItem.version}
-                </span>
-                <span className="text-gray-500 text-[11px]">
-                  Saved on{" "}
-                  {new Date(restoreConfirmItem.createdAt).toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                </span>
-              </div>
-
-              {(restoreConfirmItem.section === "top_bar" ||
-                restoreConfirmItem.section === "full") && (
-                <div>
-                  <span className="font-semibold text-gray-800">Top Bar Announcement: </span>
-                  <span className="text-gray-600">
-                    &ldquo;{restoreConfirmItem.snapshot.topBar.text}&rdquo;
-                  </span>
-                </div>
-              )}
-
-              {(restoreConfirmItem.section === "second_navbar" ||
-                restoreConfirmItem.section === "full") && (
-                <div>
-                  <span className="font-semibold text-gray-800">Second Navbar Content: </span>
-                  <span className="text-gray-600">
-                    &ldquo;{restoreConfirmItem.snapshot.secondNavbar.promoText}&rdquo;
-                    {restoreConfirmItem.snapshot.secondNavbar.phone
-                      ? ` • Phone: ${restoreConfirmItem.snapshot.secondNavbar.phone}`
-                      : ""}
-                  </span>
-                </div>
-              )}
-
-              {restoreConfirmItem.createdBy && (
-                <div className="pt-1 text-[11px] text-gray-500 font-mono">
-                  Saved by: {restoreConfirmItem.createdBy}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded border border-emerald-200 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>
-                Your current live version (v{serverSettings?.version}) will be automatically archived in history before restoring.
-              </span>
-            </div>
-
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setRestoreConfirmItem(null)}
-                disabled={isRestoring}
-                className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleExecuteRestore}
-                disabled={isRestoring}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
-              >
-                {isRestoring ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <RotateCcw className="w-3.5 h-3.5" />
-                )}
-                <span>Confirm & Publish</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
 
       {/* ─── MODAL 3: CONFIRM DELETE LINK ──────────────────────────────────── */}
       {deleteConfirmLinkId && (

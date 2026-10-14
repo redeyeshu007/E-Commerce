@@ -78,6 +78,38 @@ const mockHistory: NavbarHistoryItem[] = [
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     createdBy: "admin@peralagae.com",
   },
+  {
+    id: "hist_top_only",
+    section: "top_bar",
+    snapshot: {
+      ...mockInitialSettings,
+      topBar: {
+        ...mockInitialSettings.topBar,
+        text: "EXCLUSIVE TOP BAR ANNOUNCEMENT",
+      },
+      version: 3,
+    },
+    description: "Top bar update only",
+    version: 3,
+    createdAt: new Date(Date.now() - 1800000).toISOString(),
+    createdBy: "editor@peralagae.com",
+  },
+  {
+    id: "hist_second_only",
+    section: "second_navbar",
+    snapshot: {
+      ...mockInitialSettings,
+      secondNavbar: {
+        ...mockInitialSettings.secondNavbar,
+        promoText: "EXCLUSIVE SECOND NAVBAR BANNER",
+      },
+      version: 4,
+    },
+    description: "Second navbar update only",
+    version: 4,
+    createdAt: new Date(Date.now() - 900000).toISOString(),
+    createdBy: "editor@peralagae.com",
+  },
 ];
 
 function renderWithClient(ui: React.ReactElement) {
@@ -101,7 +133,7 @@ describe("Navbar Management Module (Frontend)", () => {
   });
 
   describe("1. Page Header & Tab Layout", () => {
-    it("renders page title, description, and three management tabs", async () => {
+    it("renders page title, description, and two management tabs without standalone history tab", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
@@ -111,7 +143,7 @@ describe("Navbar Management Module (Frontend)", () => {
         ).toBeInTheDocument();
         expect(screen.getByRole("button", { name: /^top bar/i })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /version history/i })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /version history/i })).not.toBeInTheDocument();
       });
     });
 
@@ -231,116 +263,186 @@ describe("Navbar Management Module (Frontend)", () => {
     });
   });
 
-  describe("4. Version History & Restore Workflow", () => {
-    it("switches to Version History tab and lists historical snapshots with status badges", async () => {
+  describe("4. Top Bar Tab — Inline Version History & Restore Workflow", () => {
+    it("displays Top Bar Version History automatically below settings without navigating away", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /version history/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
       });
 
-      await userEvent.click(screen.getByRole("button", { name: /version history/i }));
+      // Shows Top Bar versions
+      expect(screen.getByText(/EXCLUSIVE TOP BAR ANNOUNCEMENT/i)).toBeInTheDocument();
+      expect(screen.getByText(/FALL SPECIAL SALE 30% OFF/i)).toBeInTheDocument();
+      // Does NOT show Second Navbar exclusive version in Top Bar history
+      expect(screen.queryByText(/EXCLUSIVE SECOND NAVBAR BANNER/i)).not.toBeInTheDocument();
 
-      expect(screen.getByRole("heading", { name: "Version History" })).toBeInTheDocument();
+      // Identifies current live version
       expect(screen.getByText("Current Live: v2")).toBeInTheDocument();
-      expect(screen.getByText("Current Live Version")).toBeInTheDocument();
-      expect(screen.getByText("Previous Version")).toBeInTheDocument();
       expect(screen.getByText("Active Live")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /restore this version/i })).toBeInTheDocument();
     });
 
-    it("opens storefront preview modal when Preview button is clicked and can toggle device views", async () => {
+    it("previews a historical Top Bar version in modal with read-only badge", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /version history/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
       });
 
-      await userEvent.click(screen.getByRole("button", { name: /version history/i }));
-
       const previewButtons = screen.getAllByRole("button", { name: /preview/i });
-      await userEvent.click(previewButtons[1]); // preview v1 (historical)
+      // Click preview on v1 (index 1)
+      await userEvent.click(previewButtons[1]);
 
-      expect(screen.getByText(/storefront preview — version v1/i)).toBeInTheDocument();
+      expect(screen.getByText(/storefront preview — top bar version v1/i)).toBeInTheDocument();
       expect(screen.getByText(/historical snapshot \(read-only\)/i)).toBeInTheDocument();
       expect(screen.getByText("FALL SPECIAL SALE 30% OFF")).toBeInTheDocument();
-      expect(screen.getByText("Storefront Header")).toBeInTheDocument();
 
-      // Mobile toggle
-      const mobileBtn = screen.getByRole("button", { name: /mobile/i });
-      await userEvent.click(mobileBtn);
+      // Toggle device view in modal
+      const mobileBtns = screen.getAllByRole("button", { name: /mobile/i });
+      await userEvent.click(mobileBtns[mobileBtns.length - 1]);
 
       // Close preview
       const closeBtn = screen.getByRole("button", { name: /close preview/i });
       await userEvent.click(closeBtn);
-      expect(screen.queryByText(/storefront preview — version v1/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/storefront preview — top bar version v1/i)).not.toBeInTheDocument();
     });
 
-    it("opens confirmation dialog with required warning and cancels safely without changes", async () => {
+    it("opens confirmation dialog for Top Bar restore and cancels safely without changes", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /version history/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
       });
 
-      await userEvent.click(screen.getByRole("button", { name: /version history/i }));
-      await userEvent.click(screen.getByRole("button", { name: /restore this version/i }));
+      const restoreButtons = screen.getAllByRole("button", { name: /^restore$/i });
+      await userEvent.click(restoreButtons[0]);
 
-      expect(screen.getByRole("heading", { name: "Restore Previous Version?" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Restore This Version?" })).toBeInTheDocument();
       expect(
-        screen.getByText(/you are about to restore this saved navbar version/i)
+        screen.getByText(/you are about to restore this previous version of the top bar/i)
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/your current live version will be saved in history so you can restore it later/i)
+        screen.getByText(/the selected content will replace the current published content on the live peralagae website/i)
       ).toBeInTheDocument();
-      expect(screen.getByText(/version v1/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/your current live version will be saved in history before the restoration/i)
+      ).toBeInTheDocument();
 
       const cancelBtn = screen.getByRole("button", { name: /^cancel$/i });
       await userEvent.click(cancelBtn);
 
-      expect(screen.queryByRole("heading", { name: "Restore Previous Version?" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "Restore This Version?" })).not.toBeInTheDocument();
     });
 
-    it("restores version via API upon Confirm & Publish and refreshes live state", async () => {
+    it("restores Top Bar version via API upon Confirm & Publish", async () => {
       const restoreSpy = vi.spyOn(navbarAdminService, "restoreAdminNavbarVersion").mockResolvedValue({
         ...mockInitialSettings,
         topBar: {
           ...mockInitialSettings.topBar,
           text: "FALL SPECIAL SALE 30% OFF",
         },
-        version: 3,
+        version: 5,
       });
 
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /version history/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
       });
 
-      await userEvent.click(screen.getByRole("button", { name: /version history/i }));
-      await userEvent.click(screen.getByRole("button", { name: /restore this version/i }));
+      const restoreButtons = screen.getAllByRole("button", { name: /^restore$/i });
+      await userEvent.click(restoreButtons[0]); // restore hist_1
 
       const confirmBtn = screen.getByRole("button", { name: /confirm & publish/i });
       await userEvent.click(confirmBtn);
 
       await waitFor(() => {
-        expect(restoreSpy).toHaveBeenCalledWith("hist_1");
-        expect(screen.getByText(/version 1 successfully restored and published as v3/i)).toBeInTheDocument();
+        expect(restoreSpy).toHaveBeenCalledWith("hist_1", "top_bar");
+        expect(screen.getByText(/version 1 of the top bar successfully restored/i)).toBeInTheDocument();
       });
     });
 
-    it("displays clean empty state when no version history exists", async () => {
+    it("displays clean empty state when no Top Bar version history exists", async () => {
       vi.spyOn(navbarAdminService, "fetchAdminNavbarHistory").mockResolvedValue([]);
 
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /version history/i })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
       });
 
-      await userEvent.click(screen.getByRole("button", { name: /version history/i }));
+      expect(screen.getByText("No previous Top Bar versions recorded yet.")).toBeInTheDocument();
+      expect(
+        screen.getByText("History will appear after the first successful publication.")
+      ).toBeInTheDocument();
+    });
+  });
 
-      expect(screen.getByText("No previous versions recorded yet.")).toBeInTheDocument();
+  describe("5. Second Navbar Tab — Inline Version History & Restore Workflow", () => {
+    it("displays Second Navbar Version History automatically inside Second Navbar tab", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
+
+      expect(screen.getByRole("heading", { name: "Second Navbar Version History" })).toBeInTheDocument();
+      // Shows Second Navbar versions
+      expect(screen.getByText(/EXCLUSIVE SECOND NAVBAR BANNER/i)).toBeInTheDocument();
+      expect(screen.getByText(/Fall Collection Exclusive Offer/i)).toBeInTheDocument();
+      // Does NOT show Top Bar exclusive version
+      expect(screen.queryByText("EXCLUSIVE TOP BAR ANNOUNCEMENT")).not.toBeInTheDocument();
+    });
+
+    it("opens confirmation dialog for Second Navbar restore and calls API with section='second_navbar'", async () => {
+      const restoreSpy = vi.spyOn(navbarAdminService, "restoreAdminNavbarVersion").mockResolvedValue({
+        ...mockInitialSettings,
+        secondNavbar: {
+          ...mockInitialSettings.secondNavbar,
+          promoText: "Fall Collection Exclusive Offer",
+        },
+        version: 5,
+      });
+
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
+
+      const restoreButtons = screen.getAllByRole("button", { name: /^restore$/i });
+      await userEvent.click(restoreButtons[0]); // restore hist_1
+
+      expect(screen.getByRole("heading", { name: "Restore This Version?" })).toBeInTheDocument();
+      expect(
+        screen.getByText(/you are about to restore this previous version of the second navbar/i)
+      ).toBeInTheDocument();
+
+      const confirmBtn = screen.getByRole("button", { name: /confirm & publish/i });
+      await userEvent.click(confirmBtn);
+
+      await waitFor(() => {
+        expect(restoreSpy).toHaveBeenCalledWith("hist_1", "second_navbar");
+        expect(screen.getByText(/version 1 of the second navbar successfully restored/i)).toBeInTheDocument();
+      });
+    });
+
+    it("displays clean empty state when no Second Navbar version history exists", async () => {
+      vi.spyOn(navbarAdminService, "fetchAdminNavbarHistory").mockResolvedValue([]);
+
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
+
+      expect(screen.getByText("No previous Second Navbar versions recorded yet.")).toBeInTheDocument();
       expect(
         screen.getByText("History will appear after the first successful publication.")
       ).toBeInTheDocument();

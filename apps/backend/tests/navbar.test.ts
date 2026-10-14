@@ -253,5 +253,85 @@ describe("Navbar Management API Test Suite", () => {
 
       expect(postRestoreHistory.body.data[0]?.description).toContain("Pre-restore backup");
     });
+
+    it("restores only top_bar section without altering second_navbar when section='top_bar'", async () => {
+      const cookie = await getAdminCookie();
+
+      // Ensure distinct top_bar and second_navbar
+      await request(app)
+        .put("/api/v1/navbar/admin/top-bar")
+        .set("Cookie", cookie)
+        .send({ text: "PROMO VERSION A" });
+
+      const putSecondRes = await request(app)
+        .put("/api/v1/navbar/admin/second-navbar")
+        .set("Cookie", cookie)
+        .send({
+          phone: "+91 99999 00000",
+          promoText: "UNIQUE SECOND NAVBAR TEXT",
+          ctaText: "Shop Now",
+          ctaHref: "/shop",
+          links: [{ id: "l1", label: "Store", href: "/store", isImplemented: true }],
+        });
+      expect(putSecondRes.status).toBe(200);
+
+      const historyRes = await request(app)
+        .get("/api/v1/navbar/admin/history")
+        .set("Cookie", cookie);
+
+      const records = historyRes.body.data;
+      const olderSnapshot = records.find(
+        (r: any) => r.snapshot?.topBar?.text && r.snapshot.topBar.text !== "PROMO VERSION A"
+      );
+      expect(olderSnapshot).toBeDefined();
+
+      const restoreRes = await request(app)
+        .post(`/api/v1/navbar/admin/history/${olderSnapshot.id}/restore`)
+        .set("Cookie", cookie)
+        .send({ section: "top_bar" });
+
+      expect(restoreRes.status).toBe(200);
+      expect(restoreRes.body.success).toBe(true);
+      // Top bar restored to older text
+      expect(restoreRes.body.data.topBar.text).toBe(olderSnapshot.snapshot.topBar.text);
+      // Second navbar was NOT overwritten, preserved current
+      expect(restoreRes.body.data.secondNavbar.promoText).toBe("UNIQUE SECOND NAVBAR TEXT");
+    });
+
+    it("restores only second_navbar section without altering top_bar when section='second_navbar'", async () => {
+      const cookie = await getAdminCookie();
+
+      // Ensure current top bar has a unique value
+      await request(app)
+        .put("/api/v1/navbar/admin/top-bar")
+        .set("Cookie", cookie)
+        .send({ text: "PRESERVED TOP BAR ANNOUNCEMENT" });
+
+      const historyRes = await request(app)
+        .get("/api/v1/navbar/admin/history")
+        .set("Cookie", cookie);
+
+      const records = historyRes.body.data;
+      const olderSnapshot = records.find(
+        (r: any) =>
+          r.snapshot?.secondNavbar?.promoText &&
+          r.snapshot.secondNavbar.promoText !== "UNIQUE SECOND NAVBAR TEXT"
+      );
+      expect(olderSnapshot).toBeDefined();
+
+      const restoreRes = await request(app)
+        .post(`/api/v1/navbar/admin/history/${olderSnapshot.id}/restore`)
+        .set("Cookie", cookie)
+        .send({ section: "second_navbar" });
+
+      expect(restoreRes.status).toBe(200);
+      expect(restoreRes.body.success).toBe(true);
+      // Top bar remains preserved
+      expect(restoreRes.body.data.topBar.text).toBe("PRESERVED TOP BAR ANNOUNCEMENT");
+      // Second navbar restored to older snapshot
+      expect(restoreRes.body.data.secondNavbar.promoText).toBe(
+        olderSnapshot.snapshot.secondNavbar.promoText
+      );
+    });
   });
 });

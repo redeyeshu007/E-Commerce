@@ -394,9 +394,15 @@ export class NavbarService {
 
   /**
    * Restores a previously saved snapshot.
+   * If a specific section is specified (or indicated by targetRecord), restores only that section
+   * so restoring Top Bar does not overwrite Second Navbar, and vice versa.
    * Saves the current active state before restoring so the operation is fully reversible.
    */
-  static async restoreHistory(historyId: string, adminEmail = "admin@peralagae.com"): Promise<NavbarSettings> {
+  static async restoreHistory(
+    historyId: string,
+    adminEmail = "admin@peralagae.com",
+    targetSection?: "top_bar" | "second_navbar" | "full"
+  ): Promise<NavbarSettings> {
     const historyList = await this.getHistory();
     const targetRecord = historyList.find((h) => h.id === historyId);
 
@@ -405,21 +411,47 @@ export class NavbarService {
     }
 
     const current = await this.getSettings();
+    const restoreSection = targetSection || (targetRecord.section !== "full" ? targetRecord.section : "full");
 
     // Preserve current state into history before restoring
     await this.saveHistorySnapshot(
-      "full",
+      restoreSection,
       JSON.parse(JSON.stringify(current)),
-      `Pre-restore backup before restoring version ${targetRecord.version}`,
+      `Pre-restore backup before restoring ${restoreSection === "top_bar" ? "Top Bar" : restoreSection === "second_navbar" ? "Second Navbar" : "navbar"} version ${targetRecord.version}`,
       adminEmail
     );
 
     const newVersion = Math.max(current.version, targetRecord.version) + 1;
-    const restoredSettings: NavbarSettings = {
-      ...targetRecord.snapshot,
-      version: newVersion,
-      updatedAt: new Date().toISOString(),
-      updatedBy: adminEmail,
+    let restoredSettings: NavbarSettings;
+
+    if (restoreSection === "top_bar") {
+      // Restore ONLY Top Bar, preserve current Second Navbar
+      restoredSettings = {
+        ...current,
+        topBar: { ...targetRecord.snapshot.topBar },
+        version: newVersion,
+        updatedAt: new Date().toISOString(),
+        updatedBy: adminEmail,
+      };
+    } else if (restoreSection === "second_navbar") {
+      // Restore ONLY Second Navbar, preserve current Top Bar
+      restoredSettings = {
+        ...current,
+        secondNavbar: {
+          ...targetRecord.snapshot.secondNavbar,
+          links: targetRecord.snapshot.secondNavbar.links.map((l) => ({ ...l })),
+        },
+        version: newVersion,
+        updatedAt: new Date().toISOString(),
+        updatedBy: adminEmail,
+      };
+    } else {
+      restoredSettings = {
+        ...targetRecord.snapshot,
+        version: newVersion,
+        updatedAt: new Date().toISOString(),
+        updatedBy: adminEmail,
+      };
     };
 
     await tryPrisma(() =>

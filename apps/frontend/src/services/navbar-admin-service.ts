@@ -107,12 +107,16 @@ export async function fetchAdminNavbarHistory(): Promise<NavbarHistoryItem[]> {
 /**
  * Restores a historical version snapshot.
  */
-export async function restoreAdminNavbarVersion(historyId: string): Promise<NavbarSettingsData> {
+export async function restoreAdminNavbarVersion(
+  historyId: string,
+  section?: "top_bar" | "second_navbar"
+): Promise<NavbarSettingsData> {
   const url = `${API_BASE_URL}/navbar/admin/history/${historyId}/restore`;
   const res = await fetch(url, {
     method: "POST",
     headers: getAuthHeaders(),
     credentials: "include",
+    body: section ? JSON.stringify({ section }) : undefined,
   });
 
   const json = await res.json().catch(() => ({}));
