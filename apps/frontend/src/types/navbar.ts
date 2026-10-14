@@ -30,13 +30,15 @@ export interface NavbarSettingsData {
   topBar: TopBarConfig;
   secondNavbar: SecondNavbarConfig;
   version: number;
+  topBarVersion?: number;
+  secondNavbarVersion?: number;
   updatedAt: string;
   updatedBy: string;
 }
 
 export interface NavbarHistoryItem {
   id: string;
-  section: "top_bar" | "second_navbar" | "full";
+  section: "TOP_BAR" | "SECOND_NAVBAR" | "top_bar" | "second_navbar" | "full";
   snapshot: NavbarSettingsData;
   description: string;
   version: number;

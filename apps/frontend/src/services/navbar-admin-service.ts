@@ -85,10 +85,11 @@ export async function updateAdminSecondNavbar(
 }
 
 /**
- * Fetches content version history for navbar.
+ * Fetches content version history for navbar, optionally filtered by section.
  */
-export async function fetchAdminNavbarHistory(): Promise<NavbarHistoryItem[]> {
-  const url = `${API_BASE_URL}/navbar/admin/history`;
+export async function fetchAdminNavbarHistory(section?: string): Promise<NavbarHistoryItem[]> {
+  const queryParam = section ? `?section=${encodeURIComponent(section)}` : "";
+  const url = `${API_BASE_URL}/navbar/admin/history${queryParam}`;
   const res = await fetch(url, {
     method: "GET",
     headers: getAuthHeaders(),

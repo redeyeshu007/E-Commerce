@@ -21,12 +21,12 @@ const secondNavbarLinkSchema = z.object({
 });
 
 const secondNavbarUpdateSchema = z.object({
-  phone: z.string().trim().max(30, "Phone number must not exceed 30 characters"),
-  phoneHref: z.string().trim().optional(),
   promoText: z.string().trim().min(1, "Promotional message is required").max(120, "Promotional message must not exceed 120 characters"),
-  ctaText: z.string().trim().max(40, "CTA label must not exceed 40 characters"),
-  ctaHref: z.string().trim().min(1, "CTA destination URL is required"),
-  links: z.array(secondNavbarLinkSchema).min(1, "At least one navigation link is required"),
+  phone: z.string().trim().max(30, "Phone number must not exceed 30 characters").optional(),
+  phoneHref: z.string().trim().optional(),
+  ctaText: z.string().trim().max(40, "CTA label must not exceed 40 characters").optional(),
+  ctaHref: z.string().trim().optional(),
+  links: z.array(secondNavbarLinkSchema).optional(),
   showPhone: z.boolean().optional(),
   showPromotion: z.boolean().optional(),
   showLinks: z.boolean().optional(),
@@ -173,9 +173,11 @@ export function createNavbarRouter(env: EnvConfig): Router {
    * GET /api/v1/navbar/admin/history
    * Lists historical snapshots.
    */
-  router.get("/admin/history", requireAdminAuth, async (_req: Request, res: Response) => {
+  router.get("/admin/history", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      const history = await NavbarService.getHistory();
+      const rawSection = req.query["section"];
+      const section = typeof rawSection === "string" ? rawSection : undefined;
+      const history = await NavbarService.getHistory(section);
       res.status(200).json({
         success: true,
         data: history,

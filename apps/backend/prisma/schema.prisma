@@ -57,7 +57,7 @@ model NavbarSetting {
 
 model NavbarHistory {
   id          String   @id @default(cuid())
-  section     String   // "top_bar" | "second_navbar" | "full"
+  section     String   // "TOP_BAR" | "SECOND_NAVBAR" | "top_bar" | "second_navbar" | "full"
   snapshot    Json     // Full snapshot of settings at this version
   description String?
   version     Int

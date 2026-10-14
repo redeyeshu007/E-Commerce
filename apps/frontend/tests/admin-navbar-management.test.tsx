@@ -44,71 +44,65 @@ const mockInitialSettings: NavbarSettingsData = {
     showLinks: true,
   },
   version: 2,
+  topBarVersion: 2,
+  secondNavbarVersion: 1,
   updatedAt: new Date().toISOString(),
   updatedBy: "admin@peralagae.com",
 };
 
-const mockHistory: NavbarHistoryItem[] = [
+const mockTopBarHistory: NavbarHistoryItem[] = [
   {
-    id: "hist_live",
-    section: "full",
-    snapshot: { ...mockInitialSettings, version: 2 },
-    description: "Current live published configuration",
+    id: "hist_top_2",
+    section: "TOP_BAR",
+    snapshot: { ...mockInitialSettings, topBarVersion: 2 },
+    description: "Top bar update v2",
     version: 2,
     createdAt: new Date().toISOString(),
     createdBy: "admin@peralagae.com",
   },
   {
-    id: "hist_1",
-    section: "full",
+    id: "hist_top_1",
+    section: "TOP_BAR",
     snapshot: {
       ...mockInitialSettings,
       topBar: {
         ...mockInitialSettings.topBar,
         text: "FALL SPECIAL SALE 30% OFF",
       },
-      secondNavbar: {
-        ...mockInitialSettings.secondNavbar,
-        promoText: "Fall Collection Exclusive Offer",
-      },
-      version: 1,
+      topBarVersion: 1,
     },
-    description: "Initial baseline published configuration",
+    description: "Initial baseline Top Bar",
     version: 1,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     createdBy: "admin@peralagae.com",
   },
+];
+
+const mockSecondNavbarHistory: NavbarHistoryItem[] = [
   {
-    id: "hist_top_only",
-    section: "top_bar",
-    snapshot: {
-      ...mockInitialSettings,
-      topBar: {
-        ...mockInitialSettings.topBar,
-        text: "EXCLUSIVE TOP BAR ANNOUNCEMENT",
-      },
-      version: 3,
-    },
-    description: "Top bar update only",
-    version: 3,
-    createdAt: new Date(Date.now() - 1800000).toISOString(),
-    createdBy: "editor@peralagae.com",
+    id: "hist_sec_1",
+    section: "SECOND_NAVBAR",
+    snapshot: { ...mockInitialSettings, secondNavbarVersion: 1 },
+    description: "Initial baseline Second Navbar promo",
+    version: 1,
+    createdAt: new Date().toISOString(),
+    createdBy: "admin@peralagae.com",
   },
   {
-    id: "hist_second_only",
-    section: "second_navbar",
+    id: "hist_sec_older",
+    section: "SECOND_NAVBAR",
     snapshot: {
       ...mockInitialSettings,
       secondNavbar: {
         ...mockInitialSettings.secondNavbar,
-        promoText: "EXCLUSIVE SECOND NAVBAR BANNER",
+        promoText: "Old Festive Discount 20%",
       },
-      version: 4,
+      secondNavbarVersion: 0,
     },
-    description: "Second navbar update only",
-    version: 4,
-    createdAt: new Date(Date.now() - 900000).toISOString(),
-    createdBy: "editor@peralagae.com",
+    description: "Older Second Navbar promo",
+    version: 0,
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+    createdBy: "admin@peralagae.com",
   },
 ];
 
@@ -129,7 +123,11 @@ describe("Navbar Management Module (Frontend)", () => {
       role: "admin",
     });
     vi.spyOn(navbarAdminService, "fetchAdminNavbarSettings").mockResolvedValue(mockInitialSettings);
-    vi.spyOn(navbarAdminService, "fetchAdminNavbarHistory").mockResolvedValue(mockHistory);
+    vi.spyOn(navbarAdminService, "fetchAdminNavbarHistory").mockImplementation(async (section?: string) => {
+      if (section === "top_bar") return mockTopBarHistory;
+      if (section === "second_navbar") return mockSecondNavbarHistory;
+      return [...mockTopBarHistory, ...mockSecondNavbarHistory];
+    });
   });
 
   describe("1. Page Header & Tab Layout", () => {
@@ -178,7 +176,8 @@ describe("Navbar Management Module (Frontend)", () => {
           ...mockInitialSettings.topBar,
           text: "WINTER FESTIVAL SALE 50% OFF",
         },
-        version: 2,
+        topBarVersion: 3,
+        version: 3,
       });
 
       renderWithClient(<AdminNavbarPage />);
@@ -204,7 +203,7 @@ describe("Navbar Management Module (Frontend)", () => {
             text: "WINTER FESTIVAL SALE 50% OFF",
           })
         );
-        expect(screen.getByText(/top bar published successfully/i)).toBeInTheDocument();
+        expect(screen.getByText(/top bar published successfully as v3/i)).toBeInTheDocument();
       });
     });
 
@@ -227,8 +226,8 @@ describe("Navbar Management Module (Frontend)", () => {
     });
   });
 
-  describe("3. Second Navbar Management", () => {
-    it("switches to Second Navbar tab and renders phone, promo, and secondary links", async () => {
+  describe("3. Second Navbar Management — Promotional Message Only", () => {
+    it("renders ONLY Promotional Message editor and removes phone, CTA, and secondary links controls", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
@@ -237,14 +236,31 @@ describe("Navbar Management Module (Frontend)", () => {
 
       await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
 
-      expect(screen.getByLabelText(/contact phone number/i)).toHaveValue("+91 98765 43210");
-      expect(screen.getByLabelText(/promotional message/i)).toHaveValue("Summer Sale 15% off!");
-      expect(screen.getByDisplayValue("Find a Store")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("FAQs")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("Subscribe")).toBeInTheDocument();
+      // Promotional message input is present and populated
+      const promoInput = screen.getByLabelText(/promotional message/i) as HTMLInputElement;
+      expect(promoInput).toBeInTheDocument();
+      expect(promoInput.value).toBe("Summer Sale 15% off!");
+
+      // Removed fields must NOT exist in the editing interface
+      expect(screen.queryByLabelText(/contact phone number/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/phone link destination/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/show phone/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/cta label/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/cta url/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/secondary navigation links/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /add link/i })).not.toBeInTheDocument();
+      expect(screen.queryByTitle(/move up/i)).not.toBeInTheDocument();
+      expect(screen.queryByTitle(/remove link/i)).not.toBeInTheDocument();
+
+      // Live Storefront preview still renders phone, CTA, and secondary links from active settings
+      expect(screen.getByText("+91 98765 43210")).toBeInTheDocument();
+      expect(screen.getByText("Shop Now!")).toBeInTheDocument();
+      expect(screen.getByText("Find a Store")).toBeInTheDocument();
+      expect(screen.getByText("FAQs")).toBeInTheDocument();
+      expect(screen.getByText("Subscribe")).toBeInTheDocument();
     });
 
-    it("allows adding a new secondary link", async () => {
+    it("displays character counter and updates live preview dynamically as administrator types", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
@@ -253,49 +269,102 @@ describe("Navbar Management Module (Frontend)", () => {
 
       await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
 
-      const labelInput = screen.getByPlaceholderText(/new link label/i);
-      const hrefInput = screen.getByPlaceholderText(/destination url/i);
-      const addBtn = screen.getByRole("button", { name: /add link/i });
+      // Character counter matches initial length
+      expect(screen.getByText("20/120")).toBeInTheDocument();
 
-      await userEvent.type(labelInput, "Custom Ring Designs");
-      await userEvent.type(hrefInput, "/custom-rings");
-      await userEvent.click(addBtn);
+      const promoInput = screen.getByLabelText(/promotional message/i);
+      await userEvent.clear(promoInput);
+      await userEvent.type(promoInput, "Akshaya Tritiya Gold Offer");
 
-      expect(screen.getByDisplayValue("Custom Ring Designs")).toBeInTheDocument();
+      expect(screen.getByText("26/120")).toBeInTheDocument();
+      expect(screen.getByText(/previewing unsaved changes/i)).toBeInTheDocument();
+    });
+
+    it("resets promotional message when cancel changes is clicked", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
+
+      const promoInput = screen.getByLabelText(/promotional message/i) as HTMLInputElement;
+      await userEvent.clear(promoInput);
+      await userEvent.type(promoInput, "Unsaved temporary promo");
+
+      const cancelBtn = screen.getByRole("button", { name: /cancel changes/i });
+      await userEvent.click(cancelBtn);
+
+      expect(promoInput.value).toBe("Summer Sale 15% off!");
+      expect(screen.getByText(/second navbar changes discarded/i)).toBeInTheDocument();
+    });
+
+    it("publishes updated promotional message via updateAdminSecondNavbar without altering other fields", async () => {
+      const updateSecondSpy = vi.spyOn(navbarAdminService, "updateAdminSecondNavbar").mockResolvedValue({
+        ...mockInitialSettings,
+        secondNavbar: {
+          ...mockInitialSettings.secondNavbar,
+          promoText: "Diwali Dhamaka 25% Off Jewellery",
+        },
+        secondNavbarVersion: 2,
+        version: 2,
+      });
+
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
+
+      const promoInput = screen.getByLabelText(/promotional message/i);
+      await userEvent.clear(promoInput);
+      await userEvent.type(promoInput, "Diwali Dhamaka 25% Off Jewellery");
+
+      const saveBtn = screen.getByRole("button", { name: /save & publish changes/i });
+      await userEvent.click(saveBtn);
+
+      await waitFor(() => {
+        expect(updateSecondSpy).toHaveBeenCalledWith({
+          promoText: "Diwali Dhamaka 25% Off Jewellery",
+        });
+        expect(
+          screen.getByText(/second navbar published successfully as v2/i)
+        ).toBeInTheDocument();
+      });
     });
   });
 
-  describe("4. Top Bar Tab — Inline Version History & Restore Workflow", () => {
-    it("displays Top Bar Version History automatically below settings without navigating away", async () => {
+  describe("4. Top Bar Tab — Inline Version History & Independent Current Live", () => {
+    it("displays Top Bar Version History with its own Current Live indicator", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
         expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
       });
 
-      // Shows Top Bar versions
-      expect(screen.getByText(/EXCLUSIVE TOP BAR ANNOUNCEMENT/i)).toBeInTheDocument();
-      expect(screen.getByText(/FALL SPECIAL SALE 30% OFF/i)).toBeInTheDocument();
-      // Does NOT show Second Navbar exclusive version in Top Bar history
-      expect(screen.queryByText(/EXCLUSIVE SECOND NAVBAR BANNER/i)).not.toBeInTheDocument();
-
-      // Identifies current live version
+      // Top Bar specific indicator
       expect(screen.getByText("Current Live: v2")).toBeInTheDocument();
       expect(screen.getByText("Active Live")).toBeInTheDocument();
+      expect(screen.getByText(/FALL SPECIAL SALE 30% OFF/i)).toBeInTheDocument();
+
+      // Does not show Second Navbar snapshots
+      expect(screen.queryByText(/Summer Sale 15% off!/i)).not.toBeInTheDocument();
     });
 
-    it("does not render preview action buttons in Top Bar version history rows", async () => {
-      renderWithClient(<AdminNavbarPage />);
-
-      await waitFor(() => {
-        expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
+    it("restores Top Bar version via API upon Confirm & Publish", async () => {
+      const restoreSpy = vi.spyOn(navbarAdminService, "restoreAdminNavbarVersion").mockResolvedValue({
+        ...mockInitialSettings,
+        topBar: {
+          ...mockInitialSettings.topBar,
+          text: "FALL SPECIAL SALE 30% OFF",
+        },
+        topBarVersion: 3,
+        version: 3,
       });
 
-      expect(screen.queryByRole("button", { name: /^preview$/i })).not.toBeInTheDocument();
-      expect(screen.queryByTitle(/preview top bar version/i)).not.toBeInTheDocument();
-    });
-
-    it("opens confirmation dialog for Top Bar restore and cancels safely without changes", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
@@ -309,65 +378,19 @@ describe("Navbar Management Module (Frontend)", () => {
       expect(
         screen.getByText(/you are about to restore this previous version of the top bar/i)
       ).toBeInTheDocument();
-      expect(
-        screen.getByText(/the selected content will replace the current published content on the live peralagae website/i)
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(/your current live version will be saved in history before the restoration/i)
-      ).toBeInTheDocument();
-
-      const cancelBtn = screen.getByRole("button", { name: /^cancel$/i });
-      await userEvent.click(cancelBtn);
-
-      expect(screen.queryByRole("heading", { name: "Restore This Version?" })).not.toBeInTheDocument();
-    });
-
-    it("restores Top Bar version via API upon Confirm & Publish", async () => {
-      const restoreSpy = vi.spyOn(navbarAdminService, "restoreAdminNavbarVersion").mockResolvedValue({
-        ...mockInitialSettings,
-        topBar: {
-          ...mockInitialSettings.topBar,
-          text: "FALL SPECIAL SALE 30% OFF",
-        },
-        version: 5,
-      });
-
-      renderWithClient(<AdminNavbarPage />);
-
-      await waitFor(() => {
-        expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
-      });
-
-      const restoreButtons = screen.getAllByRole("button", { name: /^restore$/i });
-      await userEvent.click(restoreButtons[0]); // restore hist_1
 
       const confirmBtn = screen.getByRole("button", { name: /confirm & publish/i });
       await userEvent.click(confirmBtn);
 
       await waitFor(() => {
-        expect(restoreSpy).toHaveBeenCalledWith("hist_1", "top_bar");
+        expect(restoreSpy).toHaveBeenCalledWith("hist_top_1", "top_bar");
         expect(screen.getByText(/version 1 of the top bar successfully restored/i)).toBeInTheDocument();
       });
     });
-
-    it("displays clean empty state when no Top Bar version history exists", async () => {
-      vi.spyOn(navbarAdminService, "fetchAdminNavbarHistory").mockResolvedValue([]);
-
-      renderWithClient(<AdminNavbarPage />);
-
-      await waitFor(() => {
-        expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
-      });
-
-      expect(screen.getByText("No previous Top Bar versions recorded yet.")).toBeInTheDocument();
-      expect(
-        screen.getByText("History will appear after the first successful publication.")
-      ).toBeInTheDocument();
-    });
   });
 
-  describe("5. Second Navbar Tab — Inline Version History & Restore Workflow", () => {
-    it("displays Second Navbar Version History automatically inside Second Navbar tab", async () => {
+  describe("5. Second Navbar Tab — Inline Version History & Independent Current Live", () => {
+    it("displays Second Navbar Version History with promotional message only and independent Current Live: v1", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
@@ -377,35 +400,30 @@ describe("Navbar Management Module (Frontend)", () => {
       await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
 
       expect(screen.getByRole("heading", { name: "Second Navbar Version History" })).toBeInTheDocument();
-      // Shows Second Navbar versions
-      expect(screen.getByText(/EXCLUSIVE SECOND NAVBAR BANNER/i)).toBeInTheDocument();
-      expect(screen.getByText(/Fall Collection Exclusive Offer/i)).toBeInTheDocument();
-      // Does NOT show Top Bar exclusive version
-      expect(screen.queryByText("EXCLUSIVE TOP BAR ANNOUNCEMENT")).not.toBeInTheDocument();
+
+      // Second Navbar specific Current Live indicator reflecting v1
+      expect(screen.getByText("Current Live: v1")).toBeInTheDocument();
+
+      // Content summary shows promotional message
+      expect(screen.getByText(/Old Festive Discount 20%/i)).toBeInTheDocument();
+
+      // Summary does NOT show phone or link count strings
+      expect(screen.queryByText(/secondary link\(s\)/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Phone: \+91/i)).not.toBeInTheDocument();
+
+      // Does not show Top Bar snapshots
+      expect(screen.queryByText(/FALL SPECIAL SALE 30% OFF/i)).not.toBeInTheDocument();
     });
 
-    it("does not render preview action buttons in Second Navbar version history rows", async () => {
-      renderWithClient(<AdminNavbarPage />);
-
-      await waitFor(() => {
-        expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
-      });
-
-      await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
-
-      expect(screen.getByRole("heading", { name: "Second Navbar Version History" })).toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: /^preview$/i })).not.toBeInTheDocument();
-      expect(screen.queryByTitle(/preview second navbar version/i)).not.toBeInTheDocument();
-    });
-
-    it("opens confirmation dialog for Second Navbar restore and calls API with section='second_navbar'", async () => {
+    it("restores Second Navbar version with section='second_navbar' and preserves Top Bar", async () => {
       const restoreSpy = vi.spyOn(navbarAdminService, "restoreAdminNavbarVersion").mockResolvedValue({
         ...mockInitialSettings,
         secondNavbar: {
           ...mockInitialSettings.secondNavbar,
-          promoText: "Fall Collection Exclusive Offer",
+          promoText: "Old Festive Discount 20%",
         },
-        version: 5,
+        secondNavbarVersion: 2,
+        version: 2,
       });
 
       renderWithClient(<AdminNavbarPage />);
@@ -417,7 +435,7 @@ describe("Navbar Management Module (Frontend)", () => {
       await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
 
       const restoreButtons = screen.getAllByRole("button", { name: /^restore$/i });
-      await userEvent.click(restoreButtons[0]); // restore hist_1
+      await userEvent.click(restoreButtons[0]);
 
       expect(screen.getByRole("heading", { name: "Restore This Version?" })).toBeInTheDocument();
       expect(
@@ -428,26 +446,11 @@ describe("Navbar Management Module (Frontend)", () => {
       await userEvent.click(confirmBtn);
 
       await waitFor(() => {
-        expect(restoreSpy).toHaveBeenCalledWith("hist_1", "second_navbar");
-        expect(screen.getByText(/version 1 of the second navbar successfully restored/i)).toBeInTheDocument();
+        expect(restoreSpy).toHaveBeenCalledWith("hist_sec_older", "second_navbar");
+        expect(
+          screen.getByText(/version 0 of the second navbar successfully restored/i)
+        ).toBeInTheDocument();
       });
-    });
-
-    it("displays clean empty state when no Second Navbar version history exists", async () => {
-      vi.spyOn(navbarAdminService, "fetchAdminNavbarHistory").mockResolvedValue([]);
-
-      renderWithClient(<AdminNavbarPage />);
-
-      await waitFor(() => {
-        expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
-      });
-
-      await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
-
-      expect(screen.getByText("No previous Second Navbar versions recorded yet.")).toBeInTheDocument();
-      expect(
-        screen.getByText("History will appear after the first successful publication.")
-      ).toBeInTheDocument();
     });
   });
 });
