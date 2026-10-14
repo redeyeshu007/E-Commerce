@@ -17,8 +17,6 @@ import {
   ArrowDown,
   X,
   Clock,
-  Smartphone,
-  Monitor,
   History,
   Check,
 } from "lucide-react";
@@ -96,16 +94,11 @@ export default function AdminNavbarPage() {
   const [deleteConfirmLinkId, setDeleteConfirmLinkId] = useState<string | null>(null);
 
   // History & Restore Modal State
-  const [previewItem, setPreviewItem] = useState<{
-    item: NavbarHistoryItem;
-    section: "top_bar" | "second_navbar";
-  } | null>(null);
   const [restoreConfirmTarget, setRestoreConfirmTarget] = useState<{
     item: NavbarHistoryItem;
     section: "top_bar" | "second_navbar";
   } | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
-  const [modalPreviewDevice, setModalPreviewDevice] = useState<"desktop" | "mobile">("desktop");
 
   // Section-specific inline history filters
   const topBarHistory = useMemo(
@@ -116,9 +109,6 @@ export default function AdminNavbarPage() {
     () => historyList.filter((item) => item.section === "second_navbar" || item.section === "full"),
     [historyList]
   );
-
-  // Live Preview Device View (desktop vs mobile)
-  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
 
   // Verify authentication on mount
   useEffect(() => {
@@ -587,37 +577,12 @@ export default function AdminNavbarPage() {
                       Live Storefront Matches Preview
                     </span>
                   )}
-                  {/* Device toggle */}
-                  <div className="flex items-center border border-gray-200 rounded p-0.5 bg-gray-50">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewDevice("desktop")}
-                      className={`p-1 rounded ${
-                        previewDevice === "desktop" ? "bg-white shadow-xs text-black" : "text-gray-400"
-                      }`}
-                      title="Desktop view"
-                    >
-                      <Monitor className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewDevice("mobile")}
-                      className={`p-1 rounded ${
-                        previewDevice === "mobile" ? "bg-white shadow-xs text-black" : "text-gray-400"
-                      }`}
-                      title="Mobile view"
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
                 </div>
               </div>
 
               {/* Preview Rendering Container */}
               <div
-                className={`mx-auto transition-all duration-300 rounded overflow-hidden border border-gray-200 shadow-inner ${
-                  previewDevice === "mobile" ? "max-w-sm" : "w-full"
-                }`}
+                className="w-full mx-auto transition-all duration-300 rounded overflow-hidden border border-gray-200 shadow-inner"
               >
                 {topBarForm.visible ? (
                   <div
@@ -917,17 +882,7 @@ export default function AdminNavbarPage() {
                                 {item.createdBy || "admin@peralagae.com"}
                               </td>
                               <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                                <div className="inline-flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setPreviewItem({ item, section: "top_bar" })}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
-                                    title="Preview Top Bar version"
-                                  >
-                                    <Eye className="w-3 h-3 text-gray-500" />
-                                    <span>Preview</span>
-                                  </button>
-
+                                <div className="inline-flex items-center justify-end">
                                   {isCurrentLive ? (
                                     <span className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
                                       Active Live
@@ -937,7 +892,7 @@ export default function AdminNavbarPage() {
                                       type="button"
                                       onClick={() => setRestoreConfirmTarget({ item, section: "top_bar" })}
                                       disabled={isRestoring}
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-black bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-gray-300 rounded transition disabled:opacity-40"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-black bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-gray-300 rounded transition disabled:opacity-40"
                                       title="Restore this Top Bar version"
                                     >
                                       <RotateCcw className="w-3 h-3 text-[#C5A572]" />
@@ -979,37 +934,12 @@ export default function AdminNavbarPage() {
                       Live Storefront Matches Preview
                     </span>
                   )}
-                  {/* Device toggle */}
-                  <div className="flex items-center border border-gray-200 rounded p-0.5 bg-gray-50">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewDevice("desktop")}
-                      className={`p-1 rounded ${
-                        previewDevice === "desktop" ? "bg-white shadow-xs text-black" : "text-gray-400"
-                      }`}
-                      title="Desktop view"
-                    >
-                      <Monitor className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewDevice("mobile")}
-                      className={`p-1 rounded ${
-                        previewDevice === "mobile" ? "bg-white shadow-xs text-black" : "text-gray-400"
-                      }`}
-                      title="Mobile view"
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
                 </div>
               </div>
 
               {/* Preview Rendering Container */}
               <div
-                className={`mx-auto transition-all duration-300 rounded overflow-hidden border border-gray-200 shadow-inner bg-white ${
-                  previewDevice === "mobile" ? "max-w-sm" : "w-full"
-                }`}
+                className="w-full mx-auto transition-all duration-300 rounded overflow-hidden border border-gray-200 shadow-inner bg-white"
               >
                 <div className="w-full border-b border-[#E5E5E5] bg-white text-xs lg:text-[13px] text-black">
                   <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2">
@@ -1470,17 +1400,7 @@ export default function AdminNavbarPage() {
                                 {item.createdBy || "admin@peralagae.com"}
                               </td>
                               <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                                <div className="inline-flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setPreviewItem({ item, section: "second_navbar" })}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
-                                    title="Preview Second Navbar version"
-                                  >
-                                    <Eye className="w-3 h-3 text-gray-500" />
-                                    <span>Preview</span>
-                                  </button>
-
+                                <div className="inline-flex items-center justify-end">
                                   {isCurrentLive ? (
                                     <span className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
                                       Active Live
@@ -1490,7 +1410,7 @@ export default function AdminNavbarPage() {
                                       type="button"
                                       onClick={() => setRestoreConfirmTarget({ item, section: "second_navbar" })}
                                       disabled={isRestoring}
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-black bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-gray-300 rounded transition disabled:opacity-40"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-black bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-gray-300 rounded transition disabled:opacity-40"
                                       title="Restore this Second Navbar version"
                                     >
                                       <RotateCcw className="w-3 h-3 text-[#C5A572]" />
@@ -1511,200 +1431,7 @@ export default function AdminNavbarPage() {
           )}
         </main>
 
-        {/* ─── MODAL 1: PREVIEW HISTORICAL VERSION ────────────────────────────── */}
-        {previewItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] animate-fade-in">
-            <div className="bg-white rounded-lg max-w-4xl w-full p-6 shadow-xl border border-gray-200 max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                  <Eye className="w-5 h-5 text-[#C5A572]" />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-semibold text-[#111111]">
-                        Storefront Preview — {previewItem.section === "top_bar" ? "Top Bar" : "Second Navbar"} Version v{previewItem.item.version}
-                      </h3>
-                      <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded bg-gray-100 text-gray-700">
-                        Historical Snapshot (Read-Only)
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Saved on{" "}
-                      {new Date(previewItem.item.createdAt).toLocaleString(undefined, {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}{" "}
-                      by <span className="font-mono">{previewItem.item.createdBy || "Administrator"}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {/* Device View Toggle */}
-                  <div className="flex items-center border border-gray-200 rounded p-0.5 bg-gray-50">
-                    <button
-                      type="button"
-                      onClick={() => setModalPreviewDevice("desktop")}
-                      className={`p-1 rounded text-xs flex items-center gap-1 ${
-                        modalPreviewDevice === "desktop"
-                          ? "bg-white shadow-xs text-black font-medium"
-                          : "text-gray-400 hover:text-gray-600"
-                      }`}
-                      title="Desktop view"
-                    >
-                      <Monitor className="w-3.5 h-3.5" />
-                      <span className="text-[11px]">Desktop</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setModalPreviewDevice("mobile")}
-                      className={`p-1 rounded text-xs flex items-center gap-1 ${
-                        modalPreviewDevice === "mobile"
-                          ? "bg-white shadow-xs text-black font-medium"
-                          : "text-gray-400 hover:text-gray-600"
-                      }`}
-                      title="Mobile view"
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                      <span className="text-[11px]">Mobile</span>
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setPreviewItem(null)}
-                    className="text-gray-400 hover:text-black p-1 rounded"
-                    aria-label="Close"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Preview Frame */}
-              <div className="bg-[#F8F8F8] p-4 rounded-lg border border-gray-200 flex justify-center">
-                <div
-                  className={`transition-all duration-200 overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm ${
-                    modalPreviewDevice === "mobile" ? "w-[375px]" : "w-full"
-                  }`}
-                >
-                  {/* 1. Top Bar Announcement */}
-                  {previewItem.section === "top_bar" || previewItem.item.section === "full" ? (
-                    previewItem.item.snapshot.topBar.visible ? (
-                      <div
-                        className="py-2 px-4 text-center text-xs tracking-wider font-normal relative transition-colors"
-                        style={{
-                          backgroundColor: previewItem.item.snapshot.topBar.backgroundColor,
-                          color: previewItem.item.snapshot.topBar.textColor,
-                        }}
-                      >
-                        <span>{previewItem.item.snapshot.topBar.text}</span>
-                        {previewItem.item.snapshot.topBar.dismissible && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100 cursor-pointer">
-                            ✕
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="py-1 px-4 bg-gray-100 text-center text-[10px] text-gray-400 italic">
-                        Top Bar is hidden in this version
-                      </div>
-                    )
-                  ) : null}
-
-                  {/* 2. Second Navbar Strip */}
-                  {previewItem.section === "second_navbar" || previewItem.item.section === "full" ? (
-                    <div className="bg-white border-b border-gray-100 py-2 px-4 text-[11px] text-[#222222]">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center space-x-3 text-xs">
-                          {previewItem.item.snapshot.secondNavbar.showPhone && (
-                            <span>{previewItem.item.snapshot.secondNavbar.phone}</span>
-                          )}
-                          {previewItem.item.snapshot.secondNavbar.showPhone &&
-                            previewItem.item.snapshot.secondNavbar.showPromotion && (
-                              <span className="text-gray-300">|</span>
-                            )}
-                          {previewItem.item.snapshot.secondNavbar.showPromotion && (
-                            <span>
-                              {previewItem.item.snapshot.secondNavbar.promoText}{" "}
-                              <span className="font-semibold underline cursor-pointer">
-                                {previewItem.item.snapshot.secondNavbar.ctaText}
-                              </span>
-                            </span>
-                          )}
-                        </div>
-
-                        {modalPreviewDevice === "desktop" &&
-                          previewItem.item.snapshot.secondNavbar.showLinks &&
-                          previewItem.item.snapshot.secondNavbar.links.length > 0 && (
-                            <div className="flex items-center space-x-5 text-gray-600">
-                              {previewItem.item.snapshot.secondNavbar.links.map((link) => (
-                                <span key={link.id} className="hover:text-black">
-                                  {link.label}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {/* 3. Main Navbar Brand Mockup */}
-                  <div className="px-4 py-3 bg-white border-b border-gray-100 flex items-center justify-between">
-                    <div className="font-serif tracking-[0.2em] font-semibold text-sm text-[#111111]">
-                      PERALAGAE
-                    </div>
-                    {modalPreviewDevice === "desktop" ? (
-                      <div className="flex items-center space-x-6 text-[11px] tracking-widest uppercase text-gray-500 font-medium">
-                        <span>Home</span>
-                        <span>Collections</span>
-                        <span>Shop</span>
-                        <span>About</span>
-                      </div>
-                    ) : (
-                      <div className="text-xs text-gray-500">Menu ☰</div>
-                    )}
-                    <div className="text-[11px] tracking-wider text-gray-400">
-                      Storefront Context
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <p className="text-xs text-gray-500">
-                  Previewing does not modify the live website or change the currently published version.
-                </p>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewItem(null)}
-                    className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
-                  >
-                    Close Preview
-                  </button>
-
-                  {serverSettings && previewItem.item.version !== serverSettings.version && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const target = { ...previewItem };
-                        setPreviewItem(null);
-                        setRestoreConfirmTarget(target);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-[#C5A572]" />
-                      <span>Restore This Version</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ─── MODAL 2: CONFIRM RESTORE THIS VERSION ─────────────────────────── */}
+        {/* ─── MODAL: CONFIRM RESTORE THIS VERSION ─────────────────────────── */}
         {restoreConfirmTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] animate-fade-in">
             <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl border border-gray-200">

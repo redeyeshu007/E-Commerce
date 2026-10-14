@@ -159,13 +159,15 @@ describe("Navbar Management Module (Frontend)", () => {
   });
 
   describe("2. Top Bar Management", () => {
-    it("populates existing announcement text and displays live storefront preview", async () => {
+    it("populates existing announcement text and displays live storefront preview without device toggle controls", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
         const textarea = screen.getByLabelText(/announcement text/i) as HTMLTextAreaElement;
         expect(textarea.value).toBe("SUMMER SALE, Get 40% Off for all products.");
         expect(screen.getByText("Live Storefront Preview")).toBeInTheDocument();
+        expect(screen.queryByTitle(/desktop view/i)).not.toBeInTheDocument();
+        expect(screen.queryByTitle(/mobile view/i)).not.toBeInTheDocument();
       });
     });
 
@@ -282,29 +284,15 @@ describe("Navbar Management Module (Frontend)", () => {
       expect(screen.getByText("Active Live")).toBeInTheDocument();
     });
 
-    it("previews a historical Top Bar version in modal with read-only badge", async () => {
+    it("does not render preview action buttons in Top Bar version history rows", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
         expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
       });
 
-      const previewButtons = screen.getAllByRole("button", { name: /preview/i });
-      // Click preview on v1 (index 1)
-      await userEvent.click(previewButtons[1]);
-
-      expect(screen.getByText(/storefront preview — top bar version v1/i)).toBeInTheDocument();
-      expect(screen.getByText(/historical snapshot \(read-only\)/i)).toBeInTheDocument();
-      expect(screen.getByText("FALL SPECIAL SALE 30% OFF")).toBeInTheDocument();
-
-      // Toggle device view in modal
-      const mobileBtns = screen.getAllByRole("button", { name: /mobile/i });
-      await userEvent.click(mobileBtns[mobileBtns.length - 1]);
-
-      // Close preview
-      const closeBtn = screen.getByRole("button", { name: /close preview/i });
-      await userEvent.click(closeBtn);
-      expect(screen.queryByText(/storefront preview — top bar version v1/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /^preview$/i })).not.toBeInTheDocument();
+      expect(screen.queryByTitle(/preview top bar version/i)).not.toBeInTheDocument();
     });
 
     it("opens confirmation dialog for Top Bar restore and cancels safely without changes", async () => {
@@ -394,6 +382,20 @@ describe("Navbar Management Module (Frontend)", () => {
       expect(screen.getByText(/Fall Collection Exclusive Offer/i)).toBeInTheDocument();
       // Does NOT show Top Bar exclusive version
       expect(screen.queryByText("EXCLUSIVE TOP BAR ANNOUNCEMENT")).not.toBeInTheDocument();
+    });
+
+    it("does not render preview action buttons in Second Navbar version history rows", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
+
+      expect(screen.getByRole("heading", { name: "Second Navbar Version History" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /^preview$/i })).not.toBeInTheDocument();
+      expect(screen.queryByTitle(/preview second navbar version/i)).not.toBeInTheDocument();
     });
 
     it("opens confirmation dialog for Second Navbar restore and calls API with section='second_navbar'", async () => {
