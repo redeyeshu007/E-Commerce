@@ -1,52 +1,39 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Render Infrastructure Blueprint — JAVIX JEWELLERY E-Commerce Platform
+# Render Infrastructure Blueprint — PERALAGAE Jewellery E-Commerce
 # https://render.com/docs/blueprint-spec
 # ─────────────────────────────────────────────────────────────────────────────
-
-databases:
-  - name: javix-db
-    databaseName: gold_commerce
-    user: postgres
-    plan: free
 
 services:
   # ── 1. Backend Express API ─────────────────────────────────────────────────
   - type: web
-    name: javix-backend-api
+    name: peralagae-backend-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run prisma:generate --workspace=apps/backend && npm run build:backend
+    region: singapore # or oregon / frankfurt
+    buildCommand: npm install && npm run prisma:generate --workspace=apps/backend && npm run build --workspace=apps/backend
     startCommand: npm run start --workspace=apps/backend
-    healthCheckPath: /api/v1/health
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: javix-db
-          property: connectionString
-      - key: JWT_SECRET
-        generateValue: true
-      - key: COMPANY_ID
-        value: javix-jewellery
-      - key: COMPANY_NAME
-        value: Javix Jewellery
-      - key: COMPANY_DOMAIN
-        value: javix-storefront.onrender.com
-      - key: CORS_ORIGIN
-        value: https://javix-storefront.onrender.com
+        sync: false # Set manually in Render Dashboard using your Supabase connection string
+      - key: CORS_ORIGINS
+        value: https://e-commerce-s9ws.onrender.com
+      - key: LOG_LEVEL
+        value: info
 
   # ── 2. Frontend Next.js Storefront ──────────────────────────────────────────
   - type: web
-    name: javix-storefront
+    name: peralagae-storefront
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build:frontend
+    buildCommand: npm install && npm run build --workspace=apps/frontend
     startCommand: npm run start --workspace=apps/frontend
     envVars:
       - key: NODE_ENV
         value: production
-      - key: NEXT_PUBLIC_SITE_URL
-        value: https://javix-storefront.onrender.com
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://e-commerce-s9ws.onrender.com
       - key: NEXT_PUBLIC_API_URL
-        value: https://javix-backend-api.onrender.com/api/v1
+        value: https://peralagae-backend-api.onrender.com/api/v1
