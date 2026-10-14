@@ -43,15 +43,27 @@ const baseEnvSchema = z.object({
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 
   // ── Admin Authentication (Phase 1) ──────────────────────────────────────────
-  ADMIN_EMAIL: z.string().email("ADMIN_EMAIL must be a valid email").default("admin@peralagae.com"),
+  ADMIN_EMAIL: z
+    .string()
+    .default("admin@peralagae.com")
+    .transform((val) => val.trim().replace(/^["']|["']$/g, "").toLowerCase())
+    .refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "ADMIN_EMAIL must be a valid email",
+    }),
   ADMIN_PASSWORD: z
     .string()
-    .min(8, "ADMIN_PASSWORD must be at least 8 characters")
-    .default(DEFAULT_DEV_ADMIN_PASSWORD),
+    .default(DEFAULT_DEV_ADMIN_PASSWORD)
+    .transform((val) => val.trim().replace(/^["']|["']$/g, ""))
+    .refine((val) => val.length >= 8, {
+      message: "ADMIN_PASSWORD must be at least 8 characters",
+    }),
   ADMIN_JWT_SECRET: z
     .string()
-    .min(32, "ADMIN_JWT_SECRET must be at least 32 characters")
-    .default(DEFAULT_DEV_JWT_SECRET),
+    .default(DEFAULT_DEV_JWT_SECRET)
+    .transform((val) => val.trim().replace(/^["']|["']$/g, ""))
+    .refine((val) => val.length >= 32, {
+      message: "ADMIN_JWT_SECRET must be at least 32 characters",
+    }),
 });
 
 export const envSchema = baseEnvSchema.superRefine((data, ctx) => {

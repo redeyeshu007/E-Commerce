@@ -33,15 +33,18 @@ export async function verifyPassword(candidate: string, target: string): Promise
     return false;
   }
 
+  // Strip accidental quotes or carriage returns from environment password
+  const cleanTarget = target.trim().replace(/^["']|["']$/g, "");
+
   // If target looks like a bcrypt hash ($2a$ or $2b$ or $2y$)
-  if (/^\$2[aby]\$\d{2}\$/.test(target)) {
-    return bcrypt.compare(candidate, target);
+  if (/^\$2[aby]\$\d{2}\$/.test(cleanTarget)) {
+    return bcrypt.compare(candidate, cleanTarget);
   }
 
   // If target is an env plaintext password, compare candidate against it using bcrypt
   // by hashing the target or comparing with constant-time check
   const candidateHash = await hashPassword(candidate);
-  return bcrypt.compare(target, candidateHash);
+  return bcrypt.compare(cleanTarget, candidateHash);
 }
 
 /**

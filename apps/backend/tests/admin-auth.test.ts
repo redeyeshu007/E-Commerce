@@ -80,6 +80,17 @@ describe("Admin Authentication Test Suite (Phase 1)", () => {
       expect(JSON.stringify(res.body)).not.toContain(validPassword);
       expect(JSON.stringify(res.body)).not.toContain(env.ADMIN_JWT_SECRET);
     });
+
+    it("authenticates successfully with email containing leading/trailing whitespace and mixed case", async () => {
+      const res = await request(app).post("/api/admin/auth/login").send({
+        email: `  ${validEmail.toUpperCase()}  `,
+        password: validPassword,
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.admin.email).toBe(validEmail.toLowerCase());
+    });
   });
 
   describe("2. GET /api/admin/auth/me (Protected Session Check)", () => {

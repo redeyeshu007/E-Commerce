@@ -9,7 +9,7 @@ import { logger } from "../utils/logger.js";
 const COOKIE_NAME = "peralagae_admin_token";
 
 const loginSchema = z.object({
-  email: z.string().email("A valid email address is required"),
+  email: z.string().trim().email("A valid email address is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -60,13 +60,28 @@ export function createAdminAuthRouter(env: EnvConfig): Router {
 
     const { email, password } = parseResult.data;
 
-    // 2. Constant-time check: email match
-    const emailMatches = email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
+    // Check if admin credentials are configured in environment
+    if (!env.ADMIN_EMAIL || !env.ADMIN_PASSWORD) {
+      logger.error("ADMIN_EMAIL or ADMIN_PASSWORD is missing in backend configuration");
+      res.status(503).json({
+        success: false,
+        error: {
+          code: "SERVICE_UNCONFIGURED",
+          message: "Authentication service is not properly configured on the server",
+        },
+      });
+      return;
+    }
 
-    // 3. Constant-time check: password match
-    // Even if email does not match, still perform verifyPassword against dummy string to avoid timing attacks
+    // 2. Constant-time check: email match with normalization
+    const normalizedInputEmail = email.trim().toLowerCase();
+    const normalizedAdminEmail = env.ADMIN_EMAIL.trim().toLowerCase();
+    const emailMatches = Boolean(normalizedAdminEmail && normalizedInputEmail === normalizedAdminEmail);
+
+    // 3. Constant-time check: password match (normalized against quotes/whitespace)
+    const cleanAdminPassword = env.ADMIN_PASSWORD.trim().replace(/^["']|["']$/g, "");
     const passwordTarget = emailMatches
-      ? env.ADMIN_PASSWORD
+      ? cleanAdminPassword
       : "$2a$12$e8eYQv8gJ24w6wP8j3dCq.r06H0F7B5p.1C2d3E4f5G6h7I8j9k0l";
     const passwordMatches = await verifyPassword(password, passwordTarget);
 
@@ -83,7 +98,7 @@ export function createAdminAuthRouter(env: EnvConfig): Router {
     }
 
     // 4. Issue session token
-    const token = signAdminToken({ email: env.ADMIN_EMAIL }, env.ADMIN_JWT_SECRET);
+    const token = signAdminToken({ email: normalizedAdminEmail }, env.ADMIN_JWT_SECRET);
 
     // 5. Set secure HTTP-only cookie
     res.cookie(COOKIE_NAME, token, {
@@ -94,14 +109,14 @@ export function createAdminAuthRouter(env: EnvConfig): Router {
       path: "/",
     });
 
-    logger.info({ email: env.ADMIN_EMAIL }, "Admin logged in successfully");
+    logger.info({ email: normalizedAdminEmail }, "Admin logged in successfully");
 
     res.status(200).json({
       success: true,
       data: {
         token,
         admin: {
-          email: env.ADMIN_EMAIL,
+          email: normalizedAdminEmail,
           role: "admin",
         },
       },

@@ -58,19 +58,49 @@ export async function loginAdmin(credentials: {
 }): Promise<AdminLoginResponse["data"]> {
   const url = `${API_BASE_URL}/admin/auth/login`;
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(credentials),
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(credentials),
+    });
+  } catch {
+    throw new Error(
+      "Unable to connect to the authentication server. Please check your network connection and verify the backend service is running."
+    );
+  }
 
   const body = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    const message = body?.error?.message || "Invalid email or password";
+    if (res.status === 401) {
+      throw new Error(body?.error?.message || "Invalid email or password");
+    }
+    if (res.status === 429) {
+      throw new Error(
+        body?.error?.message ||
+          "Too many login attempts. Please wait 15 minutes before trying again."
+      );
+    }
+    if (res.status === 400) {
+      throw new Error(body?.error?.message || "Invalid email or password format");
+    }
+    if (res.status === 503) {
+      throw new Error(
+        body?.error?.message ||
+          "Authentication service is currently unconfigured or unavailable on the server."
+      );
+    }
+    if (res.status >= 500) {
+      throw new Error(
+        "Backend server encountered an error while processing authentication. Please try again shortly."
+      );
+    }
+    const message = body?.error?.message || `Authentication request failed (HTTP ${res.status})`;
     throw new Error(message);
   }
 
