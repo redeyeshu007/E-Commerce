@@ -54,14 +54,14 @@ export function AdminNavbar({
             onClick={onLogout}
             disabled={isLoggingOut}
             aria-label="Logout"
-            className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-[#1A1A1A] hover:text-[#C5A572] transition-colors duration-150 disabled:opacity-50"
+            className="inline-flex items-center gap-2 p-1.5 sm:p-0 text-xs font-medium uppercase tracking-wider text-[#1A1A1A] hover:text-[#C5A572] transition-colors duration-150 disabled:opacity-50"
           >
             {isLoggingOut ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C5A572]" aria-hidden="true" />
+              <Loader2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 animate-spin text-[#C5A572]" aria-hidden="true" />
             ) : (
-              <LogOut className="w-3.5 h-3.5 text-[#666666]" aria-hidden="true" />
+              <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-[#666666]" aria-hidden="true" />
             )}
-            <span>Logout</span>
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>
