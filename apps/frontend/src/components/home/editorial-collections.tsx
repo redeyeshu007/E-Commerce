@@ -41,16 +41,22 @@ export function EditorialCollectionCard({
       className={`group flex flex-col items-center text-center ${className}`}
     >
       {/* 1. Large Lifestyle Jewellery Image (Tall 3:4 Portrait Ratio) */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#F2F2F2]">
-        <Image
-          src={item.image.src}
-          alt={item.image.alt}
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          style={{ objectPosition: item.image.objectPosition || "center" }}
-        />
-      </div>
+      <Link
+        href={item.href}
+        aria-label={`View ${item.title} Collection`}
+        className="block w-full overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
+      >
+        <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#F2F2F2]">
+          <Image
+            src={item.image.src}
+            alt={item.image.alt}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105 cursor-pointer"
+            style={{ objectPosition: item.image.objectPosition || "center" }}
+          />
+        </div>
+      </Link>
 
       {/* 2. Collection Title */}
       <h3 className="mt-5 sm:mt-6 text-lg sm:text-xl lg:text-[22px] font-normal tracking-[-0.01em] text-[#111111] leading-tight">

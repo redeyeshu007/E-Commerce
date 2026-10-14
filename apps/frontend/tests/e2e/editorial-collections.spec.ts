@@ -80,4 +80,21 @@ test.describe("PERALAGAE Editorial Collections Section E2E Suite", () => {
     });
     expect(hasHorizontalOverflow).toBe(false);
   });
+
+  test("Clicking an editorial collection card CTA navigates to /shop with category filter", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const editorialSection = page.locator('section[aria-labelledby="editorial-collections-tagline"]');
+    await expect(editorialSection).toBeVisible();
+
+    const card2 = editorialSection.getByTestId("editorial-card-tennis-bracelets");
+    const cta = card2.getByRole("link", { name: /SHOP COLLECTION/i });
+    await expect(cta).toHaveAttribute("href", "/shop?category=bracelets");
+    await cta.click();
+
+    // Verify redirect to shop with bracelets category filter
+    await expect(page).toHaveURL(/\/shop\?category=bracelets/);
+    await expect(page.getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
+    await expect(page.locator("#shop-content")).toBeVisible();
+  });
 });

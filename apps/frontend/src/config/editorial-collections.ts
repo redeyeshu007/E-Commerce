@@ -50,8 +50,8 @@ export const defaultEditorialCollectionsConfig: EditorialCollectionsSectionConfi
       title: "Lab Grown Diamonds",
       description: "Discover the exceptional quality & sparkle.",
       ctaText: "EXPLORE NOW",
-      href: "/collections/lab-grown-diamonds",
-      isImplemented: false,
+      href: "/shop?category=rings",
+      isImplemented: true,
       image: {
         src: "/images/editorial/lab-grown-diamonds.jpg",
         alt: "Model wearing brilliant-cut lab-grown diamond bracelets and a solitaire diamond ring",
@@ -63,8 +63,8 @@ export const defaultEditorialCollectionsConfig: EditorialCollectionsSectionConfi
       title: "Tennis Bracelets",
       description: "Classic tennis bracelets designed for a lifetime.",
       ctaText: "SHOP COLLECTION",
-      href: "/collections/tennis-bracelets",
-      isImplemented: false,
+      href: "/shop?category=bracelets",
+      isImplemented: true,
       image: {
         src: "/images/editorial/tennis-bracelets.jpg",
         alt: "Model in tailored charcoal blazer showcasing a classic diamond tennis bracelet",
@@ -76,8 +76,8 @@ export const defaultEditorialCollectionsConfig: EditorialCollectionsSectionConfi
       title: "Garden Variety",
       description: "Add our new arrivals to your weekly lineup.",
       ctaText: "DISCOVER NOW",
-      href: "/collections/garden-variety",
-      isImplemented: false,
+      href: "/shop?category=earrings",
+      isImplemented: true,
       image: {
         src: "/images/editorial/garden-variety.jpg",
         alt: "Editorial portrait showcasing sparkling floral cluster diamond drop earrings",

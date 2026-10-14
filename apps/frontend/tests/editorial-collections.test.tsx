@@ -33,7 +33,7 @@ describe("Editorial Collections Suite", () => {
       // CTA Link
       const cta = screen.getByRole("link", { name: /EXPLORE NOW: Lab Grown Diamonds/i });
       expect(cta).toHaveTextContent("EXPLORE NOW");
-      expect(cta).toHaveAttribute("href", "/collections/lab-grown-diamonds");
+      expect(cta).toHaveAttribute("href", "/shop?category=rings");
     });
 
     it("triggers onCtaClick callback when CTA is clicked", () => {
@@ -62,7 +62,7 @@ describe("Editorial Collections Suite", () => {
       );
     });
 
-    it("renders all 3 cards with exact titles, descriptions, and CTAs", () => {
+    it("renders all 3 cards with exact titles, descriptions, and CTAs linking to /shop with category filters", () => {
       render(
         <EditorialCollectionsSection config={defaultEditorialCollectionsConfig} />
       );
@@ -72,21 +72,27 @@ describe("Editorial Collections Suite", () => {
       expect(
         screen.getByText("Discover the exceptional quality & sparkle.")
       ).toBeInTheDocument();
-      expect(screen.getByText("EXPLORE NOW")).toBeInTheDocument();
+      const cta1 = screen.getByRole("link", { name: /EXPLORE NOW: Lab Grown Diamonds/i });
+      expect(cta1).toHaveTextContent("EXPLORE NOW");
+      expect(cta1).toHaveAttribute("href", "/shop?category=rings");
 
       // Card 2
       expect(screen.getByText("Tennis Bracelets")).toBeInTheDocument();
       expect(
         screen.getByText("Classic tennis bracelets designed for a lifetime.")
       ).toBeInTheDocument();
-      expect(screen.getByText("SHOP COLLECTION")).toBeInTheDocument();
+      const cta2 = screen.getByRole("link", { name: /SHOP COLLECTION: Tennis Bracelets/i });
+      expect(cta2).toHaveTextContent("SHOP COLLECTION");
+      expect(cta2).toHaveAttribute("href", "/shop?category=bracelets");
 
       // Card 3
       expect(screen.getByText("Garden Variety")).toBeInTheDocument();
       expect(
         screen.getByText("Add our new arrivals to your weekly lineup.")
       ).toBeInTheDocument();
-      expect(screen.getByText("DISCOVER NOW")).toBeInTheDocument();
+      const cta3 = screen.getByRole("link", { name: /DISCOVER NOW: Garden Variety/i });
+      expect(cta3).toHaveTextContent("DISCOVER NOW");
+      expect(cta3).toHaveAttribute("href", "/shop?category=earrings");
     });
 
     it("supports custom configuration override", () => {
