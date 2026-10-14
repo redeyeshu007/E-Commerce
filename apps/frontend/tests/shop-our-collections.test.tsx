@@ -88,6 +88,19 @@ describe("PERALAGAE Shop Our Collections Component Suite", () => {
       expect(images[5]).toHaveAttribute("alt", expect.stringContaining("Gift Ideas"));
     });
 
+    it("renders default collection items as links pointing to /shop with category filters", () => {
+      render(<ShopOurCollections config={defaultCollectionsConfig} />);
+
+      const links = screen.getAllByRole("link", { name: /^Shop .* Collection$/i });
+      expect(links).toHaveLength(6);
+      expect(links[0]).toHaveAttribute("href", "/shop?category=necklaces");
+      expect(links[1]).toHaveAttribute("href", "/shop?category=rings");
+      expect(links[2]).toHaveAttribute("href", "/shop?category=bracelets");
+      expect(links[3]).toHaveAttribute("href", "/shop?category=earrings");
+      expect(links[4]).toHaveAttribute("href", "/shop?category=charms-bangles");
+      expect(links[5]).toHaveAttribute("href", "/shop?category=gift-ideas");
+    });
+
     it("supports custom configuration overrides for future backend API integration", () => {
       const customConfig: CollectionsSectionConfig = {
         heading: "Curated Collections",

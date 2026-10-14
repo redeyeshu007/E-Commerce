@@ -116,4 +116,17 @@ test.describe("PERALAGAE Shop Our Collections E2E Suite", () => {
     await collectionsSection.scrollIntoViewIfNeeded();
     await page.screenshot({ path: `${artifactDir}/collections_mobile.png` });
   });
+
+  test("Clicking a collection card navigates to /shop with category filter", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    const ringsCard = page.getByTestId("collection-card-rings");
+    await expect(ringsCard).toBeVisible();
+    await ringsCard.click();
+
+    // Verify redirect to shop with rings category filter
+    await expect(page).toHaveURL(/\/shop\?category=rings/);
+    await expect(page.getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
+    await expect(page.locator("#shop-content")).toBeVisible();
+  });
 });
