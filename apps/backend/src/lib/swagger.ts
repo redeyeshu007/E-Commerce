@@ -3,45 +3,33 @@ import swaggerUi from "swagger-ui-express";
 import type { Application } from "express";
 
 /**
- * Swagger / OpenAPI setup.
+ * Swagger / OpenAPI documentation setup.
  *
- * This registers the /api/docs route that serves interactive API documentation.
- * Document real endpoints here as they are implemented.
- *
- * NOTE: This is a scaffold — no business endpoints are documented yet.
+ * Provides a future OpenAPI/Swagger integration point on /api/docs.
+ * NOTE: Foundation only — no business endpoints are documented yet.
  */
 
 const options: swaggerJSDoc.Options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Gold Commerce Platform API",
+      title: "PERALAGAE Jewellery E-commerce API",
       version: "1.0.0",
       description:
-        "REST API for the Gold Jewellery E-commerce Platform. " +
-        "This documentation will be populated as endpoints are implemented.",
+        "REST API foundation for PERALAGAE Jewellery E-commerce. " +
+        "Business modules and domain models will be added incrementally in future tasks.",
       contact: {
-        name: "API Support",
+        name: "PERALAGAE Engineering",
       },
     },
     servers: [
       {
-        url: "/api/v1",
-        description: "API v1",
+        url: "/api",
+        description: "API Base",
       },
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
   },
-  // Glob patterns for files containing JSDoc annotations with @openapi tags
-  apis: ["./src/routes/**/*.ts", "./src/modules/**/*.ts"],
+  apis: ["./src/routes/**/*.ts"],
 };
 
 const swaggerSpec = swaggerJSDoc(options);

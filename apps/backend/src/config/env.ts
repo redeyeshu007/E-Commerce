@@ -1,70 +1,95 @@
 import { z } from "zod";
 
 /**
- * Environment variable schema and validation.
+ * Environment variable schema and validation using Zod.
  *
- * All required environment variables are declared here with Zod.
- * The application will throw a clear error at startup if any required
- * variable is missing or has an invalid value.
- *
- * See: .env.example for the full list of variables.
+ * Requirements:
+ * - Centralized environment validation
+ * - Clear, safe configuration error messages
+ * - Distinct rules for development, test, and production
+ * - No sensitive credentials hardcoded or exposed in logs
  */
 
-const envSchema = z.object({
-  // Runtime
+const baseEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z
     .string()
     .default("4000")
-    .transform((v) => parseInt(v, 10)),
-
-  // CORS
-  CORS_ORIGIN: z.string().default("http://localhost:3000"),
-
-  // Auth
-  JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
-
-  // Database
-  DATABASE_URL: z.string().url("DATABASE_URL must be a valid PostgreSQL connection string"),
-
-  // Company identity
-  COMPANY_ID: z.string().min(1, "COMPANY_ID is required"),
-  COMPANY_NAME: z.string().min(1, "COMPANY_NAME is required"),
-  COMPANY_DOMAIN: z.string().min(1, "COMPANY_DOMAIN is required"),
-
-  // Feature flags
-  FEATURE_GOLD_RATE_LIVE: z
+    .transform((val, ctx) => {
+      const parsed = parseInt(val, 10);
+      if (isNaN(parsed) || parsed < 1 || parsed > 65535) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "PORT must be an integer between 1 and 65535",
+        });
+        return z.NEVER;
+      }
+      return parsed;
+    }),
+  DATABASE_URL: z.string().optional().default(""),
+  CORS_ORIGINS: z
     .string()
-    .default("false")
-    .transform((v) => v === "true"),
-  FEATURE_PAYMENTS_ENABLED: z
-    .string()
-    .default("false")
-    .transform((v) => v === "true"),
-  FEATURE_SHIPPING_ENABLED: z
-    .string()
-    .default("false")
-    .transform((v) => v === "true"),
+    .default("http://localhost:3000")
+    .transform((val) =>
+      val
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ),
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 });
 
-export type EnvConfig = z.output<typeof envSchema>;
+export const envSchema = baseEnvSchema.superRefine((data, ctx) => {
+  if (data.NODE_ENV === "production") {
+    // DATABASE_URL is required in production
+    if (!data.DATABASE_URL || data.DATABASE_URL.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["DATABASE_URL"],
+        message: "DATABASE_URL is required in production environment",
+      });
+    } else if (
+      !data.DATABASE_URL.startsWith("postgresql://") &&
+      !data.DATABASE_URL.startsWith("postgres://")
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["DATABASE_URL"],
+        message: "DATABASE_URL must be a valid PostgreSQL connection string",
+      });
+    }
+
+    // CORS_ORIGINS must not allow wildcard in production
+    if (data.CORS_ORIGINS.includes("*")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["CORS_ORIGINS"],
+        message: "Wildcard CORS origin '*' is not permitted in production",
+      });
+    }
+  }
+});
+
+export type EnvConfig = z.output<typeof baseEnvSchema>;
 
 /**
- * Validates process.env against the schema.
- * Called once at application startup in server.ts.
- * Throws a formatted error if any required variable is missing.
+ * Validates environment variables.
+ * Accepts optional explicit dictionary (useful for isolated unit testing).
+ * Defaults to process.env.
  */
-export function validateEnv(): EnvConfig {
-  const result = envSchema.safeParse(process.env);
+export function validateEnv(source: Record<string, string | undefined> = process.env): EnvConfig {
+  const result = envSchema.safeParse(source);
 
   if (!result.success) {
-    console.error("[config] ❌ Invalid environment variables:\n");
-    for (const issue of result.error.issues) {
-      console.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+    const errorDetails = result.error.issues
+      .map((issue) => `  - ${issue.path.join(".") || "config"}: ${issue.message}`)
+      .join("\n");
+
+    const message = `[config] Configuration validation failed:\n${errorDetails}`;
+    if (process.env["NODE_ENV"] !== "test") {
+      console.error(message);
     }
-    throw new Error(
-      "[config] Application failed to start due to missing or invalid environment variables. See above for details.",
-    );
+    throw new Error(message);
   }
 
   return result.data;

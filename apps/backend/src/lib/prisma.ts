@@ -1,26 +1,6 @@
 /**
- * Database connection — Prisma Client singleton.
- *
- * In development, reuse the global PrismaClient instance to prevent
- * exhausting the connection pool during hot reloads (Next.js / tsx watch).
- *
- * See: https://www.prisma.io/docs/guides/performance-and-optimization/connection-management
- *
- * NOTE: DATABASE_URL must be set in the environment before importing this module.
+ * Re-export database client from canonical database module.
+ * Preserved for backwards compatibility with any early imports.
  */
-
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-export const prisma: PrismaClient =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env["NODE_ENV"] === "development" ? ["query", "warn", "error"] : ["warn", "error"],
-  });
-
-if (process.env["NODE_ENV"] !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+export { prisma, checkDatabaseConnection, disconnectPrisma } from "../database/prisma.js";
+export type { DatabaseStatus } from "../database/prisma.js";
