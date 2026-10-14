@@ -330,4 +330,78 @@ describe("PERALAGAE Premium Authentication Experience Suite", () => {
       expect(screen.getByRole("heading", { name: "Welcome Back" })).toBeInTheDocument();
     });
   });
+
+  describe("7. Backend Authentication Integration & Error Handling", () => {
+    it("authenticates via backend loginAdmin and redirects to /admin/dashboard on valid credentials", async () => {
+      const adminAuth = await import("@/services/admin-auth-service");
+      const loginSpy = vi.spyOn(adminAuth, "loginAdmin").mockResolvedValue({
+        token: "jwt-test-token",
+        admin: { email: "javixtech@gmail.com", role: "admin" },
+      });
+
+      const onSuccess = vi.fn();
+      render(<LoginForm onSwitchToRegister={vi.fn()} onSwitchToForgotPassword={vi.fn()} onSuccess={onSuccess} />);
+
+      fireEvent.change(screen.getByLabelText("Email Address"), {
+        target: { value: "javixtech@gmail.com" },
+      });
+      fireEvent.change(screen.getByLabelText("Password"), {
+        target: { value: "ValidPassword123!" },
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
+
+      await waitFor(() => {
+        expect(loginSpy).toHaveBeenCalledWith({
+          email: "javixtech@gmail.com",
+          password: "ValidPassword123!",
+        });
+        expect(onSuccess).toHaveBeenCalled();
+      });
+    });
+
+    it("displays generic error message on invalid credentials without exposing internal details", async () => {
+      const adminAuth = await import("@/services/admin-auth-service");
+      vi.spyOn(adminAuth, "loginAdmin").mockRejectedValue(new Error("Invalid email or password"));
+
+      render(<LoginForm onSwitchToRegister={vi.fn()} onSwitchToForgotPassword={vi.fn()} />);
+
+      fireEvent.change(screen.getByLabelText("Email Address"), {
+        target: { value: "wrong@peralagae.com" },
+      });
+      fireEvent.change(screen.getByLabelText("Password"), {
+        target: { value: "WrongPass123!" },
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("auth-error-banner")).toHaveTextContent(
+          "Invalid email or password. Please try again."
+        );
+      });
+    });
+
+    it("handles network connection failures safely with a helpful connection message", async () => {
+      const adminAuth = await import("@/services/admin-auth-service");
+      vi.spyOn(adminAuth, "loginAdmin").mockRejectedValue(new TypeError("Failed to fetch"));
+
+      render(<LoginForm onSwitchToRegister={vi.fn()} onSwitchToForgotPassword={vi.fn()} />);
+
+      fireEvent.change(screen.getByLabelText("Email Address"), {
+        target: { value: "javixtech@gmail.com" },
+      });
+      fireEvent.change(screen.getByLabelText("Password"), {
+        target: { value: "SomePassword123!" },
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("auth-error-banner")).toHaveTextContent(
+          "Unable to connect to the authentication server."
+        );
+      });
+    });
+  });
 });

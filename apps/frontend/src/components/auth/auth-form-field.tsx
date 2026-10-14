@@ -28,7 +28,7 @@ export const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
     ref
   ) => {
     const [showPassword, setShowPassword] = useState(false);
-    const resolvedType = isPassword ? (showPassword ? "text" : "password") : type;
+    const resolvedType = isPassword ? (showPassword ? "text" : "password") : (type || "text");
     const errorId = `${id}-error`;
 
     return (
@@ -43,7 +43,6 @@ export const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
           <input
             ref={ref}
             id={id}
-            type={resolvedType}
             disabled={disabled}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? errorId : undefined}
@@ -53,13 +52,14 @@ export const AuthFormField = forwardRef<HTMLInputElement, AuthFormFieldProps>(
                 : "border-[#E5E5E5] hover:border-[#CCCCCC] focus:border-[#111111] focus:ring-1 focus:ring-[#111111]"
             } ${isPassword ? "pr-11" : ""} ${className}`}
             {...props}
+            type={resolvedType}
           />
           {isPassword && (
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
               disabled={disabled}
-              aria-label={showPassword ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+              aria-label={showPassword ? "Hide password" : "Show password"}
               className="absolute right-0 top-0 h-full w-11 flex items-center justify-center rounded-r-lg text-[#777777] hover:text-[#111111] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
             >
               {showPassword ? (

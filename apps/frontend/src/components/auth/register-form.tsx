@@ -58,7 +58,7 @@ export function RegisterForm({
         if (res.status === 409) {
           setFormError("An account with this email address already exists. Please sign in.");
         } else if (res.status === 404) {
-          setFormError("Registration service is currently being configured on the backend. Please check back shortly.");
+          setFormError("Customer registration is not available in this phase. Only administrative authentication is currently enabled.");
         } else {
           setFormError("Unable to create account at this time. Please try again later.");
         }

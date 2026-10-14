@@ -9,6 +9,9 @@ import { loginSchema, type LoginFormData } from "./auth-schemas";
 import { AuthFormField } from "./auth-form-field";
 import { GoogleSignInButton } from "./google-sign-in-button";
 
+import { loginAdmin } from "@/services/admin-auth-service";
+import { useRouter } from "next/navigation";
+
 export interface LoginFormProps {
   initialEmail?: string;
   onSwitchToRegister: () => void;
@@ -27,6 +30,13 @@ export function LoginForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  let router: ReturnType<typeof useRouter> | null = null;
+  try {
+    router = useRouter();
+  } catch {
+    router = null;
+  }
+
   const {
     register,
     handleSubmit,
@@ -44,35 +54,40 @@ export function LoginForm({
     setIsSubmitting(true);
 
     try {
-      // Connect to auth backend endpoint boundary
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+      const authResult = await loginAdmin({
+        email: data.email.trim(),
+        password: data.password,
       });
 
-      if (!res.ok) {
-        if (res.status === 401) {
-          setFormError("Invalid email or password. Please try again.");
-        } else if (res.status === 404) {
-          // In a frontend-only environment or if backend auth router is pending
-          setFormError("Authentication service is currently being configured on the backend. Please check back shortly.");
-        } else {
-          setFormError("An unexpected error occurred. Please try again later.");
-        }
-        setIsSubmitting(false);
-        return;
-      }
-
-      const result = await res.json();
-      if (result.success) {
+      if (authResult?.admin?.role === "admin") {
         onSuccess?.();
+        if (router?.push) {
+          router.push("/admin/dashboard");
+        } else if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
+          window.location.href = "/admin/dashboard";
+        }
       } else {
-        setFormError(result.message || "Failed to sign in. Please verify your credentials.");
+        onSuccess?.();
       }
-    } catch {
-      // Handles network failure or pending backend route gracefully
-      setFormError("Unable to connect to authentication server. Please verify your connection.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        if (
+          err.message.includes("fetch") ||
+          err.message.includes("network") ||
+          err.message.includes("Failed to fetch") ||
+          err.message.includes("connect")
+        ) {
+          setFormError(
+            "Unable to connect to the authentication server. Please ensure the backend server is running and try again."
+          );
+        } else if (err.message === "Invalid email or password") {
+          setFormError("Invalid email or password. Please try again.");
+        } else {
+          setFormError(err.message || "Invalid email or password. Please try again.");
+        }
+      } else {
+        setFormError("An unexpected authentication error occurred. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -139,6 +154,7 @@ export function LoginForm({
           <AuthFormField
             id="login-password"
             label="Password"
+            type="password"
             isPassword
             autoComplete="current-password"
             placeholder="••••••••"

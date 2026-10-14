@@ -99,10 +99,12 @@ export function createApp(env: EnvConfig): Application {
   // Primary infrastructure health check (liveness & database readiness)
   app.use("/api/health", healthRouter);
 
-  // Phase 1: Admin Authentication endpoints
+  // Phase 1: Authentication endpoints (supports /api/admin/auth, /api/v1/admin/auth, /api/auth, /api/v1/auth)
   const adminAuthRouter = createAdminAuthRouter(env);
   app.use("/api/admin/auth", adminAuthRouter);
   app.use("/api/v1/admin/auth", adminAuthRouter);
+  app.use("/api/auth", adminAuthRouter);
+  app.use("/api/v1/auth", adminAuthRouter);
 
   // API v1 namespace
   app.use("/api/v1", v1Router);
