@@ -90,7 +90,7 @@ export default function AdminDashboardPage() {
           Admin Dashboard
         </h1>
         <p className="mt-2 text-sm text-[#666666]">
-          Welcome to the PERALAGAE administration panel.
+          The Admin Dashboard will be implemented once all project features are completed.
         </p>
 
         {/* Intentionally completely empty remaining content area — full KPI dashboard deferred to final phase */}

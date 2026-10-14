@@ -68,7 +68,9 @@ describe("PERALAGAE Admin Authentication, Dashboard & Sidebar Suite", () => {
         // Dashboard shell content
         expect(screen.getByRole("heading", { name: "Admin Dashboard" })).toBeInTheDocument();
         expect(
-          screen.getByText("Welcome to the PERALAGAE administration panel.")
+          screen.getByText(
+            "The Admin Dashboard will be implemented once all project features are completed."
+          )
         ).toBeInTheDocument();
       });
 
