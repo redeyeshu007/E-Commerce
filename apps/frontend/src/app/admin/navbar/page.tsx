@@ -76,7 +76,6 @@ export default function AdminNavbarPage() {
     visible: true,
     dismissible: true,
   });
-  const [topBarDescription, setTopBarDescription] = useState("");
 
   // Second Navbar Form State
   const [secondNavbarForm, setSecondNavbarForm] = useState<SecondNavbarConfig>({
@@ -90,7 +89,6 @@ export default function AdminNavbarPage() {
     showPromotion: true,
     showLinks: true,
   });
-  const [secondNavbarDescription, setSecondNavbarDescription] = useState("");
 
   // Secondary Links Editor State
   const [newLinkLabel, setNewLinkLabel] = useState("");
@@ -135,14 +133,12 @@ export default function AdminNavbarPage() {
 
       // Populate Top Bar form
       setTopBarForm({ ...settings.topBar });
-      setTopBarDescription("");
 
       // Populate Second Navbar form
       setSecondNavbarForm({
         ...settings.secondNavbar,
         links: settings.secondNavbar.links.map((l) => ({ ...l })),
       });
-      setSecondNavbarDescription("");
     } catch (err) {
       setStatusMessage({
         type: "error",
@@ -205,7 +201,6 @@ export default function AdminNavbarPage() {
   const handleCancelTopBar = () => {
     if (!serverSettings) return;
     setTopBarForm({ ...serverSettings.topBar });
-    setTopBarDescription("");
     setStatusMessage({ type: "info", text: "Top Bar changes discarded." });
   };
 
@@ -229,12 +224,10 @@ export default function AdminNavbarPage() {
         textColor: topBarForm.textColor,
         visible: topBarForm.visible,
         dismissible: topBarForm.dismissible,
-        description: topBarDescription.trim() || undefined,
       });
 
       setServerSettings(updated);
       setTopBarForm({ ...updated.topBar });
-      setTopBarDescription("");
       setStatusMessage({
         type: "success",
         text: `Top Bar published successfully as v${updated.version}! Storefront is now synchronized.`,
@@ -264,7 +257,6 @@ export default function AdminNavbarPage() {
       ...serverSettings.secondNavbar,
       links: serverSettings.secondNavbar.links.map((l) => ({ ...l })),
     });
-    setSecondNavbarDescription("");
     setStatusMessage({ type: "info", text: "Second Navbar changes discarded." });
   };
 
@@ -296,7 +288,6 @@ export default function AdminNavbarPage() {
         showPhone: secondNavbarForm.showPhone,
         showPromotion: secondNavbarForm.showPromotion,
         showLinks: secondNavbarForm.showLinks,
-        description: secondNavbarDescription.trim() || undefined,
       });
 
       setServerSettings(updated);
@@ -304,7 +295,6 @@ export default function AdminNavbarPage() {
         ...updated.secondNavbar,
         links: updated.secondNavbar.links.map((l) => ({ ...l })),
       });
-      setSecondNavbarDescription("");
       setStatusMessage({
         type: "success",
         text: `Second Navbar published successfully as v${updated.version}! Storefront is now synchronized.`,
@@ -797,25 +787,6 @@ export default function AdminNavbarPage() {
                     </label>
                   </div>
                 </div>
-
-                {/* Optional History Snapshot Note */}
-                <div className="pt-2 border-t border-gray-100">
-                  <label
-                    htmlFor="topbar-description"
-                    className="block text-xs font-medium text-gray-600 mb-1"
-                  >
-                    Change Description / Revision Note (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    id="topbar-description"
-                    value={topBarDescription}
-                    onChange={(e) => setTopBarDescription(e.target.value)}
-                    placeholder="e.g. Updated discount percentage for Diwali Campaign"
-                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
-                    maxLength={200}
-                  />
-                </div>
               </div>
 
               {/* Action Buttons */}
@@ -1239,25 +1210,6 @@ export default function AdminNavbarPage() {
                       <span>Add Link</span>
                     </button>
                   </div>
-                </div>
-
-                {/* Optional History Snapshot Note */}
-                <div className="pt-2 border-t border-gray-100">
-                  <label
-                    htmlFor="second-description"
-                    className="block text-xs font-medium text-gray-600 mb-1"
-                  >
-                    Change Description / Revision Note (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    id="second-description"
-                    value={secondNavbarDescription}
-                    onChange={(e) => setSecondNavbarDescription(e.target.value)}
-                    placeholder="e.g. Updated festive promo banner and custom orders link"
-                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
-                    maxLength={200}
-                  />
                 </div>
               </div>
 
