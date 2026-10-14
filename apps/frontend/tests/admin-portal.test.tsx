@@ -48,7 +48,7 @@ describe("PERALAGAE Admin Authentication, Dashboard & Sidebar Suite", () => {
       });
     });
 
-    it("renders menu icon, brand, ADMIN label, Logout button, and empty dashboard content area", async () => {
+    it("renders menu icon, brand, Logout button, and empty dashboard content area", async () => {
       vi.spyOn(adminAuthService, "getAdminSession").mockResolvedValue({
         email: "javixtech@gmail.com",
         role: "admin",
@@ -62,7 +62,7 @@ describe("PERALAGAE Admin Authentication, Dashboard & Sidebar Suite", () => {
           screen.getByRole("button", { name: /open navigation menu/i })
         ).toBeInTheDocument();
         expect(screen.getAllByText("PERALAGAE")[0]).toBeInTheDocument();
-        expect(screen.getAllByText("ADMIN")[0]).toBeInTheDocument();
+        expect(screen.queryByText("ADMIN")).not.toBeInTheDocument();
         expect(screen.getByRole("button", { name: /logout/i })).toBeInTheDocument();
 
         // Dashboard shell content

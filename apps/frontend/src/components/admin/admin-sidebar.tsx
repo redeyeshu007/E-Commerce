@@ -81,9 +81,6 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
             <span className="text-base font-medium tracking-[0.18em] uppercase text-[#1A1A1A]">
               {brandConfig.name}
             </span>
-            <span className="text-[10px] font-medium tracking-widest uppercase text-[#888888] pl-2 border-l border-[#E5E7EB]">
-              ADMIN
-            </span>
           </div>
 
           <button

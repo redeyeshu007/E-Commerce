@@ -45,9 +45,6 @@ export function AdminNavbar({
           <span className="text-lg sm:text-xl font-medium tracking-[0.18em] uppercase text-[#1A1A1A]">
             {brandConfig.name}
           </span>
-          <span className="text-[11px] font-medium tracking-widest uppercase text-[#888888] pl-2.5 border-l border-[#E5E7EB]">
-            ADMIN
-          </span>
         </div>
 
         {/* Right Side: Logout Action Only */}
