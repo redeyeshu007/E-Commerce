@@ -10,6 +10,10 @@ import { z } from "zod";
  * - No sensitive credentials hardcoded or exposed in logs
  */
 
+const DEFAULT_DEV_ADMIN_PASSWORD = "PeralagaeAdmin2026!SecureKey";
+const DEFAULT_DEV_JWT_SECRET =
+  "peralagae_super_secure_admin_jwt_secret_at_least_32_characters_long";
+
 const baseEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z
@@ -37,6 +41,17 @@ const baseEnvSchema = z.object({
         .filter(Boolean),
     ),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+
+  // ── Admin Authentication (Phase 1) ──────────────────────────────────────────
+  ADMIN_EMAIL: z.string().email("ADMIN_EMAIL must be a valid email").default("admin@peralagae.com"),
+  ADMIN_PASSWORD: z
+    .string()
+    .min(8, "ADMIN_PASSWORD must be at least 8 characters")
+    .default(DEFAULT_DEV_ADMIN_PASSWORD),
+  ADMIN_JWT_SECRET: z
+    .string()
+    .min(32, "ADMIN_JWT_SECRET must be at least 32 characters")
+    .default(DEFAULT_DEV_JWT_SECRET),
 });
 
 export const envSchema = baseEnvSchema.superRefine((data, ctx) => {
@@ -65,6 +80,23 @@ export const envSchema = baseEnvSchema.superRefine((data, ctx) => {
         code: z.ZodIssueCode.custom,
         path: ["CORS_ORIGINS"],
         message: "Wildcard CORS origin '*' is not permitted in production",
+      });
+    }
+
+    // Admin secrets must not use insecure development defaults in production
+    if (data.ADMIN_PASSWORD === DEFAULT_DEV_ADMIN_PASSWORD) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["ADMIN_PASSWORD"],
+        message: "ADMIN_PASSWORD must be changed from the development default in production",
+      });
+    }
+
+    if (data.ADMIN_JWT_SECRET === DEFAULT_DEV_JWT_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["ADMIN_JWT_SECRET"],
+        message: "ADMIN_JWT_SECRET must be changed from the development default in production",
       });
     }
   }

@@ -9,6 +9,7 @@ import { AuthModal } from "@/components/auth";
 import { SearchOverlay } from "@/components/search";
 import { NewsletterPopup } from "@/components/newsletter";
 import { useStorefront } from "@/providers/storefront-provider";
+import { usePathname } from "next/navigation";
 import { defaultNavigationConfig, type NavigationConfig } from "@/config/navigation";
 
 export interface SiteHeaderProps {
@@ -20,22 +21,19 @@ export interface SiteHeaderProps {
   className?: string;
 }
 
-/**
- * Top-Level Storefront Header for PERALAGAE.
- *
- * Reproduces the luxury header reference design across desktop and mobile:
- *
- * Desktop:
- * 1. Announcement Bar — Soft pastel pink promotional banner (#FBC0CE) with centered text and dismiss X.
- * 2. Utility Bar — Top utility bar with contact number, promotional callout, and utility links.
- * 3. Main Navigation Bar — Left: "PERALAGAE", Centre: Home / Shop / Contact / New Arrivals, Right: Search / Account / Wishlist / Cart.
- *
- * Mobile:
- * 1. Top Navbar — Left: Hamburger Menu, Centre: "PERALAGAE" (centered), Right: Shopping Cart with "0" badge.
- * 2. Bottom Sticky Navigation Bar — Fixed at bottom with HOME, SEARCH, WISHLIST (with "0" badge), and ACCOUNT.
- */
 export function SiteHeader({ config = defaultNavigationConfig, className = "" }: SiteHeaderProps) {
   const storefront = useStorefront();
+  let pathname = "/";
+  try {
+    const p = usePathname();
+    if (p) pathname = p;
+  } catch {
+    pathname = "/";
+  }
+
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <>

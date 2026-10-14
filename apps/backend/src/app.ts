@@ -2,12 +2,14 @@ import express, { type Application, type Request, type Response, type NextFuncti
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import crypto from "node:crypto";
 import type { EnvConfig } from "./config/env.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { notFoundHandler } from "./middleware/not-found.js";
 import { healthRouter } from "./routes/health.js";
 import { v1Router } from "./routes/v1/index.js";
+import { createAdminAuthRouter } from "./routes/admin-auth.js";
 import { setupSwagger } from "./lib/swagger.js";
 import { logger } from "./utils/logger.js";
 
@@ -51,12 +53,15 @@ export function createApp(env: EnvConfig): Application {
 
         return callback(new Error(`Origin '${origin}' not allowed by CORS policy`));
       },
-      credentials: false,
+      credentials: true,
     }),
   );
 
   // ── Compression ───────────────────────────────────────────────────────────
   app.use(compression());
+
+  // ── Cookie Parsing for Server-Managed Admin Sessions ──────────────────────
+  app.use(cookieParser());
 
   // ── Structured Request Logging ───────────────────────────────────────────
   if (env.NODE_ENV !== "test") {
@@ -93,6 +98,12 @@ export function createApp(env: EnvConfig): Application {
   // ── Infrastructure Health & API Routes ──────────────────────────────────
   // Primary infrastructure health check (liveness & database readiness)
   app.use("/api/health", healthRouter);
+
+  // Phase 1: Admin Authentication endpoints
+  const adminAuthRouter = createAdminAuthRouter(env);
+  app.use("/api/admin/auth", adminAuthRouter);
+  app.use("/api/v1/admin/auth", adminAuthRouter);
+
   // API v1 namespace
   app.use("/api/v1", v1Router);
 

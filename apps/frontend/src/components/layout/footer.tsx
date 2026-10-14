@@ -624,6 +624,18 @@ export function SiteFooter({
 
   const exploreColumn = explorePeralagae ?? exploreJavix;
 
+  let pathname = "/";
+  try {
+    const p = usePathname();
+    if (p) pathname = p;
+  } catch {
+    pathname = "/";
+  }
+
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
+
   return (
     <footer
       role="contentinfo"
