@@ -331,19 +331,19 @@ export default function AdminNavbarPage() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8 transition-all">
         {/* Page Title & Breadcrumb Header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="mb-5 sm:mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
               <span>Admin</span>
               <span>/</span>
               <span className="text-gray-900 font-medium">Navbar</span>
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-[#111111]">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#111111]">
               Navbar Management
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Manage the storefront announcement bar and secondary navigation bar with live previews and independent version histories.
             </p>
           </div>
@@ -352,7 +352,7 @@ export default function AdminNavbarPage() {
         {/* Global Status Banner */}
         {statusMessage && (
           <div
-            className={`mb-6 p-4 rounded-lg flex items-center justify-between text-sm shadow-sm transition-all duration-300 ${
+            className={`mb-5 sm:mb-6 p-3.5 sm:p-4 rounded-lg flex items-start sm:items-center justify-between gap-3 text-xs sm:text-sm shadow-sm transition-all duration-300 ${
               statusMessage.type === "success"
                 ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                 : statusMessage.type === "error"
@@ -360,35 +360,35 @@ export default function AdminNavbarPage() {
                 : "bg-blue-50 text-blue-800 border border-blue-200"
             }`}
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-start sm:items-center gap-2.5 min-w-0">
               {statusMessage.type === "success" && (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
               )}
               {statusMessage.type === "error" && (
-                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600 shrink-0 mt-0.5 sm:mt-0" />
               )}
               {statusMessage.type === "info" && (
-                <AlertCircle className="w-5 h-5 text-blue-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0 mt-0.5 sm:mt-0" />
               )}
-              <span className="font-medium">{statusMessage.text}</span>
+              <span className="font-medium break-words leading-relaxed">{statusMessage.text}</span>
             </div>
             <button
               type="button"
               onClick={() => setStatusMessage(null)}
-              className="text-gray-400 hover:text-gray-600 transition p-1"
+              className="text-gray-400 hover:text-gray-600 transition p-1 shrink-0 -mr-1 -mt-1 sm:mt-0"
             >
               &times;
             </button>
           </div>
         )}
 
-        {/* Section Tabs */}
-        <div className="border-b border-[#E5E7EB]">
-          <nav className="flex space-x-8" aria-label="Tabs">
+        {/* Section Tabs: Horizontally scrollable on mobile */}
+        <div className="border-b border-[#E5E7EB] -mx-3.5 px-3.5 sm:mx-0 sm:px-0 overflow-x-auto scrollbar-none">
+          <nav className="flex space-x-5 sm:space-x-8 min-w-max pb-px" aria-label="Tabs">
             <button
               type="button"
               onClick={() => setActiveTab("top_bar")}
-              className={`py-3.5 px-1 inline-flex items-center gap-2 border-b-2 text-sm font-medium transition-colors ${
+              className={`py-3 sm:py-3.5 px-1 inline-flex items-center gap-2 border-b-2 text-xs sm:text-sm font-medium transition-colors ${
                 activeTab === "top_bar"
                   ? "border-black text-black font-semibold"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -403,7 +403,7 @@ export default function AdminNavbarPage() {
             <button
               type="button"
               onClick={() => setActiveTab("second_navbar")}
-              className={`py-3.5 px-1 inline-flex items-center gap-2 border-b-2 text-sm font-medium transition-colors ${
+              className={`py-3 sm:py-3.5 px-1 inline-flex items-center gap-2 border-b-2 text-xs sm:text-sm font-medium transition-colors ${
                 activeTab === "second_navbar"
                   ? "border-black text-black font-semibold"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -419,17 +419,17 @@ export default function AdminNavbarPage() {
 
         {/* ─── TAB 1: TOP BAR MANAGEMENT ───────────────────────────────────── */}
         {activeTab === "top_bar" && (
-          <div className="mt-8 space-y-8">
+          <div className="mt-6 sm:mt-8 space-y-6 sm:space-y-8">
             {/* Live Preview Card */}
-            <div className="bg-white border border-[#E5E7EB] rounded-lg p-5 shadow-sm">
-              <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#F0F0F0]">
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-5 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 mb-4 border-b border-[#F0F0F0]">
                 <div className="flex items-center gap-2">
                   <Eye className="w-4 h-4 text-[#888888]" />
                   <span className="text-xs font-semibold uppercase tracking-wider text-[#666666]">
                     Live Storefront Preview
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 self-start sm:self-auto">
                   {hasTopBarChanges ? (
                     <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-200">
                       Previewing Unsaved Changes
@@ -446,15 +446,15 @@ export default function AdminNavbarPage() {
               <div className="w-full mx-auto transition-all duration-300 rounded overflow-hidden border border-gray-200 shadow-inner">
                 {topBarForm.visible ? (
                   <div
-                    className="w-full py-2.5 px-4 text-center text-xs sm:text-sm font-medium tracking-wide flex items-center justify-center transition-colors duration-200 relative break-words"
+                    className="w-full py-2 sm:py-2.5 px-3 sm:px-4 text-center text-xs sm:text-sm font-medium tracking-wide flex items-center justify-center transition-colors duration-200 relative break-words"
                     style={{
                       backgroundColor: topBarForm.backgroundColor,
                       color: topBarForm.textColor,
                     }}
                   >
-                    <span className="max-w-2xl px-2">{topBarForm.text || "Your announcement message here..."}</span>
+                    <span className="max-w-2xl px-5 sm:px-2 leading-relaxed">{topBarForm.text || "Your announcement message here..."}</span>
                     {topBarForm.dismissible && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 text-xs cursor-pointer">
+                      <span className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 opacity-60 text-base cursor-pointer p-1">
                         &times;
                       </span>
                     )}
@@ -468,14 +468,14 @@ export default function AdminNavbarPage() {
             </div>
 
             {/* Editor Form Card */}
-            <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <h2 className="text-base font-medium text-[#111111]">
                   Top Bar Announcement Settings
                 </h2>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-5 sm:space-y-6">
                 {/* Announcement Text Input */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
@@ -485,8 +485,8 @@ export default function AdminNavbarPage() {
                     >
                       Announcement Text <span className="text-rose-500">*</span>
                     </label>
-                    <span className="text-xs text-gray-400">
-                      {topBarForm.text.length}/250 characters
+                    <span className="text-xs text-gray-400 font-mono">
+                      {topBarForm.text.length}/250
                     </span>
                   </div>
                   <textarea
@@ -495,7 +495,7 @@ export default function AdminNavbarPage() {
                     value={topBarForm.text}
                     onChange={(e) => setTopBarForm((prev) => ({ ...prev, text: e.target.value }))}
                     placeholder="e.g. SUMMER SALE, Get 40% Off for all products."
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none transition"
+                    className="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none transition"
                     maxLength={250}
                   />
                   {topBarForm.text.trim().length === 0 && (
@@ -521,7 +521,7 @@ export default function AdminNavbarPage() {
                         onChange={(e) =>
                           setTopBarForm((prev) => ({ ...prev, backgroundColor: e.target.value }))
                         }
-                        className="w-9 h-9 p-0.5 rounded border border-gray-300 cursor-pointer bg-white"
+                        className="w-9 h-9 p-0.5 rounded border border-gray-300 cursor-pointer bg-white shrink-0"
                       />
                       <input
                         type="text"
@@ -551,7 +551,7 @@ export default function AdminNavbarPage() {
                         onChange={(e) =>
                           setTopBarForm((prev) => ({ ...prev, textColor: e.target.value }))
                         }
-                        className="w-9 h-9 p-0.5 rounded border border-gray-300 cursor-pointer bg-white"
+                        className="w-9 h-9 p-0.5 rounded border border-gray-300 cursor-pointer bg-white shrink-0"
                       />
                       <input
                         type="text"
@@ -566,8 +566,8 @@ export default function AdminNavbarPage() {
                   </div>
 
                   {/* Visibility Toggle */}
-                  <div className="flex flex-col justify-end">
-                    <label className="flex items-center cursor-pointer gap-2.5 pb-2">
+                  <div className="flex flex-col justify-end pt-1 sm:pt-0">
+                    <label className="flex items-center cursor-pointer gap-2.5 py-1">
                       <input
                         type="checkbox"
                         checked={topBarForm.visible}
@@ -582,8 +582,8 @@ export default function AdminNavbarPage() {
                   </div>
 
                   {/* Dismissible Toggle */}
-                  <div className="flex flex-col justify-end">
-                    <label className="flex items-center cursor-pointer gap-2.5 pb-2">
+                  <div className="flex flex-col justify-end pt-1 sm:pt-0">
+                    <label className="flex items-center cursor-pointer gap-2.5 py-1">
                       <input
                         type="checkbox"
                         checked={topBarForm.dismissible}
@@ -599,13 +599,13 @@ export default function AdminNavbarPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="mt-8 pt-5 border-t border-gray-100 flex flex-wrap items-center justify-end gap-3">
+              {/* Action Buttons: Responsive mobile stacking */}
+              <div className="mt-6 sm:mt-8 pt-4 sm:pt-5 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2.5 sm:gap-3">
                 <button
                   type="button"
                   onClick={handleCancelTopBar}
                   disabled={!hasTopBarChanges || isSaving}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
                 >
                   <Undo2 className="w-3.5 h-3.5" />
                   <span>Cancel Changes</span>
@@ -615,7 +615,7 @@ export default function AdminNavbarPage() {
                   type="button"
                   onClick={handleSaveTopBar}
                   disabled={!hasTopBarChanges || isSaving}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-medium text-white bg-[#111111] rounded hover:bg-black transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 sm:py-2 text-xs font-medium text-white bg-[#111111] rounded hover:bg-black transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
                 >
                   {isSaving ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -628,8 +628,8 @@ export default function AdminNavbarPage() {
             </div>
 
             {/* Top Bar Version History Section */}
-            <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
                 <div>
                   <h2 className="text-base font-medium text-[#111111]">
                     Top Bar Version History
@@ -639,7 +639,7 @@ export default function AdminNavbarPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-start sm:self-auto">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Current Live: v{serverSettings?.topBarVersion ?? 1}</span>
@@ -648,7 +648,7 @@ export default function AdminNavbarPage() {
               </div>
 
               {topBarHistory.length === 0 ? (
-                <div className="py-12 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
+                <div className="py-10 sm:py-12 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
                   <History className="w-7 h-7 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm font-medium text-gray-700">
                     No previous Top Bar versions recorded yet.
@@ -658,16 +658,16 @@ export default function AdminNavbarPage() {
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
+                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                  <table className="w-full min-w-[620px] text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50/75 text-gray-600 font-semibold uppercase tracking-wider">
-                        <th className="py-3 px-4">Version</th>
-                        <th className="py-3 px-4">Status</th>
-                        <th className="py-3 px-4">Announcement Text</th>
-                        <th className="py-3 px-4">Date & Time</th>
-                        <th className="py-3 px-4">Administrator</th>
-                        <th className="py-3 px-4 text-right">Actions</th>
+                        <th className="py-3 px-3 sm:px-4">Version</th>
+                        <th className="py-3 px-3 sm:px-4">Status</th>
+                        <th className="py-3 px-3 sm:px-4">Announcement Text</th>
+                        <th className="py-3 px-3 sm:px-4">Date & Time</th>
+                        <th className="py-3 px-3 sm:px-4">Administrator</th>
+                        <th className="py-3 px-3 sm:px-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -682,10 +682,10 @@ export default function AdminNavbarPage() {
                               isCurrentLive ? "bg-emerald-50/20" : ""
                             }`}
                           >
-                            <td className="py-3.5 px-4 font-mono font-bold text-gray-900">
+                            <td className="py-3.5 px-3 sm:px-4 font-mono font-bold text-gray-900 whitespace-nowrap">
                               v{item.version}
                             </td>
-                            <td className="py-3.5 px-4 whitespace-nowrap">
+                            <td className="py-3.5 px-3 sm:px-4 whitespace-nowrap">
                               {isCurrentLive ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                   <Check className="w-3 h-3 text-emerald-600" />
@@ -697,7 +697,7 @@ export default function AdminNavbarPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="py-3.5 px-4 max-w-sm">
+                            <td className="py-3.5 px-3 sm:px-4 max-w-xs sm:max-w-sm">
                               <div className="flex items-center gap-2">
                                 <span
                                   className="w-3.5 h-3.5 rounded border border-gray-300 shrink-0"
@@ -713,7 +713,7 @@ export default function AdminNavbarPage() {
                                 </span>
                               </div>
                             </td>
-                            <td className="py-3.5 px-4 text-gray-600 whitespace-nowrap">
+                            <td className="py-3.5 px-3 sm:px-4 text-gray-600 whitespace-nowrap">
                               <span className="flex items-center gap-1.5">
                                 <Clock className="w-3 h-3 text-gray-400 shrink-0" />
                                 {new Date(item.createdAt).toLocaleString(undefined, {
@@ -722,10 +722,10 @@ export default function AdminNavbarPage() {
                                 })}
                               </span>
                             </td>
-                            <td className="py-3.5 px-4 text-gray-500 font-mono text-[11px] whitespace-nowrap">
+                            <td className="py-3.5 px-3 sm:px-4 text-gray-500 font-mono text-[11px] whitespace-nowrap">
                               {item.createdBy || "admin@peralagae.com"}
                             </td>
-                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <td className="py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
                               <div className="inline-flex items-center justify-end">
                                 {isCurrentLive ? (
                                   <span className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
@@ -758,17 +758,17 @@ export default function AdminNavbarPage() {
 
         {/* ─── TAB 2: SECOND NAVBAR MANAGEMENT ─────────────────────────────── */}
         {activeTab === "second_navbar" && (
-          <div className="mt-8 space-y-8">
+          <div className="mt-6 sm:mt-8 space-y-6 sm:space-y-8">
             {/* Live Preview Card */}
-            <div className="bg-white border border-[#E5E7EB] rounded-lg p-5 shadow-sm">
-              <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#F0F0F0]">
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-5 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 mb-4 border-b border-[#F0F0F0]">
                 <div className="flex items-center gap-2">
                   <Eye className="w-4 h-4 text-[#888888]" />
                   <span className="text-xs font-semibold uppercase tracking-wider text-[#666666]">
                     Live Storefront Preview
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 self-start sm:self-auto">
                   {hasSecondNavbarChanges ? (
                     <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-200">
                       Previewing Unsaved Changes
@@ -784,11 +784,11 @@ export default function AdminNavbarPage() {
               {/* Preview Rendering Container: Shows full storefront second navbar with live promoText */}
               <div className="w-full mx-auto transition-all duration-300 rounded overflow-hidden border border-gray-200 shadow-inner bg-white">
                 <div className="w-full border-b border-[#E5E5E5] bg-white text-xs lg:text-[13px] text-black">
-                  <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-x-4 gap-y-2 px-3 sm:px-4 py-2 sm:py-2.5">
                     {/* Left Group */}
-                    <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-5 gap-y-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-2.5 sm:gap-x-5 gap-y-1.5 min-w-0">
                       {serverSettings?.secondNavbar.showPhone && serverSettings?.secondNavbar.phone && (
-                        <span className="font-normal text-black shrink-0">
+                        <span className="font-normal text-black shrink-0 text-[11px] sm:text-xs lg:text-[13px]">
                           {serverSettings.secondNavbar.phone}
                         </span>
                       )}
@@ -800,8 +800,8 @@ export default function AdminNavbarPage() {
                         )}
 
                       {serverSettings?.secondNavbar.showPromotion && secondNavbarPromo && (
-                        <span className="text-black inline-flex flex-wrap items-center gap-1.5 leading-snug break-words">
-                          <span>{secondNavbarPromo}</span>
+                        <span className="text-black inline-flex flex-wrap items-center gap-1.5 leading-snug break-words text-[11px] sm:text-xs lg:text-[13px]">
+                          <span className="break-words">{secondNavbarPromo}</span>
                           {serverSettings?.secondNavbar.ctaText && (
                             <span className="font-semibold text-black underline cursor-pointer shrink-0">
                               {serverSettings.secondNavbar.ctaText}
@@ -811,13 +811,13 @@ export default function AdminNavbarPage() {
                       )}
                     </div>
 
-                    {/* Right Group (Secondary Links from active configuration) */}
+                    {/* Right Group (Secondary Links: hidden on xs mobile, matching storefront utility bar) */}
                     {serverSettings?.secondNavbar.showLinks && (serverSettings?.secondNavbar.links.length ?? 0) > 0 && (
-                      <div className="flex items-center space-x-6 text-black shrink-0">
+                      <div className="hidden sm:flex items-center space-x-4 sm:space-x-6 text-black shrink-0 text-xs lg:text-[13px]">
                         {serverSettings?.secondNavbar.links.map((link) => (
                           <span
                             key={link.id}
-                            className="hover:opacity-75 transition-opacity cursor-pointer"
+                            className="hover:opacity-75 transition-opacity cursor-pointer whitespace-nowrap"
                           >
                             {link.label}
                           </span>
@@ -830,8 +830,8 @@ export default function AdminNavbarPage() {
             </div>
 
             {/* Editor Form Card: Promotional Message ONLY */}
-            <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 shadow-sm">
-              <div className="mb-5">
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
+              <div className="mb-4 sm:mb-5">
                 <h2 className="text-base font-medium text-[#111111]">
                   Second Navbar Promotional Message
                 </h2>
@@ -861,7 +861,7 @@ export default function AdminNavbarPage() {
                       value={secondNavbarPromo}
                       onChange={(e) => setSecondNavbarPromo(e.target.value)}
                       placeholder="e.g. Summer Sale 15% off!"
-                      className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none transition"
+                      className="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 pr-16 text-xs sm:text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none transition"
                       maxLength={120}
                     />
                   </div>
@@ -881,13 +881,13 @@ export default function AdminNavbarPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="mt-8 pt-5 border-t border-gray-100 flex flex-wrap items-center justify-end gap-3">
+              {/* Action Buttons: Responsive mobile stacking */}
+              <div className="mt-6 sm:mt-8 pt-4 sm:pt-5 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2.5 sm:gap-3">
                 <button
                   type="button"
                   onClick={handleCancelSecondNavbar}
                   disabled={!hasSecondNavbarChanges || isSaving}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
                 >
                   <Undo2 className="w-3.5 h-3.5" />
                   <span>Cancel Changes</span>
@@ -897,7 +897,7 @@ export default function AdminNavbarPage() {
                   type="button"
                   onClick={handleSaveSecondNavbar}
                   disabled={!hasSecondNavbarChanges || isSaving}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-medium text-white bg-[#111111] rounded hover:bg-black transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 sm:py-2 text-xs font-medium text-white bg-[#111111] rounded hover:bg-black transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
                 >
                   {isSaving ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -910,8 +910,8 @@ export default function AdminNavbarPage() {
             </div>
 
             {/* Second Navbar Version History Section */}
-            <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
                 <div>
                   <h2 className="text-base font-medium text-[#111111]">
                     Second Navbar Version History
@@ -921,7 +921,7 @@ export default function AdminNavbarPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-start sm:self-auto">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Current Live: v{serverSettings?.secondNavbarVersion ?? 1}</span>
@@ -930,7 +930,7 @@ export default function AdminNavbarPage() {
               </div>
 
               {secondNavbarHistory.length === 0 ? (
-                <div className="py-12 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
+                <div className="py-10 sm:py-12 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
                   <History className="w-7 h-7 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm font-medium text-gray-700">
                     No previous Second Navbar versions recorded yet.
@@ -940,16 +940,16 @@ export default function AdminNavbarPage() {
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
+                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                  <table className="w-full min-w-[580px] text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50/75 text-gray-600 font-semibold uppercase tracking-wider">
-                        <th className="py-3 px-4">Version</th>
-                        <th className="py-3 px-4">Status</th>
-                        <th className="py-3 px-4">Content Summary</th>
-                        <th className="py-3 px-4">Date & Time</th>
-                        <th className="py-3 px-4">Administrator</th>
-                        <th className="py-3 px-4 text-right">Actions</th>
+                        <th className="py-3 px-3 sm:px-4">Version</th>
+                        <th className="py-3 px-3 sm:px-4">Status</th>
+                        <th className="py-3 px-3 sm:px-4">Content Summary</th>
+                        <th className="py-3 px-3 sm:px-4">Date & Time</th>
+                        <th className="py-3 px-3 sm:px-4">Administrator</th>
+                        <th className="py-3 px-3 sm:px-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -964,10 +964,10 @@ export default function AdminNavbarPage() {
                               isCurrentLive ? "bg-emerald-50/20" : ""
                             }`}
                           >
-                            <td className="py-3.5 px-4 font-mono font-bold text-gray-900">
+                            <td className="py-3.5 px-3 sm:px-4 font-mono font-bold text-gray-900 whitespace-nowrap">
                               v{item.version}
                             </td>
-                            <td className="py-3.5 px-4 whitespace-nowrap">
+                            <td className="py-3.5 px-3 sm:px-4 whitespace-nowrap">
                               {isCurrentLive ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                   <Check className="w-3 h-3 text-emerald-600" />
@@ -979,7 +979,7 @@ export default function AdminNavbarPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="py-3.5 px-4 max-w-sm">
+                            <td className="py-3.5 px-3 sm:px-4 max-w-xs sm:max-w-sm">
                               <div className="text-gray-800 font-medium truncate">
                                 {item.snapshot.secondNavbar.promoText ? (
                                   <span>&ldquo;{item.snapshot.secondNavbar.promoText}&rdquo;</span>
@@ -988,7 +988,7 @@ export default function AdminNavbarPage() {
                                 )}
                               </div>
                             </td>
-                            <td className="py-3.5 px-4 text-gray-600 whitespace-nowrap">
+                            <td className="py-3.5 px-3 sm:px-4 text-gray-600 whitespace-nowrap">
                               <span className="flex items-center gap-1.5">
                                 <Clock className="w-3 h-3 text-gray-400 shrink-0" />
                                 {new Date(item.createdAt).toLocaleString(undefined, {
@@ -997,10 +997,10 @@ export default function AdminNavbarPage() {
                                 })}
                               </span>
                             </td>
-                            <td className="py-3.5 px-4 text-gray-500 font-mono text-[11px] whitespace-nowrap">
+                            <td className="py-3.5 px-3 sm:px-4 text-gray-500 font-mono text-[11px] whitespace-nowrap">
                               {item.createdBy || "admin@peralagae.com"}
                             </td>
-                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <td className="py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
                               <div className="inline-flex items-center justify-end">
                                 {isCurrentLive ? (
                                   <span className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
@@ -1032,13 +1032,13 @@ export default function AdminNavbarPage() {
         )}
       </main>
 
-      {/* ─── MODAL: CONFIRM RESTORE THIS VERSION ───────────────────────────── */}
+      {/* ─── MODAL: CONFIRM RESTORE THIS VERSION (Responsive Drawer/Modal) ─── */}
       {restoreConfirmTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] animate-fade-in">
-          <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl border border-gray-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-[2px] animate-fade-in">
+          <div className="bg-white rounded-t-2xl sm:rounded-lg max-w-lg w-full p-5 sm:p-6 shadow-xl border border-gray-200 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center gap-3 text-amber-600 mb-3">
-              <div className="p-2 bg-amber-50 rounded-full border border-amber-200">
-                <RotateCcw className="w-5 h-5 shrink-0 text-amber-600" />
+              <div className="p-2 bg-amber-50 rounded-full border border-amber-200 shrink-0">
+                <RotateCcw className="w-5 h-5 text-amber-600" />
               </div>
               <h3 className="text-base font-semibold text-gray-900">
                 Restore This Version?
@@ -1054,7 +1054,7 @@ export default function AdminNavbarPage() {
             </p>
 
             <div className="mt-4 p-3.5 bg-gray-50 rounded-md border border-gray-200 text-xs text-gray-700 space-y-2">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-gray-200 gap-1">
                 <span className="font-semibold text-gray-900 font-mono text-sm">
                   Version v{restoreConfirmTarget.item.version}
                 </span>
@@ -1092,9 +1092,9 @@ export default function AdminNavbarPage() {
               )}
             </div>
 
-            <div className="mt-4 text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded border border-emerald-200 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>
+            <div className="mt-4 text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded border border-emerald-200 flex items-start sm:items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+              <span className="leading-relaxed">
                 Your current live version (v{
                   restoreConfirmTarget.section === "top_bar"
                     ? (serverSettings?.topBarVersion ?? 1)
@@ -1103,12 +1103,12 @@ export default function AdminNavbarPage() {
               </span>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setRestoreConfirmTarget(null)}
                 disabled={isRestoring}
-                className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40 text-center justify-center"
               >
                 Cancel
               </button>
@@ -1116,7 +1116,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 onClick={handleExecuteRestore}
                 disabled={isRestoring}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
               >
                 {isRestoring ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
