@@ -43,6 +43,18 @@ export function ShopPageContent({ pageSize = 12 }: ShopPageContentProps) {
   const [currentPage, setCurrentPage] = useState<number>(initialPage);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
+  // Sync category filter when URL search parameters change externally
+  const categoryParam = searchParams.get("category") || null;
+  useEffect(() => {
+    setFilters((prev) => {
+      if (prev.category !== categoryParam) {
+        return { ...prev, category: categoryParam };
+      }
+      return prev;
+    });
+    setCurrentPage(1);
+  }, [categoryParam]);
+
   // Sync state to URL search parameters for shareable/bookmarkable URLs
   useEffect(() => {
     const params = new URLSearchParams();

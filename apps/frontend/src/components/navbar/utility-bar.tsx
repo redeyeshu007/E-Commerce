@@ -120,9 +120,12 @@ export function UtilityBar({ config }: UtilityBarProps) {
           <span className="whitespace-nowrap text-black inline-block">
             {config.promotion.text}{" "}
             {config.promotion.linkText && (
-              <span className="font-semibold text-black transition-opacity hover:underline hover:opacity-75 cursor-pointer">
+              <Link
+                href={config.promotion.href || "/shop"}
+                className="font-semibold text-black transition-opacity hover:underline hover:opacity-75 cursor-pointer"
+              >
                 {config.promotion.linkText}
-              </span>
+              </Link>
             )}
           </span>
         </div>

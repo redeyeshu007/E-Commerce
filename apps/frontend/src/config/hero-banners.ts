@@ -62,7 +62,7 @@ export const defaultHeroBannersConfig: HeroBannersConfig = {
     description: "Look to our new season collection for girls.",
     cta: {
       label: "Shop Now",
-      href: "/category/necklaces",
+      href: "/shop?category=necklaces",
     },
     image: {
       src: "/images/hero/banner-necklaces.jpg",
@@ -77,7 +77,7 @@ export const defaultHeroBannersConfig: HeroBannersConfig = {
     title: "Desk The Hals",
     cta: {
       label: "Shop Now",
-      href: "/category/rings",
+      href: "/shop?category=rings",
     },
     image: {
       src: "/images/hero/banner-desk-hals.jpg",
@@ -92,7 +92,7 @@ export const defaultHeroBannersConfig: HeroBannersConfig = {
     title: "Charm Bracelets",
     cta: {
       label: "Shop Now",
-      href: "/category/bracelets",
+      href: "/shop?category=bracelets",
     },
     image: {
       src: "/images/hero/banner-charm-bracelets.jpg",

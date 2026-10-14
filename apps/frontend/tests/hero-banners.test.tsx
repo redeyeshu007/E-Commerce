@@ -7,11 +7,11 @@ import { defaultHeroBannersConfig, type HeroBannersConfig } from "@/config/hero-
 describe("PERALAGAE Hero & Promotional Banners Component Suite", () => {
   describe("OutlineButton", () => {
     it("renders rectangular outline button with correct label, href, and styling classes", () => {
-      render(<OutlineButton label="Shop Now" href="/category/necklaces" />);
+      render(<OutlineButton label="Shop Now" href="/shop?category=necklaces" />);
 
       const link = screen.getByRole("link", { name: "Shop Now" });
       expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute("href", "/category/necklaces");
+      expect(link).toHaveAttribute("href", "/shop?category=necklaces");
       expect(link.className).toContain("border");
       expect(link.className).toContain("hover:bg-[#111111]");
     });
@@ -33,7 +33,7 @@ describe("PERALAGAE Hero & Promotional Banners Component Suite", () => {
 
       // CTA Button
       const cta = screen.getByRole("link", { name: /Shop Now/i });
-      expect(cta).toHaveAttribute("href", "/category/necklaces");
+      expect(cta).toHaveAttribute("href", "/shop?category=necklaces");
 
       // Image
       const image = screen.getByRole("img");
@@ -52,7 +52,7 @@ describe("PERALAGAE Hero & Promotional Banners Component Suite", () => {
 
       // CTA button
       const cta = screen.getByRole("link", { name: /Shop Now/i });
-      expect(cta).toHaveAttribute("href", "/category/rings");
+      expect(cta).toHaveAttribute("href", "/shop?category=rings");
     });
   });
 
@@ -76,9 +76,9 @@ describe("PERALAGAE Hero & Promotional Banners Component Suite", () => {
       // Verify 3 Shop Now CTA buttons are present with their destinations
       const ctaLinks = screen.getAllByRole("link", { name: /Shop Now/i });
       expect(ctaLinks).toHaveLength(3);
-      expect(ctaLinks[0]).toHaveAttribute("href", "/category/necklaces");
-      expect(ctaLinks[1]).toHaveAttribute("href", "/category/rings");
-      expect(ctaLinks[2]).toHaveAttribute("href", "/category/bracelets");
+      expect(ctaLinks[0]).toHaveAttribute("href", "/shop?category=necklaces");
+      expect(ctaLinks[1]).toHaveAttribute("href", "/shop?category=rings");
+      expect(ctaLinks[2]).toHaveAttribute("href", "/shop?category=bracelets");
     });
 
     it("supports custom configuration overrides for backend CMS integration", () => {

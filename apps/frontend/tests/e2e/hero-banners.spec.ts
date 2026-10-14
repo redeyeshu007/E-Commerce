@@ -53,7 +53,7 @@ test.describe("PERALAGAE Hero & Promotional Banners E2E Suite", () => {
     // Verify rectangular outline CTA buttons
     const leftCta = leftBanner.locator("a", { hasText: "Shop Now" });
     await expect(leftCta).toBeVisible();
-    await expect(leftCta).toHaveAttribute("href", "/category/necklaces");
+    await expect(leftCta).toHaveAttribute("href", "/shop?category=necklaces");
   });
 
   test("Mobile: stacks banners vertically without horizontal overflow", async ({ page }) => {
@@ -85,5 +85,18 @@ test.describe("PERALAGAE Hero & Promotional Banners E2E Suite", () => {
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+  });
+
+  test("Clicking 'Shop Now' redirects to /shop with category filter", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    const leftBanner = page.getByTestId("banner-hero-featured-necklaces");
+    const leftCta = leftBanner.locator("a", { hasText: "Shop Now" });
+    await leftCta.click();
+
+    // Verify redirect to shop with category filter
+    await expect(page).toHaveURL(/\/shop\?category=necklaces/);
+    await expect(page.getByRole("heading", { name: "Shop", exact: true })).toBeVisible();
+    await expect(page.locator("#shop-content")).toBeVisible();
   });
 });
