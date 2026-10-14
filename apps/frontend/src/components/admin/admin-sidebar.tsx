@@ -104,11 +104,16 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
             onClick={onClose}
             className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
               isDashboardActive
-                ? "bg-[#FAF8F5] text-[#C5A572] font-semibold border-l-2 border-[#C5A572]"
-                : "text-[#1A1A1A] hover:bg-[#F5F5F5] hover:text-[#C5A572]"
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
             }`}
           >
-            <LayoutDashboard className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <LayoutDashboard
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isDashboardActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
             <span>Dashboard</span>
           </Link>
         </nav>
