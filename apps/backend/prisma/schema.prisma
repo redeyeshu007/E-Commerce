@@ -25,3 +25,45 @@ model HealthCheck {
 
   @@map("health_checks")
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Navbar Management Models (Top Bar & Second Navbar Settings and History)
+// ──────────────────────────────────────────────────────────────────────────
+
+model NavbarSetting {
+  id                String   @id @default("current")
+  topBarText        String   @default("SUMMER SALE, Get 40% Off for all products.")
+  topBarBgColor     String   @default("#FBC0CE")
+  topBarTextColor   String   @default("#222222")
+  topBarVisible     Boolean  @default(true)
+  topBarDismissible Boolean  @default(true)
+
+  secondPhone        String   @default("+91 98765 43210")
+  secondPhoneHref    String   @default("tel:+919876543210")
+  secondPromoText    String   @default("Summer Sale 15% off!")
+  secondCtaText      String   @default("Shop Now!")
+  secondCtaHref      String   @default("/shop")
+  secondLinks        Json     @default("[]")
+  secondPhoneVisible Boolean  @default(true)
+  secondPromoVisible Boolean  @default(true)
+  secondLinksVisible Boolean  @default(true)
+
+  version            Int      @default(1)
+  updatedAt          DateTime @updatedAt
+  updatedBy          String?
+
+  @@map("navbar_settings")
+}
+
+model NavbarHistory {
+  id          String   @id @default(cuid())
+  section     String   // "top_bar" | "second_navbar" | "full"
+  snapshot    Json     // Full snapshot of settings at this version
+  description String?
+  version     Int
+  createdAt   DateTime @default(now())
+  createdBy   String?
+
+  @@map("navbar_history")
+}
+

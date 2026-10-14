@@ -1,0 +1,89 @@
+export interface TopBarConfig {
+  text: string;
+  backgroundColor: string;
+  textColor: string;
+  visible: boolean;
+  dismissible: boolean;
+}
+
+export interface SecondNavbarLinkItem {
+  id: string;
+  label: string;
+  href: string;
+  isImplemented: boolean;
+}
+
+export interface SecondNavbarConfig {
+  phone: string;
+  phoneHref: string;
+  promoText: string;
+  ctaText: string;
+  ctaHref: string;
+  links: SecondNavbarLinkItem[];
+  showPhone: boolean;
+  showPromotion: boolean;
+  showLinks: boolean;
+}
+
+export interface NavbarSettingsData {
+  id: string;
+  topBar: TopBarConfig;
+  secondNavbar: SecondNavbarConfig;
+  version: number;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export interface NavbarHistoryItem {
+  id: string;
+  section: "top_bar" | "second_navbar" | "full";
+  snapshot: NavbarSettingsData;
+  description: string;
+  version: number;
+  createdAt: string;
+  createdBy: string;
+}
+
+export const defaultNavbarSettingsData: NavbarSettingsData = {
+  id: "current",
+  topBar: {
+    text: "SUMMER SALE, Get 40% Off for all products.",
+    backgroundColor: "#FBC0CE",
+    textColor: "#222222",
+    visible: true,
+    dismissible: true,
+  },
+  secondNavbar: {
+    phone: "+91 98765 43210",
+    phoneHref: "tel:+919876543210",
+    promoText: "Summer Sale 15% off!",
+    ctaText: "Shop Now!",
+    ctaHref: "/shop",
+    links: [
+      {
+        id: "find-store",
+        label: "Find a Store",
+        href: "/#store-locator",
+        isImplemented: true,
+      },
+      {
+        id: "faqs",
+        label: "FAQs",
+        href: "/#faqs",
+        isImplemented: false,
+      },
+      {
+        id: "subscribe",
+        label: "Subscribe",
+        href: "/#newsletter-section",
+        isImplemented: true,
+      },
+    ],
+    showPhone: true,
+    showPromotion: true,
+    showLinks: true,
+  },
+  version: 1,
+  updatedAt: new Date().toISOString(),
+  updatedBy: "system",
+};

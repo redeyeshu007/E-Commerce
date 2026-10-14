@@ -11,6 +11,7 @@ import { NewsletterPopup } from "@/components/newsletter";
 import { useStorefront } from "@/providers/storefront-provider";
 import { usePathname } from "next/navigation";
 import { defaultNavigationConfig, type NavigationConfig } from "@/config/navigation";
+import { useNavbarSettings } from "@/services/navbar-settings-service";
 
 export interface SiteHeaderProps {
   /**
@@ -23,6 +24,8 @@ export interface SiteHeaderProps {
 
 export function SiteHeader({ config = defaultNavigationConfig, className = "" }: SiteHeaderProps) {
   const storefront = useStorefront();
+  const { data: dynamicNavbar } = useNavbarSettings();
+
   let pathname = "/";
   try {
     const p = usePathname();
@@ -30,6 +33,42 @@ export function SiteHeader({ config = defaultNavigationConfig, className = "" }:
   } catch {
     pathname = "/";
   }
+
+  const announcementConfig = React.useMemo(() => {
+    if (!dynamicNavbar?.topBar) return config.announcement;
+    return {
+      text: dynamicNavbar.topBar.text,
+      backgroundColor: dynamicNavbar.topBar.backgroundColor || config.announcement.backgroundColor,
+      textColor: dynamicNavbar.topBar.textColor || config.announcement.textColor,
+      dismissible: dynamicNavbar.topBar.dismissible,
+    };
+  }, [dynamicNavbar?.topBar, config.announcement]);
+
+  const utilityConfig = React.useMemo(() => {
+    if (!dynamicNavbar?.secondNavbar) return config.utility;
+    const sec = dynamicNavbar.secondNavbar;
+    return {
+      ...config.utility,
+      phone: sec.phone,
+      phoneHref: sec.phoneHref || config.utility.phoneHref,
+      promotion: {
+        text: sec.promoText,
+        linkText: sec.ctaText,
+        href: sec.ctaHref || config.utility.promotion.href,
+      },
+      links: sec.links.map((link) => ({
+        id: link.id,
+        label: link.label,
+        href: link.href,
+        isImplemented: link.isImplemented,
+      })),
+      showPhone: sec.showPhone,
+      showPromotion: sec.showPromotion,
+      showLinks: sec.showLinks,
+    };
+  }, [dynamicNavbar?.secondNavbar, config.utility]);
+
+  const showTopBar = dynamicNavbar?.topBar?.visible ?? true;
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -39,10 +78,10 @@ export function SiteHeader({ config = defaultNavigationConfig, className = "" }:
     <>
       <header className={`relative w-full z-30 bg-white text-black ${className}`} role="banner">
         {/* Row One: Announcement Bar */}
-        <AnnouncementBar config={config.announcement} />
+        {showTopBar && <AnnouncementBar config={announcementConfig} />}
 
         {/* Row Two: Utility Bar */}
-        <UtilityBar config={config.utility} />
+        <UtilityBar config={utilityConfig} />
 
         {/* Row Three: Main Navigation */}
         <MainNavbar config={config} />

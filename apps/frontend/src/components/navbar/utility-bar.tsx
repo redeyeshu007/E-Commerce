@@ -94,46 +94,63 @@ export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
  * - Solid black typography with minimalist editorial spacing.
  */
 export function UtilityBar({ config }: UtilityBarProps) {
+  const showPhone = config.showPhone !== false && Boolean(config.phone);
+  const showPromotion = config.showPromotion !== false && Boolean(config.promotion?.text);
+  const showLinks = config.showLinks !== false && Array.isArray(config.links) && config.links.length > 0;
+
+  // If all elements are hidden, don't render empty bar
+  if (!showPhone && !showPromotion && !showLinks) {
+    return null;
+  }
+
   return (
     <div
-      className="hidden lg:block w-full border-b border-[#E5E5E5] bg-white text-xs lg:text-[13px] text-black"
+      className="w-full border-b border-[#E5E5E5] bg-white text-xs lg:text-[13px] text-black transition-all duration-200"
       role="region"
       aria-label="Utility navigation and store information"
     >
-      <div className="mx-auto flex h-10 lg:h-12 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Left group */}
-        <div className="flex items-center space-x-4 sm:space-x-5 lg:space-x-6 overflow-x-auto no-scrollbar py-1">
-          {/* 1. Indian Phone Number (10 digits) */}
-          <a
-            href={config.phoneHref ?? "tel:+919876543210"}
-            className="whitespace-nowrap font-normal text-black transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
-          >
-            {config.phone ?? "+91 98765 43210"}
-          </a>
+      <div className="mx-auto flex min-h-[40px] lg:min-h-[48px] max-w-7xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 sm:px-6 lg:px-8 py-1.5">
+        {/* Left group: Phone and Promotion */}
+        <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-5 lg:gap-x-6 gap-y-1">
+          {/* 1. Phone Number */}
+          {showPhone && (
+            <a
+              href={config.phoneHref ?? "tel:+919876543210"}
+              className="inline-flex items-center font-normal text-black transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black shrink-0"
+            >
+              {config.phone}
+            </a>
+          )}
 
-          <span
-            className="h-3 lg:h-3.5 w-px bg-[#E5E5E5] inline-block"
-            aria-hidden="true"
-          />
+          {showPhone && showPromotion && (
+            <span
+              className="h-3 lg:h-3.5 w-px bg-[#E5E5E5] inline-block shrink-0"
+              aria-hidden="true"
+            />
+          )}
 
           {/* 2. Promotional info */}
-          <span className="whitespace-nowrap text-black inline-block">
-            {config.promotion.text}{" "}
-            {config.promotion.linkText && (
-              <Link
-                href={config.promotion.href || "/shop"}
-                className="font-semibold text-black transition-opacity hover:underline hover:opacity-75 cursor-pointer"
-              >
-                {config.promotion.linkText}
-              </Link>
-            )}
-          </span>
+          {showPromotion && (
+            <span className="text-black inline-flex flex-wrap items-center gap-1.5 leading-snug">
+              <span>{config.promotion.text}</span>
+              {config.promotion.linkText && (
+                <Link
+                  href={config.promotion.href || "/shop"}
+                  className="font-semibold text-black transition-opacity hover:underline hover:opacity-75 cursor-pointer shrink-0"
+                >
+                  {config.promotion.linkText}
+                </Link>
+              )}
+            </span>
+          )}
         </div>
 
-        {/* Right group (Desktop) */}
-        <div className="hidden lg:flex items-center">
-          <UtilityLinks links={config.links} />
-        </div>
+        {/* Right group: Secondary Links */}
+        {showLinks && (
+          <div className="hidden sm:flex items-center shrink-0">
+            <UtilityLinks links={config.links} />
+          </div>
+        )}
       </div>
     </div>
   );

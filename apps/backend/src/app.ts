@@ -10,6 +10,7 @@ import { notFoundHandler } from "./middleware/not-found.js";
 import { healthRouter } from "./routes/health.js";
 import { v1Router } from "./routes/v1/index.js";
 import { createAdminAuthRouter } from "./routes/admin-auth.js";
+import { createNavbarRouter } from "./routes/navbar.js";
 import { setupSwagger } from "./lib/swagger.js";
 import { logger } from "./utils/logger.js";
 
@@ -105,6 +106,11 @@ export function createApp(env: EnvConfig): Application {
   app.use("/api/v1/admin/auth", adminAuthRouter);
   app.use("/api/auth", adminAuthRouter);
   app.use("/api/v1/auth", adminAuthRouter);
+
+  // Navbar Management endpoints (storefront public & admin protected)
+  const navbarRouter = createNavbarRouter(env);
+  app.use("/api/navbar", navbarRouter);
+  app.use("/api/v1/navbar", navbarRouter);
 
   // API v1 namespace
   app.use("/api/v1", v1Router);

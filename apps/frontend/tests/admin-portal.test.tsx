@@ -128,10 +128,11 @@ describe("PERALAGAE Admin Authentication, Dashboard & Sidebar Suite", () => {
       const drawer = screen.getByTestId("admin-sidebar-drawer");
       expect(drawer).toHaveClass("translate-x-0");
 
-      // Drawer contains PERALAGAE ADMIN and Dashboard item
+      // Drawer contains brand and Dashboard and Navbar items
       expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /navbar/i })).toBeInTheDocument();
 
-      // STRICT SCOPE: No Products, Orders, Customers, or Settings in drawer
+      // STRICT SCOPE: No Products, Orders, Customers in drawer
       expect(screen.queryByRole("link", { name: /products/i })).not.toBeInTheDocument();
       expect(screen.queryByRole("link", { name: /orders/i })).not.toBeInTheDocument();
       expect(screen.queryByRole("link", { name: /customers/i })).not.toBeInTheDocument();

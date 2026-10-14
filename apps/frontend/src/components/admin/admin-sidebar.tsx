@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, LayoutDashboard } from "lucide-react";
+import { X, LayoutDashboard, PanelTop } from "lucide-react";
 import { brandConfig } from "@/config/brand";
 
 export interface AdminSidebarProps {
@@ -18,8 +18,8 @@ export interface AdminSidebarProps {
  * - Opens smoothly from left to right with semi-transparent backdrop
  * - Closes on close button, backdrop click, or Escape key
  * - Prevents background scrolling while open
- * - Displays small drawer heading: PERALAGAE ADMIN
- * - Contains only the Dashboard navigation item linking to /admin/dashboard
+ * - Displays small drawer heading: PERALAGAE
+ * - Contains Dashboard and Navbar items
  * - Minimal white-and-neutral visual style with restrained gold accent
  */
 export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
@@ -51,7 +51,8 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     }
   }, [isOpen]);
 
-  const isDashboardActive = pathname === "/admin/dashboard" || pathname.startsWith("/admin");
+  const isDashboardActive = pathname === "/admin/dashboard" || pathname === "/admin";
+  const isNavbarActive = pathname === "/admin/navbar" || pathname.startsWith("/admin/navbar");
 
   return (
     <>
@@ -112,6 +113,24 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               aria-hidden="true"
             />
             <span>Dashboard</span>
+          </Link>
+
+          <Link
+            href="/admin/navbar"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isNavbarActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <PanelTop
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isNavbarActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>Navbar</span>
           </Link>
         </nav>
       </aside>

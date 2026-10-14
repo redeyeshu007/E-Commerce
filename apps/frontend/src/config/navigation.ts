@@ -38,6 +38,9 @@ export interface UtilityConfig {
   currencySymbol?: string;
   promotion: UtilityPromotionConfig;
   links: UtilityLinkItem[];
+  showPhone?: boolean;
+  showPromotion?: boolean;
+  showLinks?: boolean;
 }
 
 export interface BrandConfig {
