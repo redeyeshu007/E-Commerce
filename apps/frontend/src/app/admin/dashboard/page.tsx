@@ -5,23 +5,25 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { getAdminSession, logoutAdmin } from "@/services/admin-auth-service";
 import { AdminNavbar } from "@/components/admin/admin-navbar";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
 
 /**
- * Minimal Admin Dashboard Shell
+ * Protected Admin Dashboard Shell
  *
  * Requirements:
  * - Minimal white-and-neutral visual design
- * - White page background, dark charcoal text, subtle light-grey divider
- * - Simple top navbar containing only brand, ADMIN label, and Logout
- * - Content area containing only the heading and subtle supporting line
- * - Rest of dashboard content area left completely empty (no KPI widgets, cards, tables, or charts)
- * - Session verification on load; redirects to /admin/login if unauthenticated
+ * - Slide-out navigation drawer with Dashboard link
+ * - Menu/Settings icon at far left of top navbar to toggle drawer
+ * - Minimal top navbar containing brand, ADMIN label, and Logout
+ * - Content area containing heading and welcome line, with empty workspace
+ * - Session verification on load; redirects unauthenticated visitors to /?auth=login
  */
 export default function AdminDashboardPage() {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Authenticate session on initial load
   useEffect(() => {
@@ -68,8 +70,19 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#1A1A1A]">
+      {/* Slide-out Navigation Drawer */}
+      <AdminSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+
       {/* Minimal Top Admin Navbar */}
-      <AdminNavbar onLogout={handleLogout} isLoggingOut={isLoggingOut} />
+      <AdminNavbar
+        onLogout={handleLogout}
+        isLoggingOut={isLoggingOut}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        isSidebarOpen={isSidebarOpen}
+      />
 
       {/* Minimal Admin Dashboard Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">

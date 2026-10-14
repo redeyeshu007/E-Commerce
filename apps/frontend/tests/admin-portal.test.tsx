@@ -17,7 +17,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/dashboard",
 }));
 
-describe("PERALAGAE Admin Authentication & Minimal Dashboard Shell Suite", () => {
+describe("PERALAGAE Admin Authentication, Dashboard & Sidebar Suite", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -48,7 +48,7 @@ describe("PERALAGAE Admin Authentication & Minimal Dashboard Shell Suite", () =>
       });
     });
 
-    it("renders minimal navbar (PERALAGAE, ADMIN, Logout) and empty dashboard content area", async () => {
+    it("renders menu icon, brand, ADMIN label, Logout button, and empty dashboard content area", async () => {
       vi.spyOn(adminAuthService, "getAdminSession").mockResolvedValue({
         email: "javixtech@gmail.com",
         role: "admin",
@@ -58,8 +58,11 @@ describe("PERALAGAE Admin Authentication & Minimal Dashboard Shell Suite", () =>
 
       await waitFor(() => {
         // Navbar elements
-        expect(screen.getByText("PERALAGAE")).toBeInTheDocument();
-        expect(screen.getByText("ADMIN")).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /open navigation menu/i })
+        ).toBeInTheDocument();
+        expect(screen.getAllByText("PERALAGAE")[0]).toBeInTheDocument();
+        expect(screen.getAllByText("ADMIN")[0]).toBeInTheDocument();
         expect(screen.getByRole("button", { name: /logout/i })).toBeInTheDocument();
 
         // Dashboard shell content
@@ -98,6 +101,116 @@ describe("PERALAGAE Admin Authentication & Minimal Dashboard Shell Suite", () =>
         expect(logoutSpy).toHaveBeenCalled();
         expect(mockReplace).toHaveBeenCalledWith("/?auth=login");
       });
+    });
+  });
+
+  describe("3. Admin Navigation Sidebar Drawer", () => {
+    it("opens the slide-out navigation drawer when the menu button is clicked", async () => {
+      vi.spyOn(adminAuthService, "getAdminSession").mockResolvedValue({
+        email: "javixtech@gmail.com",
+        role: "admin",
+      });
+
+      render(<AdminDashboardPage />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /open navigation menu/i })
+        ).toBeInTheDocument();
+      });
+
+      const menuButton = screen.getByRole("button", { name: /open navigation menu/i });
+      await userEvent.click(menuButton);
+
+      // Drawer is open
+      const drawer = screen.getByTestId("admin-sidebar-drawer");
+      expect(drawer).toHaveClass("translate-x-0");
+
+      // Drawer contains PERALAGAE ADMIN and Dashboard item
+      expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
+
+      // STRICT SCOPE: No Products, Orders, Customers, or Settings in drawer
+      expect(screen.queryByRole("link", { name: /products/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /orders/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /customers/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /analytics/i })).not.toBeInTheDocument();
+    });
+
+    it("closes the drawer when the close button is clicked", async () => {
+      vi.spyOn(adminAuthService, "getAdminSession").mockResolvedValue({
+        email: "javixtech@gmail.com",
+        role: "admin",
+      });
+
+      render(<AdminDashboardPage />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /open navigation menu/i })
+        ).toBeInTheDocument();
+      });
+
+      // Open drawer
+      await userEvent.click(screen.getByRole("button", { name: /open navigation menu/i }));
+      const drawer = screen.getByTestId("admin-sidebar-drawer");
+      expect(drawer).toHaveClass("translate-x-0");
+
+      // Click close button
+      const closeButton = screen.getByTestId("admin-sidebar-close-button");
+      await userEvent.click(closeButton);
+
+      expect(drawer).toHaveClass("-translate-x-full");
+    });
+
+    it("closes the drawer when the semi-transparent backdrop is clicked", async () => {
+      vi.spyOn(adminAuthService, "getAdminSession").mockResolvedValue({
+        email: "javixtech@gmail.com",
+        role: "admin",
+      });
+
+      render(<AdminDashboardPage />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /open navigation menu/i })
+        ).toBeInTheDocument();
+      });
+
+      // Open drawer
+      await userEvent.click(screen.getByRole("button", { name: /open navigation menu/i }));
+      const drawer = screen.getByTestId("admin-sidebar-drawer");
+      expect(drawer).toHaveClass("translate-x-0");
+
+      // Click backdrop
+      const backdrop = screen.getByTestId("admin-sidebar-backdrop");
+      await userEvent.click(backdrop);
+
+      expect(drawer).toHaveClass("-translate-x-full");
+    });
+
+    it("closes the drawer when the Escape key is pressed", async () => {
+      vi.spyOn(adminAuthService, "getAdminSession").mockResolvedValue({
+        email: "javixtech@gmail.com",
+        role: "admin",
+      });
+
+      render(<AdminDashboardPage />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /open navigation menu/i })
+        ).toBeInTheDocument();
+      });
+
+      // Open drawer
+      await userEvent.click(screen.getByRole("button", { name: /open navigation menu/i }));
+      const drawer = screen.getByTestId("admin-sidebar-drawer");
+      expect(drawer).toHaveClass("translate-x-0");
+
+      // Press Escape
+      await userEvent.keyboard("{Escape}");
+
+      expect(drawer).toHaveClass("-translate-x-full");
     });
   });
 });
