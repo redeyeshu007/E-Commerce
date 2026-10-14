@@ -90,6 +90,18 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
     }
   }, []);
 
+  // Support opening login modal when ?auth=login or ?auth=admin is present in the URL
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const authParam = params.get("auth");
+      if (authParam === "login" || authParam === "admin") {
+        setAuthModalView("login");
+        setIsAuthModalOpen(true);
+      }
+    }
+  }, []);
+
   // Save wishlist changes to localStorage
   const saveWishlist = useCallback((ids: string[]) => {
     setWishlistIds(ids);

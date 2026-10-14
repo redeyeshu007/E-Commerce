@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
         }
       } catch {
         if (isMounted) {
-          router.replace("/admin/login");
+          router.replace("/?auth=login");
         }
       }
     }
@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
     try {
       await logoutAdmin();
     } finally {
-      router.replace("/admin/login");
+      router.replace("/?auth=login");
     }
   };
 

@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
     replace: mockReplace,
     push: mockPush,
   }),
-  usePathname: () => "/admin/login",
+  usePathname: () => "/admin/dashboard",
 }));
 
 describe("PERALAGAE Admin Authentication & Minimal Dashboard Shell Suite", () => {
@@ -22,93 +22,29 @@ describe("PERALAGAE Admin Authentication & Minimal Dashboard Shell Suite", () =>
     vi.clearAllMocks();
   });
 
-  describe("1. Admin Login Page (/admin/login)", () => {
-    it("renders brand name, ADMIN label, heading, inputs, and Login button", async () => {
-      vi.spyOn(adminAuthService, "getAdminSession").mockRejectedValue(new Error("Unauthorized"));
+  describe("1. Admin Login Route Compatibility (/admin/login)", () => {
+    it("does NOT render a duplicate or standalone login page UI, and redirects to /?auth=login", async () => {
+      const { container } = render(<AdminLoginPage />);
 
-      render(<AdminLoginPage />);
+      // Ensure no standalone inputs, headings, or forms are rendered
+      expect(screen.queryByRole("heading", { name: "Admin Login" })).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/admin email/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/^password/i)).not.toBeInTheDocument();
+      expect(container.firstChild).toBeNull();
 
-      await waitFor(() => {
-        expect(screen.getByText("PERALAGAE")).toBeInTheDocument();
-        expect(screen.getByText("ADMIN")).toBeInTheDocument();
-        expect(screen.getByRole("heading", { name: "Admin Login" })).toBeInTheDocument();
-      });
-
-      expect(screen.getByLabelText(/admin email/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /^login$/i })).toBeInTheDocument();
-    });
-
-    it("toggles password visibility between password and text", async () => {
-      vi.spyOn(adminAuthService, "getAdminSession").mockRejectedValue(new Error("Unauthorized"));
-
-      render(<AdminLoginPage />);
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
-      });
-
-      const passwordInput = screen.getByLabelText(/^password/i);
-      expect(passwordInput).toHaveAttribute("type", "password");
-
-      const toggleButton = screen.getByRole("button", { name: /show password/i });
-      await userEvent.click(toggleButton);
-
-      expect(passwordInput).toHaveAttribute("type", "text");
-    });
-
-    it("displays error message when submitted with invalid credentials", async () => {
-      vi.spyOn(adminAuthService, "getAdminSession").mockRejectedValue(new Error("Unauthorized"));
-      vi.spyOn(adminAuthService, "loginAdmin").mockRejectedValue(
-        new Error("Invalid email or password")
-      );
-
-      render(<AdminLoginPage />);
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/admin email/i)).toBeInTheDocument();
-      });
-
-      await userEvent.type(screen.getByLabelText(/admin email/i), "wrong@peralagae.com");
-      await userEvent.type(screen.getByLabelText(/^password/i), "wrongpass");
-      await userEvent.click(screen.getByRole("button", { name: /^login$/i }));
-
-      await waitFor(() => {
-        expect(screen.getByRole("alert")).toHaveTextContent("Invalid email or password");
-      });
-    });
-
-    it("redirects to /admin/dashboard on successful login", async () => {
-      vi.spyOn(adminAuthService, "getAdminSession").mockRejectedValue(new Error("Unauthorized"));
-      vi.spyOn(adminAuthService, "loginAdmin").mockResolvedValue({
-        token: "fake-jwt-token",
-        admin: { email: "javixtech@gmail.com", role: "admin" },
-      });
-
-      render(<AdminLoginPage />);
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/admin email/i)).toBeInTheDocument();
-      });
-
-      await userEvent.type(screen.getByLabelText(/admin email/i), "javixtech@gmail.com");
-      await userEvent.type(screen.getByLabelText(/^password/i), "ValidPassword123!");
-      await userEvent.click(screen.getByRole("button", { name: /^login$/i }));
-
-      await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith("/admin/dashboard");
-      });
+      // Confirms immediate redirection to homepage with modal trigger
+      expect(mockReplace).toHaveBeenCalledWith("/?auth=login");
     });
   });
 
   describe("2. Minimal Admin Top Navbar & Protected Dashboard Shell (/admin/dashboard)", () => {
-    it("redirects to /admin/login when session is not authenticated", async () => {
+    it("redirects to /?auth=login when session is not authenticated", async () => {
       vi.spyOn(adminAuthService, "getAdminSession").mockRejectedValue(new Error("Unauthorized"));
 
       render(<AdminDashboardPage />);
 
       await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith("/admin/login");
+        expect(mockReplace).toHaveBeenCalledWith("/?auth=login");
       });
     });
 
@@ -143,7 +79,7 @@ describe("PERALAGAE Admin Authentication & Minimal Dashboard Shell Suite", () =>
       expect(screen.queryByPlaceholderText(/search/i)).not.toBeInTheDocument();
     });
 
-    it("logs out through backend and redirects to /admin/login when logout is clicked", async () => {
+    it("logs out through backend and redirects to /?auth=login when logout is clicked", async () => {
       vi.spyOn(adminAuthService, "getAdminSession").mockResolvedValue({
         email: "javixtech@gmail.com",
         role: "admin",
@@ -160,7 +96,7 @@ describe("PERALAGAE Admin Authentication & Minimal Dashboard Shell Suite", () =>
 
       await waitFor(() => {
         expect(logoutSpy).toHaveBeenCalled();
-        expect(mockReplace).toHaveBeenCalledWith("/admin/login");
+        expect(mockReplace).toHaveBeenCalledWith("/?auth=login");
       });
     });
   });
