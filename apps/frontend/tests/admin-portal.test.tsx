@@ -17,25 +17,26 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/login",
 }));
 
-describe("PERALAGAE Admin Authentication & Portal Suite", () => {
+describe("PERALAGAE Admin Authentication & Minimal Dashboard Shell Suite", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe("1. Admin Login Page (/admin/login)", () => {
-    it("renders brand name, admin login heading, inputs, and submit button", async () => {
+    it("renders brand name, ADMIN label, heading, inputs, and Login button", async () => {
       vi.spyOn(adminAuthService, "getAdminSession").mockRejectedValue(new Error("Unauthorized"));
 
       render(<AdminLoginPage />);
 
       await waitFor(() => {
         expect(screen.getByText("PERALAGAE")).toBeInTheDocument();
+        expect(screen.getByText("ADMIN")).toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Admin Login" })).toBeInTheDocument();
       });
 
       expect(screen.getByLabelText(/admin email/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /sign in to admin portal/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^login$/i })).toBeInTheDocument();
     });
 
     it("toggles password visibility between password and text", async () => {
@@ -70,7 +71,7 @@ describe("PERALAGAE Admin Authentication & Portal Suite", () => {
 
       await userEvent.type(screen.getByLabelText(/admin email/i), "wrong@peralagae.com");
       await userEvent.type(screen.getByLabelText(/^password/i), "wrongpass");
-      await userEvent.click(screen.getByRole("button", { name: /sign in to admin portal/i }));
+      await userEvent.click(screen.getByRole("button", { name: /^login$/i }));
 
       await waitFor(() => {
         expect(screen.getByRole("alert")).toHaveTextContent("Invalid email or password");
@@ -81,7 +82,7 @@ describe("PERALAGAE Admin Authentication & Portal Suite", () => {
       vi.spyOn(adminAuthService, "getAdminSession").mockRejectedValue(new Error("Unauthorized"));
       vi.spyOn(adminAuthService, "loginAdmin").mockResolvedValue({
         token: "fake-jwt-token",
-        admin: { email: "admin@peralagae.com", role: "admin" },
+        admin: { email: "javixtech@gmail.com", role: "admin" },
       });
 
       render(<AdminLoginPage />);
@@ -90,9 +91,9 @@ describe("PERALAGAE Admin Authentication & Portal Suite", () => {
         expect(screen.getByLabelText(/admin email/i)).toBeInTheDocument();
       });
 
-      await userEvent.type(screen.getByLabelText(/admin email/i), "admin@peralagae.com");
+      await userEvent.type(screen.getByLabelText(/admin email/i), "javixtech@gmail.com");
       await userEvent.type(screen.getByLabelText(/^password/i), "ValidPassword123!");
-      await userEvent.click(screen.getByRole("button", { name: /sign in to admin portal/i }));
+      await userEvent.click(screen.getByRole("button", { name: /^login$/i }));
 
       await waitFor(() => {
         expect(mockReplace).toHaveBeenCalledWith("/admin/dashboard");
@@ -100,7 +101,7 @@ describe("PERALAGAE Admin Authentication & Portal Suite", () => {
     });
   });
 
-  describe("2. Protected Admin Dashboard (/admin/dashboard)", () => {
+  describe("2. Minimal Admin Top Navbar & Protected Dashboard Shell (/admin/dashboard)", () => {
     it("redirects to /admin/login when session is not authenticated", async () => {
       vi.spyOn(adminAuthService, "getAdminSession").mockRejectedValue(new Error("Unauthorized"));
 
@@ -111,31 +112,40 @@ describe("PERALAGAE Admin Authentication & Portal Suite", () => {
       });
     });
 
-    it("renders dashboard heading, welcome message, and logout button when authenticated", async () => {
+    it("renders minimal navbar (PERALAGAE, ADMIN, Logout) and empty dashboard content area", async () => {
       vi.spyOn(adminAuthService, "getAdminSession").mockResolvedValue({
-        email: "admin@peralagae.com",
+        email: "javixtech@gmail.com",
         role: "admin",
       });
 
       render(<AdminDashboardPage />);
 
       await waitFor(() => {
+        // Navbar elements
+        expect(screen.getByText("PERALAGAE")).toBeInTheDocument();
+        expect(screen.getByText("ADMIN")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /logout/i })).toBeInTheDocument();
+
+        // Dashboard shell content
         expect(screen.getByRole("heading", { name: "Admin Dashboard" })).toBeInTheDocument();
+        expect(
+          screen.getByText("Welcome to the PERALAGAE administration panel.")
+        ).toBeInTheDocument();
       });
 
-      expect(screen.getAllByText(/admin@peralagae.com/)[0]).toBeInTheDocument();
-      expect(screen.getByText(/Phase 1 authentication complete/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /logout/i })).toBeInTheDocument();
-
-      // Ensure no business modules or widgets are present
+      // Strict navbar and dashboard restrictions: no business modules, menus, or cards
       expect(screen.queryByText(/products/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/orders/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/customers/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/analytics/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/revenue/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/settings/i)).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText(/search/i)).not.toBeInTheDocument();
     });
 
-    it("logs out and redirects to /admin/login when logout is clicked", async () => {
+    it("logs out through backend and redirects to /admin/login when logout is clicked", async () => {
       vi.spyOn(adminAuthService, "getAdminSession").mockResolvedValue({
-        email: "admin@peralagae.com",
+        email: "javixtech@gmail.com",
         role: "admin",
       });
       const logoutSpy = vi.spyOn(adminAuthService, "logoutAdmin").mockResolvedValue();

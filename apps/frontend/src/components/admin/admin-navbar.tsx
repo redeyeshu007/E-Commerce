@@ -1,0 +1,55 @@
+"use client";
+
+import React from "react";
+import { LogOut, Loader2 } from "lucide-react";
+import { brandConfig } from "@/config/brand";
+
+export interface AdminNavbarProps {
+  onLogout: () => void | Promise<void>;
+  isLoggingOut?: boolean;
+}
+
+/**
+ * Minimal Admin Top Navbar
+ *
+ * Strict layout:
+ * - Left: Text logo PERALAGAE with subtle ADMIN label
+ * - Right: Simple Logout action with minimal icon
+ * - Visual design: White background, dark charcoal text, subtle light-grey bottom divider
+ * - Contains NO navigation menus, search, notifications, profile dropdowns, or extra links
+ */
+export function AdminNavbar({ onLogout, isLoggingOut = false }: AdminNavbarProps) {
+  return (
+    <header className="w-full bg-white border-b border-[#E5E7EB]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Left Side: PERALAGAE Brand & Subtle ADMIN Label */}
+        <div className="flex items-center gap-3">
+          <span className="text-lg sm:text-xl font-medium tracking-[0.18em] uppercase text-[#1A1A1A]">
+            {brandConfig.name}
+          </span>
+          <span className="text-[11px] font-medium tracking-widest uppercase text-[#888888] pl-2.5 border-l border-[#E5E7EB]">
+            ADMIN
+          </span>
+        </div>
+
+        {/* Right Side: Logout Action Only */}
+        <div>
+          <button
+            type="button"
+            onClick={onLogout}
+            disabled={isLoggingOut}
+            aria-label="Logout"
+            className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-[#1A1A1A] hover:text-[#C5A572] transition-colors duration-150 disabled:opacity-50"
+          >
+            {isLoggingOut ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C5A572]" aria-hidden="true" />
+            ) : (
+              <LogOut className="w-3.5 h-3.5 text-[#666666]" aria-hidden="true" />
+            )}
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}

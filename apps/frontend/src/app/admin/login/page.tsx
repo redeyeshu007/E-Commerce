@@ -2,10 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, ShieldAlert, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { loginAdmin, getAdminSession } from "@/services/admin-auth-service";
 import { brandConfig } from "@/config/brand";
 
+/**
+ * Minimal Admin Login Page
+ *
+ * Requirements:
+ * - Minimal white-and-neutral visual design
+ * - White page background, dark charcoal text, subtle light-grey borders
+ * - PERALAGAE brand logo and Admin Login heading
+ * - Email field, password field with show/hide toggle, and Login button
+ * - Clean loading and invalid-credential feedback states
+ * - Backend authentication using server-side credentials
+ * - Redirect to /admin/dashboard on success or if already authenticated
+ */
 export default function AdminLoginPage() {
   const router = useRouter();
 
@@ -71,10 +83,10 @@ export default function AdminLoginPage() {
 
   if (isCheckingSession) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
+      <main className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#C5A572]" />
-          <p className="text-xs uppercase tracking-widest text-[#777777] font-medium">
+          <Loader2 className="w-6 h-6 animate-spin text-[#C5A572]" />
+          <p className="text-xs uppercase tracking-widest text-[#888888] font-medium">
             Verifying Admin Session...
           </p>
         </div>
@@ -83,34 +95,33 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[#FAF8F5]">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center px-4">
-        {/* Brand Wordmark */}
-        <span className="text-2xl sm:text-3xl font-semibold tracking-[0.2em] text-[#111111] uppercase block font-jost">
-          {brandConfig.name}
-        </span>
-        <div className="mt-2 flex items-center justify-center gap-1.5 text-xs uppercase tracking-widest text-[#C5A572] font-medium">
-          <Lock className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>Restricted Portal</span>
+    <main className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-white text-[#1A1A1A]">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        {/* Brand Header */}
+        <div className="text-center">
+          <span className="text-2xl font-medium tracking-[0.2em] text-[#1A1A1A] uppercase block">
+            {brandConfig.name}
+          </span>
+          <span className="mt-1 text-[11px] font-medium tracking-widest uppercase text-[#888888] block">
+            ADMIN
+          </span>
+          <h1 className="mt-5 text-xl font-medium tracking-tight text-[#1A1A1A]">
+            Admin Login
+          </h1>
+          <p className="mt-1.5 text-xs text-[#666666]">
+            Enter your credentials to access the administration panel.
+          </p>
         </div>
-        <h1 className="mt-4 text-xl sm:text-2xl font-normal tracking-wide text-[#111111]">
-          Admin Login
-        </h1>
-        <p className="mt-1 text-xs text-[#777777]">
-          Sign in with authorized administrative credentials to manage platform operations.
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white py-8 px-6 shadow-sm border border-[#EAE6DF] sm:px-10">
-          {/* Error Message Banner */}
+        {/* Login Form Container */}
+        <div className="mt-8 border border-[#E5E7EB] bg-white p-6 sm:p-8">
+          {/* Validation / Error Message */}
           {errorMessage && (
             <div
               role="alert"
-              className="mb-6 p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-none flex items-start gap-2.5"
+              className="mb-5 p-3 bg-red-50 border border-red-200 text-xs text-red-700 leading-relaxed"
             >
-              <ShieldAlert className="w-4 h-4 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
-              <span>{errorMessage}</span>
+              {errorMessage}
             </div>
           )}
 
@@ -123,23 +134,18 @@ export default function AdminLoginPage() {
               >
                 Admin Email
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-400">
-                  <Mail className="h-4 w-4" aria-hidden="true" />
-                </div>
-                <input
-                  id="admin-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  disabled={isLoading}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@peralagae.com"
-                  className="block w-full pl-9 pr-3 py-2.5 text-sm bg-white border border-[#D5D0C7] text-[#111111] placeholder:text-[#999999] focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors rounded-none disabled:opacity-50"
-                />
-              </div>
+              <input
+                id="admin-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                disabled={isLoading}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@peralagae.com"
+                className="block w-full px-3.5 py-2.5 text-sm bg-white border border-[#E5E7EB] text-[#1A1A1A] placeholder:text-[#999999] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] transition-colors rounded-none disabled:opacity-50"
+              />
             </div>
 
             {/* Password Field */}
@@ -151,9 +157,6 @@ export default function AdminLoginPage() {
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-400">
-                  <Lock className="h-4 w-4" aria-hidden="true" />
-                </div>
                 <input
                   id="admin-password"
                   name="password"
@@ -164,14 +167,14 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="block w-full pl-9 pr-10 py-2.5 text-sm bg-white border border-[#D5D0C7] text-[#111111] placeholder:text-[#999999] focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors rounded-none disabled:opacity-50"
+                  className="block w-full pl-3.5 pr-10 py-2.5 text-sm bg-white border border-[#E5E7EB] text-[#1A1A1A] placeholder:text-[#999999] focus:outline-none focus:border-[#1A1A1A] focus:ring-1 focus:ring-[#1A1A1A] transition-colors rounded-none disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   disabled={isLoading}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-700 transition-colors focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#888888] hover:text-[#1A1A1A] transition-colors focus:outline-none"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -182,12 +185,12 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Submit Button */}
-            <div className="pt-2">
+            {/* Login Button */}
+            <div className="pt-1">
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent text-xs font-medium uppercase tracking-[0.15em] text-white bg-[#111111] hover:bg-[#C5A572] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
+                className="w-full flex justify-center items-center gap-2 py-3 px-4 text-xs font-medium uppercase tracking-[0.15em] text-white bg-[#1A1A1A] hover:bg-[#C5A572] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1A1A1A] disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
               >
                 {isLoading ? (
                   <>
@@ -195,17 +198,12 @@ export default function AdminLoginPage() {
                     <span>Signing in...</span>
                   </>
                 ) : (
-                  <span>Sign In to Admin Portal</span>
+                  <span>Login</span>
                 )}
               </button>
             </div>
           </form>
         </div>
-
-        {/* Security Footer Note */}
-        <p className="mt-6 text-center text-[11px] text-[#888888] tracking-wider uppercase">
-          PERALAGAE Secure Administrative Gateway • Authorized Access Only
-        </p>
       </div>
     </main>
   );
