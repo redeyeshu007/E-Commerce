@@ -1,4 +1,7 @@
 import { redirect } from "next/navigation";
+import React, { Suspense } from "react";
+
+export const instant = false;
 
 interface CollectionsPageProps {
   params: Promise<{
@@ -19,9 +22,26 @@ const EDITORIAL_COLLECTION_MAP: Record<string, string> = {
   "garden-variety": "earrings",
 };
 
-export default async function CollectionsPage({ params }: CollectionsPageProps) {
-  const { slug } = await params;
+export function generateStaticParams() {
+  return Object.keys(EDITORIAL_COLLECTION_MAP).map((slug) => ({ slug }));
+}
+
+async function CollectionRedirect({
+  paramsPromise,
+}: {
+  paramsPromise: Promise<{ slug: string }>;
+}) {
+  const { slug } = await paramsPromise;
   const targetCategory =
     (slug && EDITORIAL_COLLECTION_MAP[slug.toLowerCase()]) || "rings";
   redirect(`/shop?category=${encodeURIComponent(targetCategory)}`);
+  return null;
+}
+
+export default function CollectionsPage({ params }: CollectionsPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <CollectionRedirect paramsPromise={params} />
+    </Suspense>
+  );
 }
