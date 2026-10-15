@@ -42,9 +42,9 @@ export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData | 
  * settings inside useEffect on the client.
  */
 export function useNavbarSettings(initialData?: NavbarSettingsData) {
-  const [data, setData] = useState<NavbarSettingsData>(initialData ?? defaultNavbarSettingsData);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
+  const [data, setData] = useState<NavbarSettingsData | null>(initialData ?? null);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialData);
+  const [isError, setIsError] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -53,12 +53,16 @@ export function useNavbarSettings(initialData?: NavbarSettingsData) {
       setIsLoading(true);
       try {
         const settings = await fetchPublicNavbarSettings();
-        if (isMounted && settings) {
-          setData(settings);
+        if (isMounted) {
+          if (settings) {
+            setData(settings);
+          }
+          setIsError(false);
         }
-      } catch {
+      } catch (err) {
         if (isMounted) {
           setIsError(true);
+          console.error("Safe error: Failed to retrieve authoritative navbar settings from database:", err);
         }
       } finally {
         if (isMounted) {

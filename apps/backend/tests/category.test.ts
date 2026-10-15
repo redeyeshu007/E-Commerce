@@ -197,7 +197,7 @@ describe("Category Management API & Catalogue Integration Test Suite", () => {
       const cookie = await getAdminCookie();
       const categories = await CategoryService.getAllCategories({ includeInactive: true });
       const firstTwo = categories.slice(0, 2);
-      const reversedIds = [firstTwo[1].id, firstTwo[0].id];
+      const reversedIds = [firstTwo[1]!.id, firstTwo[0]!.id];
 
       const res = await request(app)
         .patch("/api/v1/categories/admin/reorder")

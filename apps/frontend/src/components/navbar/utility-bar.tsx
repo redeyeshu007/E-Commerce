@@ -95,7 +95,9 @@ export function UtilityLinks({ links }: { links: UtilityLinkItem[] }) {
  */
 export function UtilityBar({ config }: UtilityBarProps) {
   const showPhone = config.showPhone !== false && Boolean(config.phone);
-  const showPromotion = config.showPromotion !== false && Boolean(config.promotion?.text);
+  const showPromotion =
+    config.showPromotion !== false &&
+    (Boolean(config.promotion?.text) || Boolean(config.promotion?.isLoading));
   const showLinks = config.showLinks !== false && Array.isArray(config.links) && config.links.length > 0;
 
   // If all elements are hidden, don't render empty bar
@@ -132,15 +134,25 @@ export function UtilityBar({ config }: UtilityBarProps) {
           {/* 2. Promotional info */}
           {showPromotion && (
             <span className="text-black inline-flex flex-wrap items-center gap-1.5 leading-snug">
-              <span>{config.promotion.text}</span>
-              {config.promotion.linkText && (
-                <Link
-                  href={config.promotion.href || "/shop"}
-                  className="font-semibold text-black transition-opacity hover:underline hover:opacity-75 cursor-pointer shrink-0"
-                >
-                  {config.promotion.linkText}
-                </Link>
-              )}
+              {config.promotion?.isLoading ? (
+                <span
+                  data-testid="navbar-promo-loading-placeholder"
+                  className="inline-block w-28 sm:w-36 h-3 bg-neutral-200/70 animate-pulse rounded"
+                  aria-label="Loading promotional message"
+                />
+              ) : config.promotion?.text ? (
+                <>
+                  <span data-testid="navbar-promo-text">{config.promotion.text}</span>
+                  {config.promotion.linkText && (
+                    <Link
+                      href={config.promotion.href || "/shop"}
+                      className="font-semibold text-black transition-opacity hover:underline hover:opacity-75 cursor-pointer shrink-0"
+                    >
+                      {config.promotion.linkText}
+                    </Link>
+                  )}
+                </>
+              ) : null}
             </span>
           )}
         </div>

@@ -45,8 +45,19 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
   });
 
   describe("Row 2: UtilityBar", () => {
-    it("renders Indian phone number (+91 98765 43210) and Summer Sale promo", () => {
-      render(<UtilityBar config={defaultNavigationConfig.utility} />);
+    it("renders Indian phone number (+91 98765 43210) and promotional message when configured", () => {
+      render(
+        <UtilityBar
+          config={{
+            ...defaultNavigationConfig.utility,
+            promotion: {
+              text: "Persisted Promo Message",
+              linkText: "Shop Now!",
+              href: "/shop",
+            },
+          }}
+        />
+      );
 
       // Indian 10-digit phone number
       expect(screen.getByText("+91 98765 43210")).toBeInTheDocument();
@@ -56,8 +67,25 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
       );
 
       // Promo text
-      expect(screen.getByText(/Summer Sale 15% off!/)).toBeInTheDocument();
+      expect(screen.getByText("Persisted Promo Message")).toBeInTheDocument();
       expect(screen.getByText("Shop Now!")).toBeInTheDocument();
+    });
+
+    it("renders neutral loading placeholder without static text during loading state", () => {
+      render(
+        <UtilityBar
+          config={{
+            ...defaultNavigationConfig.utility,
+            promotion: {
+              text: "",
+              isLoading: true,
+            },
+          }}
+        />
+      );
+
+      expect(screen.getByTestId("navbar-promo-loading-placeholder")).toBeInTheDocument();
+      expect(screen.queryByText(/Summer Sale 15% off!/)).not.toBeInTheDocument();
     });
 
     it("renders the 3 utility items on the right in exact order: Find a Store, FAQs, Subscribe", () => {

@@ -15,12 +15,15 @@ export interface AnnouncementConfig {
   textColor: string;
   /** Whether the announcement can be dismissed by the user */
   dismissible: boolean;
+  /** Whether the announcement is currently loading from the database */
+  isLoading?: boolean;
 }
 
 export interface UtilityPromotionConfig {
   text: string;
   linkText?: string;
   href?: string;
+  isLoading?: boolean;
 }
 
 export interface UtilityLinkItem {
@@ -108,7 +111,7 @@ export const defaultNavigationConfig: NavigationConfig = {
     currency: "Rupees (INR)",
     currencySymbol: "₹",
     promotion: {
-      text: "Summer Sale 15% off!",
+      text: "",
       linkText: "Shop Now!",
       href: "/shop",
     },

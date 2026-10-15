@@ -24,7 +24,7 @@ export interface SiteHeaderProps {
 
 export function SiteHeader({ config = defaultNavigationConfig, className = "" }: SiteHeaderProps) {
   const storefront = useStorefront();
-  const { data: dynamicNavbar } = useNavbarSettings();
+  const { data: dynamicNavbar, isLoading } = useNavbarSettings();
 
   let pathname = "/";
   try {
@@ -44,29 +44,33 @@ export function SiteHeader({ config = defaultNavigationConfig, className = "" }:
     };
   }, [dynamicNavbar?.topBar, config.announcement]);
 
+  const isPromoLoading = isLoading || !dynamicNavbar?.secondNavbar;
+
   const utilityConfig = React.useMemo(() => {
-    if (!dynamicNavbar?.secondNavbar) return config.utility;
-    const sec = dynamicNavbar.secondNavbar;
+    const sec = dynamicNavbar?.secondNavbar;
     return {
       ...config.utility,
-      phone: sec.phone,
-      phoneHref: sec.phoneHref || config.utility.phoneHref,
+      phone: sec?.phone ?? config.utility.phone,
+      phoneHref: sec?.phoneHref || config.utility.phoneHref,
       promotion: {
-        text: sec.promoText,
-        linkText: sec.ctaText,
-        href: sec.ctaHref || config.utility.promotion.href,
+        text: sec?.promoText ?? "",
+        linkText: sec?.ctaText ?? (isPromoLoading ? "" : config.utility.promotion.linkText),
+        href: sec?.ctaHref || config.utility.promotion.href,
+        isLoading: isPromoLoading,
       },
-      links: sec.links.map((link) => ({
-        id: link.id,
-        label: link.label,
-        href: link.href,
-        isImplemented: link.isImplemented,
-      })),
-      showPhone: sec.showPhone,
-      showPromotion: sec.showPromotion,
-      showLinks: sec.showLinks,
+      links: sec?.links
+        ? sec.links.map((link) => ({
+            id: link.id,
+            label: link.label,
+            href: link.href,
+            isImplemented: link.isImplemented,
+          }))
+        : config.utility.links,
+      showPhone: sec ? sec.showPhone : (config.utility.showPhone ?? true),
+      showPromotion: sec ? sec.showPromotion : (config.utility.showPromotion ?? true),
+      showLinks: sec ? sec.showLinks : (config.utility.showLinks ?? true),
     };
-  }, [dynamicNavbar?.secondNavbar, config.utility]);
+  }, [dynamicNavbar?.secondNavbar, isPromoLoading, config.utility]);
 
   const showTopBar = dynamicNavbar?.topBar?.visible ?? true;
 

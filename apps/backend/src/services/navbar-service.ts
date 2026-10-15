@@ -82,7 +82,7 @@ export const defaultTopBarSettings: TopBarSettings = {
 export const defaultSecondNavbarSettings: SecondNavbarSettings = {
   phone: "+91 98765 43210",
   phoneHref: "tel:+919876543210",
-  promoText: "Summer Sale 15% off!",
+  promoText: "",
   ctaText: "Shop Now!",
   ctaHref: "/shop",
   links: [
