@@ -54,7 +54,7 @@ export interface Product {
   images?: ProductImage[];
   /** Numeric price in Indian Rupees (INR) */
   priceInr: number;
-  /** Optional formatted price string for custom display (e.g. "$249.00") */
+  /** Optional formatted price string in Indian Rupees (e.g. "₹24,900") */
   priceDisplay?: string;
   /** Optional original compare-at price in INR (for discounted items) */
   compareAtPriceInr?: number;

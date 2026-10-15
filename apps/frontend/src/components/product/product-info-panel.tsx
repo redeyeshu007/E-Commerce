@@ -138,10 +138,15 @@ export function ProductInfoPanel({
       </div>
 
       {/* 3. Product Price Matching Reference */}
-      <div className="mt-4">
+      <div className="mt-4 flex items-baseline gap-3">
         <span className="text-2xl sm:text-[26px] lg:text-[28px] font-normal text-[#1A1A1A]">
-          {product.priceDisplay || formatInr(product.priceInr)}
+          {formatInr(product.priceInr)}
         </span>
+        {product.compareAtPriceInr && product.compareAtPriceInr > product.priceInr && (
+          <span className="text-[16px] sm:text-[18px] text-[#888888] line-through font-light">
+            {formatInr(product.compareAtPriceInr)}
+          </span>
+        )}
       </div>
 
       {/* 4. Product Short Description */}

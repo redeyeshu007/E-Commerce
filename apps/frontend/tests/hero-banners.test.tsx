@@ -122,7 +122,7 @@ describe("PERALAGAE Hero & Promotional Banners Component Suite", () => {
         "@/services/hero-settings-service"
       );
 
-      const mockCategories = [
+      const mockCategories: any[] = [
         {
           id: "cat-necklaces",
           name: "NECKLACES",

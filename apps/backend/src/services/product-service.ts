@@ -246,7 +246,7 @@ function enrichProductDetails(raw: any): FormattedProduct {
     },
     images: rawImages,
     priceInr: raw.priceInr,
-    priceDisplay: `$${(raw.priceInr / 82.5).toFixed(2)}`,
+    priceDisplay: `₹${raw.priceInr.toLocaleString("en-IN")}`,
     compareAtPriceInr: raw.compareAtPriceInr,
     isNew: raw.isNew,
     isHot: raw.isHot,

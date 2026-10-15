@@ -106,7 +106,7 @@ export const BLUE_STRIPES_PRODUCT: Product = {
     },
   ],
   priceInr: 20490,
-  priceDisplay: "$249.00",
+  priceDisplay: "₹20,490",
   isHot: true,
   isAvailable: true,
   inStock: true,
