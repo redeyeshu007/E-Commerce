@@ -206,7 +206,106 @@ describe("PERALAGAE Admin Category Management Suite (/admin/categories)", () => 
         );
       });
     });
+
+    it("ensures URL Slug, Image Alt Text, and Description fields are completely removed from the form UI", async () => {
+      renderWithQueryClient(<AdminCategoriesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /add category/i })).toBeInTheDocument();
+      });
+
+      // Open Add Modal
+      await userEvent.click(screen.getByRole("button", { name: /add category/i }));
+
+      // Required fields MUST be present
+      expect(screen.getByLabelText(/category name/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /upload image/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/display order/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/active & published/i)).toBeInTheDocument();
+
+      // Removed fields MUST NOT be present
+      expect(screen.queryByLabelText(/url slug/i)).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText(/e\.g\. anklets-and-cuffs/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/image alt text/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/description/i)).not.toBeInTheDocument();
+    });
+
+    it("automatically generates URL slug from uppercase names, spaces, and special characters", async () => {
+      const createSpy = vi
+        .spyOn(categoryAdminService, "createAdminCategory")
+        .mockResolvedValue({
+          id: "cat-charms",
+          name: "CHARMS & BANGLES",
+          slug: "charms-bangles",
+          imageUrl: "/images/collections/charms.jpg",
+          order: 5,
+          isActive: true,
+          productCount: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+
+      renderWithQueryClient(<AdminCategoriesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /add category/i })).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: /add category/i }));
+
+      // Type name with special character "&"
+      const nameInput = screen.getByPlaceholderText(/e\.g\. ANKLETS & CUFFS/i);
+      await userEvent.type(nameInput, "CHARMS & BANGLES");
+
+      const imageUrlInput = screen.getByPlaceholderText(/Or enter permanent image URL/i);
+      await userEvent.type(imageUrlInput, "/images/collections/charms.jpg");
+
+      // Verify live preview of auto-generated slug
+      expect(screen.getByText(/Slug: \/charms-bangles/i)).toBeInTheDocument();
+
+      const submitBtn = screen.getByRole("button", { name: /save category/i });
+      await userEvent.click(submitBtn);
+
+      await waitFor(() => {
+        expect(createSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: "CHARMS & BANGLES",
+            slug: "charms-bangles",
+          })
+        );
+      });
+    });
+
+    it("displays validation error when server rejects duplicate category name or slug", async () => {
+      vi.spyOn(categoryAdminService, "createAdminCategory").mockRejectedValue(
+        new Error('A category with the name "RINGS" already exists')
+      );
+
+      renderWithQueryClient(<AdminCategoriesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /add category/i })).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: /add category/i }));
+
+      const nameInput = screen.getByPlaceholderText(/e\.g\. ANKLETS & CUFFS/i);
+      await userEvent.type(nameInput, "RINGS");
+
+      const imageUrlInput = screen.getByPlaceholderText(/Or enter permanent image URL/i);
+      await userEvent.type(imageUrlInput, "/images/collections/rings.jpg");
+
+      const submitBtn = screen.getByRole("button", { name: /save category/i });
+      await userEvent.click(submitBtn);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/A category with the name "RINGS" already exists/i)
+        ).toBeInTheDocument();
+      });
+    });
   });
+
 
   describe("4. Edit Category Workflow", () => {
     beforeEach(() => {

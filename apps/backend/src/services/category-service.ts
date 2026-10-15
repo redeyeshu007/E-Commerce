@@ -42,10 +42,10 @@ export function slugify(text: string): string {
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/&/g, "and")
-    .replace(/[\s\W-]+/g, "-")
+    .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+
 
 // ── Baseline Categories ───────────────────────────────────────────────────────
 export const BASELINE_CATEGORIES = [
@@ -409,6 +409,21 @@ export class CategoryService {
         throw new Error(`A category with the name "${cleanName}" already exists`);
       }
       dataToUpdate.name = cleanName;
+
+      // Automatically generate and update slug if not explicitly provided
+      if (input.slug === undefined) {
+        const autoSlug = slugify(cleanName);
+        const duplicateSlug = await prisma.category.findFirst({
+          where: {
+            id: { not: id },
+            slug: autoSlug,
+          },
+        });
+        if (duplicateSlug) {
+          throw new Error(`A category with the slug "${autoSlug}" already exists`);
+        }
+        dataToUpdate.slug = autoSlug;
+      }
     }
 
     if (input.slug !== undefined) {
@@ -428,6 +443,7 @@ export class CategoryService {
       }
       dataToUpdate.slug = cleanSlug;
     }
+
 
     if (input.imageUrl !== undefined) {
       if (!input.imageUrl.trim()) {

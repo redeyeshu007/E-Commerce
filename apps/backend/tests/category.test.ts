@@ -120,12 +120,13 @@ describe("Category Management API & Catalogue Integration Test Suite", () => {
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.name).toBe(testName);
-      expect(res.body.data.slug).toContain("pendants-and-chokers");
+      expect(res.body.data.slug).toContain("pendants-chokers");
       expect(res.body.data.productCount).toBe(0);
 
       // Clean up test category
       await prisma.category.delete({ where: { id: res.body.data.id } });
     });
+
 
     it("rejects duplicate category name with 409 Conflict", async () => {
       const cookie = await getAdminCookie();

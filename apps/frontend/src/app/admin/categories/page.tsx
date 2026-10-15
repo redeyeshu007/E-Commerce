@@ -36,13 +36,12 @@ import {
 } from "@/services/category-public-service";
 import type { CategoryItem } from "@/types/category";
 
-function slugify(text: string): string {
+export function slugify(text: string): string {
   return text
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/&/g, "and")
-    .replace(/[\s\W-]+/g, "-")
+    .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
 
@@ -69,29 +68,24 @@ export default function AdminCategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<CategoryItem | null>(null);
 
-  // Add Category Form State
+  // Add Category Form State (Category Name, Image, Order, Active only)
   const [addName, setAddName] = useState("");
-  const [addSlug, setAddSlug] = useState("");
   const [addImageUrl, setAddImageUrl] = useState("");
-  const [addImageAlt, setAddImageAlt] = useState("");
-  const [addDescription, setAddDescription] = useState("");
   const [addOrder, setAddOrder] = useState<number>(0);
   const [addIsActive, setAddIsActive] = useState(true);
   const [isUploadingAddImage, setIsUploadingAddImage] = useState(false);
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
   const addFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Edit Category Form State
+  // Edit Category Form State (Category Name, Image, Order, Active only)
   const [editName, setEditName] = useState("");
-  const [editSlug, setEditSlug] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
-  const [editImageAlt, setEditImageAlt] = useState("");
-  const [editDescription, setEditDescription] = useState("");
   const [editOrder, setEditOrder] = useState<number>(0);
   const [editIsActive, setEditIsActive] = useState(true);
   const [isUploadingEditImage, setIsUploadingEditImage] = useState(false);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
+
 
   // Deletion State
   const [isDeleting, setIsDeleting] = useState(false);
@@ -158,22 +152,15 @@ export default function AdminCategoriesPage() {
   const handleOpenAddModal = () => {
     const nextOrder = categories.length > 0 ? Math.max(...categories.map((c) => c.order)) + 1 : 1;
     setAddName("");
-    setAddSlug("");
     setAddImageUrl("");
-    setAddImageAlt("");
-    setAddDescription("");
     setAddOrder(nextOrder);
     setAddIsActive(true);
     setIsAddModalOpen(true);
   };
 
-  // Add Category Name change handler (auto-populates slug)
+  // Add Category Name change handler
   const handleAddNameChange = (val: string) => {
     setAddName(val);
-    setAddSlug(slugify(val));
-    if (!addImageAlt || addImageAlt.startsWith("Category - ")) {
-      setAddImageAlt(`Category - ${val}`);
-    }
   };
 
   // Handle Image Upload for Add
@@ -201,7 +188,7 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  // Submit Add Category
+  // Submit Add Category (Slug is auto-generated strictly from name)
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addName.trim()) {
@@ -215,12 +202,11 @@ export default function AdminCategoriesPage() {
 
     setIsSubmittingAdd(true);
     try {
+      const autoSlug = slugify(addName);
       const created = await createAdminCategory({
         name: addName.trim(),
-        slug: addSlug.trim() || slugify(addName),
+        slug: autoSlug,
         imageUrl: addImageUrl.trim(),
-        imageAlt: addImageAlt.trim() || undefined,
-        description: addDescription.trim() || undefined,
         order: addOrder,
         isActive: addIsActive,
       });
@@ -229,7 +215,7 @@ export default function AdminCategoriesPage() {
       setIsAddModalOpen(false);
       setStatusMessage({
         type: "success",
-        text: `Category "${created.name}" created successfully.`,
+        text: `Category "${created.name}" created successfully with slug /${created.slug}.`,
       });
 
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
@@ -250,10 +236,7 @@ export default function AdminCategoriesPage() {
   const handleOpenEditModal = (cat: CategoryItem) => {
     setEditingCategory(cat);
     setEditName(cat.name);
-    setEditSlug(cat.slug);
     setEditImageUrl(cat.imageUrl);
-    setEditImageAlt(cat.imageAlt || "");
-    setEditDescription(cat.description || "");
     setEditOrder(cat.order);
     setEditIsActive(cat.isActive);
   };
@@ -283,7 +266,7 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  // Submit Edit Category
+  // Submit Edit Category (Slug is auto-generated strictly from name)
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCategory) return;
@@ -299,12 +282,11 @@ export default function AdminCategoriesPage() {
 
     setIsSubmittingEdit(true);
     try {
+      const autoSlug = slugify(editName);
       const updated = await updateAdminCategory(editingCategory.id, {
         name: editName.trim(),
-        slug: editSlug.trim() || slugify(editName),
+        slug: autoSlug,
         imageUrl: editImageUrl.trim(),
-        imageAlt: editImageAlt.trim() || undefined,
-        description: editDescription.trim() || undefined,
         order: editOrder,
         isActive: editIsActive,
       });
@@ -319,6 +301,7 @@ export default function AdminCategoriesPage() {
         type: "success",
         text: `Category "${updated.name}" updated successfully. Associated products preserved.`,
       });
+
 
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
       if (typeof window !== "undefined") {
@@ -536,9 +519,6 @@ export default function AdminCategoriesPage() {
                   <th scope="col" className="px-4 py-3">
                     Category Name & Slug
                   </th>
-                  <th scope="col" className="px-4 py-3">
-                    Description
-                  </th>
                   <th scope="col" className="px-4 py-3 text-center">
                     Products
                   </th>
@@ -553,7 +533,7 @@ export default function AdminCategoriesPage() {
               <tbody className="divide-y divide-[#E5E7EB]">
                 {filteredCategories.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-gray-400 text-sm">
+                    <td colSpan={6} className="px-4 py-12 text-center text-gray-400 text-sm">
                       No categories found matching your search.
                     </td>
                   </tr>
@@ -626,11 +606,6 @@ export default function AdminCategoriesPage() {
                         <div className="text-[11px] text-gray-400 font-mono mt-0.5">
                           /{cat.slug}
                         </div>
-                      </td>
-
-                      {/* Description */}
-                      <td className="px-4 py-3 max-w-xs truncate text-xs text-gray-500">
-                        {cat.description || "—"}
                       </td>
 
                       {/* Product Count Badge */}
@@ -707,10 +682,11 @@ export default function AdminCategoriesPage() {
 
             <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
+                <label htmlFor="add-category-name" className="block text-xs font-medium uppercase text-gray-700 mb-1">
                   Category Name <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="add-category-name"
                   type="text"
                   required
                   value={addName}
@@ -718,20 +694,9 @@ export default function AdminCategoriesPage() {
                   placeholder="e.g. ANKLETS & CUFFS"
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:border-[#C5A572] focus:outline-none"
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
-                  URL Slug <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={addSlug}
-                  onChange={(e) => setAddSlug(slugify(e.target.value))}
-                  placeholder="e.g. anklets-and-cuffs"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded font-mono text-gray-700 focus:border-[#C5A572] focus:outline-none"
-                />
+                <p className="mt-1 text-[11px] text-gray-400 font-mono">
+                  Slug: /{slugify(addName) || "slug"}
+                </p>
               </div>
 
               {/* Image Uploader & Live Preview */}
@@ -793,38 +758,13 @@ export default function AdminCategoriesPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
-                  Image Alt Text
-                </label>
-                <input
-                  type="text"
-                  value={addImageAlt}
-                  onChange={(e) => setAddImageAlt(e.target.value)}
-                  placeholder="e.g. Anklets Collection - Handcrafted Gold"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  value={addDescription}
-                  onChange={(e) => setAddDescription(e.target.value)}
-                  placeholder="Short description of this category for catalogues and SEO..."
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
-                />
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
+                  <label htmlFor="add-category-order" className="block text-xs font-medium uppercase text-gray-700 mb-1">
                     Display Order
                   </label>
                   <input
+                    id="add-category-order"
                     type="number"
                     min={1}
                     value={addOrder}
@@ -898,29 +838,20 @@ export default function AdminCategoriesPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
+                <label htmlFor="edit-category-name" className="block text-xs font-medium uppercase text-gray-700 mb-1">
                   Category Name <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="edit-category-name"
                   type="text"
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:border-[#C5A572] focus:outline-none"
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
-                  URL Slug <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editSlug}
-                  onChange={(e) => setEditSlug(slugify(e.target.value))}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded font-mono text-gray-700 focus:border-[#C5A572] focus:outline-none"
-                />
+                <p className="mt-1 text-[11px] text-gray-400 font-mono">
+                  Slug: /{slugify(editName) || "slug"}
+                </p>
               </div>
 
               {/* Image Replacement */}
@@ -982,36 +913,13 @@ export default function AdminCategoriesPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
-                  Image Alt Text
-                </label>
-                <input
-                  type="text"
-                  value={editImageAlt}
-                  onChange={(e) => setEditImageAlt(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded"
-                />
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium uppercase text-gray-700 mb-1">
+                  <label htmlFor="edit-category-order" className="block text-xs font-medium uppercase text-gray-700 mb-1">
                     Display Order
                   </label>
                   <input
+                    id="edit-category-order"
                     type="number"
                     min={1}
                     value={editOrder}
