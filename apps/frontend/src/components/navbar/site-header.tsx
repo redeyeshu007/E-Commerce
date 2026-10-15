@@ -11,7 +11,7 @@ import { NewsletterPopup } from "@/components/newsletter";
 import { useStorefront } from "@/providers/storefront-provider";
 import { usePathname } from "next/navigation";
 import { defaultNavigationConfig, type NavigationConfig } from "@/config/navigation";
-import { useNavbarSettings } from "@/services/navbar-settings-service";
+import { useNavbarSettings } from "@/hooks/use-navbar-settings";
 
 export interface SiteHeaderProps {
   /**
