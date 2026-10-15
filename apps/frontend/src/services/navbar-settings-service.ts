@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { API_BASE_URL } from "@/lib/api-client";
+import { API_BASE_URL, getBackendOrigin } from "@/lib/api-client";
 import { defaultNavbarSettingsData, type NavbarSettingsData } from "@/types/navbar";
 
 export const NAVBAR_SETTINGS_QUERY_KEY = ["navbar-settings"] as const;
@@ -9,29 +9,40 @@ export const NAVBAR_SETTINGS_UPDATED_EVENT = "peralagae:navbar-settings-updated"
 
 /**
  * Fetches the currently published navbar configuration from the public endpoint.
- * Returns default fallback values if the request fails or backend is unreachable.
+ * Returns null if the request fails or backend is unreachable, allowing components
+ * to render appropriate loading/fallback states without throwing unhandled console errors.
  */
 export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData | null> {
-  const url = `${API_BASE_URL}/navbar`;
+  const isServer = typeof window === "undefined";
+  const baseUrl = isServer
+    ? getBackendOrigin()
+    : (typeof window !== "undefined" && window.location?.origin ? "" : getBackendOrigin());
+  const url = `${baseUrl}/api/v1/navbar`;
 
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    throw new Error(`Failed to retrieve navbar settings from database API: ${res.status}`);
+    if (!res.ok) {
+      console.warn(`[fetchPublicNavbarSettings] Non-200 response: ${res.status}`);
+      return null;
+    }
+
+    const json = await res.json();
+    if (json?.success && json?.data) {
+      return json.data as NavbarSettingsData;
+    }
+
+    return null;
+  } catch (err) {
+    console.warn("[fetchPublicNavbarSettings] Failed to retrieve navbar settings:", err);
+    return null;
   }
-
-  const json = await res.json();
-  if (json?.success && json?.data) {
-    return json.data as NavbarSettingsData;
-  }
-
-  return null;
 }
 
 /**
@@ -56,13 +67,15 @@ export function useNavbarSettings(initialData?: NavbarSettingsData) {
         if (isMounted) {
           if (settings) {
             setData(settings);
+            setIsError(false);
+          } else if (!data) {
+            setIsError(true);
           }
-          setIsError(false);
         }
       } catch (err) {
         if (isMounted) {
           setIsError(true);
-          console.error("Safe error: Failed to retrieve authoritative navbar settings from database:", err);
+          console.warn("Could not retrieve authoritative navbar settings from database:", err);
         }
       } finally {
         if (isMounted) {
