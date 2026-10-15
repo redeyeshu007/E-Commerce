@@ -8,6 +8,7 @@
 
 import type { Product } from "@/types/product";
 import type { CategoryItem } from "@/types/category";
+import { getBackendOrigin } from "@/lib/api-client";
 
 export interface ShopFilters {
   category?: string | null;
@@ -1035,11 +1036,8 @@ export async function fetchPublicProducts(
 ): Promise<ShopCatalogueResult | null> {
   const isServer = typeof window === "undefined";
   const baseUrl = isServer
-    ? (process.env["INTERNAL_API_URL"] ||
-       process.env["NEXT_PUBLIC_BACKEND_URL"] ||
-       process.env["BACKEND_URL"] ||
-       "http://localhost:4000")
-    : "";
+    ? getBackendOrigin()
+    : (typeof window !== "undefined" && window.location?.origin ? "" : getBackendOrigin());
 
   const queryParams = new URLSearchParams();
   if (filters.category && filters.category !== "all") queryParams.set("category", filters.category);
@@ -1085,11 +1083,8 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
   if (!slug) return null;
   const isServer = typeof window === "undefined";
   const baseUrl = isServer
-    ? (process.env["INTERNAL_API_URL"] ||
-       process.env["NEXT_PUBLIC_BACKEND_URL"] ||
-       process.env["BACKEND_URL"] ||
-       "http://localhost:4000")
-    : "";
+    ? getBackendOrigin()
+    : (typeof window !== "undefined" && window.location?.origin ? "" : getBackendOrigin());
 
   const url = `${baseUrl}/api/v1/products/${encodeURIComponent(slug)}`;
 
@@ -1122,11 +1117,8 @@ export async function fetchAdjacentProducts(slug: string): Promise<{ prev: Produ
   if (!slug) return null;
   const isServer = typeof window === "undefined";
   const baseUrl = isServer
-    ? (process.env["INTERNAL_API_URL"] ||
-       process.env["NEXT_PUBLIC_BACKEND_URL"] ||
-       process.env["BACKEND_URL"] ||
-       "http://localhost:4000")
-    : "";
+    ? getBackendOrigin()
+    : (typeof window !== "undefined" && window.location?.origin ? "" : getBackendOrigin());
 
   const url = `${baseUrl}/api/v1/products/${encodeURIComponent(slug)}/adjacent`;
 

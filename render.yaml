@@ -44,3 +44,9 @@ services:
         value: https://e-commerce-s9ws.onrender.com
       - key: NEXT_PUBLIC_API_URL
         value: https://peralagae-backend-api.onrender.com/api/v1
+      - key: NEXT_PUBLIC_BACKEND_URL
+        value: https://peralagae-backend-api.onrender.com
+      - key: BACKEND_URL
+        value: https://peralagae-backend-api.onrender.com
+      - key: INTERNAL_API_URL
+        value: https://peralagae-backend-api.onrender.com

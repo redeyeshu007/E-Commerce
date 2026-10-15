@@ -7,11 +7,22 @@
  * Use TanStack Query hooks to call these utilities from components.
  */
 
+export function getBackendOrigin(): string {
+  if (process.env["INTERNAL_API_URL"]) return process.env["INTERNAL_API_URL"];
+  if (process.env["NEXT_PUBLIC_BACKEND_URL"]) return process.env["NEXT_PUBLIC_BACKEND_URL"];
+  if (process.env["BACKEND_URL"]) return process.env["BACKEND_URL"];
+  if (process.env["NEXT_PUBLIC_API_URL"]) {
+    return process.env["NEXT_PUBLIC_API_URL"].replace(/\/api\/v1\/?$/, "");
+  }
+  return "http://localhost:4000";
+}
+
+export const BACKEND_ORIGIN = getBackendOrigin();
+
 export const API_BASE_URL =
-  typeof window !== "undefined"
+  typeof window !== "undefined" && window.location?.origin
     ? "/api/v1"
-    : (process.env["NEXT_PUBLIC_API_URL"] ??
-       `${process.env["INTERNAL_API_URL"] || process.env["NEXT_PUBLIC_BACKEND_URL"] || process.env["BACKEND_URL"] || "http://localhost:4000"}/api/v1`);
+    : `${BACKEND_ORIGIN}/api/v1`;
 
 /**
  * Base fetch wrapper with default headers and error handling.

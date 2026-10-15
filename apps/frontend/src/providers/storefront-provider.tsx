@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from "react";
 import type { Product } from "@/types/product";
 
 export interface CartItem {
@@ -122,14 +122,36 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
     }
   }, []);
 
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const showToast = useCallback((msg: string) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
     setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage((current) => (current === msg ? null : current));
+    toastTimeoutRef.current = setTimeout(() => {
+      try {
+        if (typeof window !== "undefined") {
+          setToastMessage((current) => (current === msg ? null : current));
+        }
+      } catch {
+        // Safe tear down in test environments
+      }
     }, 3000);
   }, []);
 
   const dismissToast = useCallback(() => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
     setToastMessage(null);
   }, []);
 

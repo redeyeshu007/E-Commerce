@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/api-client";
+import { API_BASE_URL, getBackendOrigin } from "@/lib/api-client";
 import { defaultHeroSettingsData, type HeroSettingsData } from "@/types/hero";
 import {
   type HeroBannersConfig,
@@ -72,13 +72,9 @@ export function transformHeroSettingsToConfig(
  */
 export async function fetchPublicHeroSettings(): Promise<HeroSettingsData | null> {
   const isServer = typeof window === "undefined";
-  const backendBase =
-    process.env["INTERNAL_API_URL"] ||
-    process.env["NEXT_PUBLIC_BACKEND_URL"] ||
-    process.env["BACKEND_URL"] ||
-    "http://localhost:4000";
-
-  const url = isServer ? `${backendBase}/api/v1/hero` : `${API_BASE_URL}/hero`;
+  const url = isServer
+    ? `${getBackendOrigin()}/api/v1/hero`
+    : (typeof window !== "undefined" && window.location?.origin ? "/api/v1/hero" : `${getBackendOrigin()}/api/v1/hero`);
 
   const res = await fetch(url, {
     method: "GET",

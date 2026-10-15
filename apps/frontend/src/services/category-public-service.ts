@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/api-client";
+import { API_BASE_URL, getBackendOrigin } from "@/lib/api-client";
 import type { CategoryItem } from "@/types/category";
 
 export const CATEGORIES_QUERY_KEY = ["categories"] as const;
@@ -10,10 +10,8 @@ export const CATEGORIES_UPDATED_EVENT = "peralagae:categories-updated";
 export async function fetchPublicCategories(): Promise<CategoryItem[]> {
   const isServer = typeof window === "undefined";
   const baseUrl = isServer
-    ? (process.env["INTERNAL_API_URL"] ||
-       process.env["NEXT_PUBLIC_BACKEND_URL"] ||
-       "http://localhost:4000")
-    : (typeof window !== "undefined" && window.location?.origin ? "" : "http://localhost:4000");
+    ? getBackendOrigin()
+    : (typeof window !== "undefined" && window.location?.origin ? "" : getBackendOrigin());
   const url = `${baseUrl}/api/v1/categories`;
   try {
     const res = await fetch(url, {
