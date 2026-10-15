@@ -40,6 +40,8 @@ export interface Product {
   name: string;
   /** Product category label (e.g. "NECKLACES", "RINGS", "BRACELETS", "EARRINGS", "CHARMS & BANGLES", "GIFT IDEAS") */
   category: string;
+  categoryKey?: string;
+  categoryId?: string | null;
   /** Optional subcategory (e.g. "Pendants", "Solitaires", "Bangles", "Studs") */
   subcategory?: string;
   /** Collection grouping (e.g. "Solitaire Radiance", "Heritage Gold", "Modern Classics") */

@@ -8,10 +8,10 @@
  */
 
 export const API_BASE_URL =
-  process.env["NEXT_PUBLIC_API_URL"] ??
-  (typeof window === "undefined"
-    ? `${process.env["INTERNAL_API_URL"] || process.env["NEXT_PUBLIC_BACKEND_URL"] || process.env["BACKEND_URL"] || "http://localhost:4000"}/api/v1`
-    : "/api/v1");
+  typeof window !== "undefined"
+    ? "/api/v1"
+    : (process.env["NEXT_PUBLIC_API_URL"] ??
+       `${process.env["INTERNAL_API_URL"] || process.env["NEXT_PUBLIC_BACKEND_URL"] || process.env["BACKEND_URL"] || "http://localhost:4000"}/api/v1`);
 
 /**
  * Base fetch wrapper with default headers and error handling.

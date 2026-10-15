@@ -157,15 +157,8 @@ export function ShopOurCollections({
     }
   }, [initialMapped]);
 
-  // Check if custom config was passed (different from default)
-  const isCustomConfig = useMemo(() => {
-    return config !== defaultCollectionsConfig && config.items !== defaultCollectionsConfig.items;
-  }, [config]);
-
   // Load public categories from backend API
   useEffect(() => {
-    if (isCustomConfig) return;
-
     let isMounted = true;
 
     const loadCategories = async () => {
@@ -191,8 +184,8 @@ export function ShopOurCollections({
 
           setDynamicItems(mapped);
         }
-      } catch {
-        // Fall back to default config if network fails
+      } catch (err) {
+        console.warn("[ShopOurCollections] Failed to load categories:", err);
       }
     };
 
@@ -208,24 +201,22 @@ export function ShopOurCollections({
       isMounted = false;
       window.removeEventListener(CATEGORIES_UPDATED_EVENT, handleUpdated);
     };
-  }, [isCustomConfig]);
+  }, []);
 
-  // Resolve active items (prioritizing dynamic categories unless custom config supplied)
+  // Resolve active items: dynamic categories > server initialMapped > config.items fallback
   const activeItems = useMemo(() => {
-    if (isCustomConfig) {
-      return [...config.items]
-        .filter((item) => item.isActive)
-        .sort((a, b) => a.order - b.order);
-    }
-
     if (dynamicItems && dynamicItems.length > 0) {
       return dynamicItems;
     }
 
-    return [...config.items]
+    if (initialMapped && initialMapped.length > 0) {
+      return initialMapped;
+    }
+
+    return [...(config?.items || defaultCollectionsConfig.items)]
       .filter((item) => item.isActive)
       .sort((a, b) => a.order - b.order);
-  }, [isCustomConfig, dynamicItems, config.items]);
+  }, [dynamicItems, initialMapped, config]);
 
   // Determine whether carousel mode is needed (> 6 items)
   const isCarouselMode = activeItems.length > 6;

@@ -14,12 +14,18 @@ import {
   type ShopFilters,
   type SortOption,
 } from "@/services/product-service";
+import type { CategoryItem } from "@/types/category";
+import {
+  fetchPublicCategories,
+  CATEGORIES_UPDATED_EVENT,
+} from "@/services/category-public-service";
 
 export interface ShopPageContentProps {
   pageSize?: number;
+  initialCategories?: CategoryItem[];
 }
 
-export function ShopPageContent({ pageSize = 12 }: ShopPageContentProps) {
+export function ShopPageContent({ pageSize = 12, initialCategories }: ShopPageContentProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const productAreaRef = useRef<HTMLDivElement>(null);
@@ -68,10 +74,59 @@ export function ShopPageContent({ pageSize = 12 }: ShopPageContentProps) {
     window.history.replaceState(null, "", newUrl);
   }, [filters, sort, viewMode, currentPage, pathname]);
 
-  // Compute catalogue results via service
+  const [categories, setCategories] = useState<CategoryItem[]>(initialCategories || []);
+
+  // Fetch or sync categories on mount and when categories are updated in admin
+  useEffect(() => {
+    let isMounted = true;
+    const loadCategories = async () => {
+      try {
+        const fetched = await fetchPublicCategories();
+        if (isMounted && fetched && fetched.length > 0) {
+          setCategories(fetched);
+        }
+      } catch (err) {
+        console.warn("[ShopPageContent] Failed to fetch public categories:", err);
+      }
+    };
+
+    if (!initialCategories || initialCategories.length === 0) {
+      loadCategories();
+    }
+
+    const handleUpdated = () => {
+      loadCategories();
+    };
+
+    window.addEventListener(CATEGORIES_UPDATED_EVENT, handleUpdated);
+    return () => {
+      isMounted = false;
+      window.removeEventListener(CATEGORIES_UPDATED_EVENT, handleUpdated);
+    };
+  }, [initialCategories]);
+
+  // Sync initialCategories if passed externally
+  useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) {
+      setCategories(initialCategories);
+    }
+  }, [initialCategories]);
+
+  // Compute catalogue results via service with dynamic categories
   const catalogueResult = useMemo(() => {
-    return getShopCatalogue(filters, sort, currentPage, pageSize);
-  }, [filters, sort, currentPage, pageSize]);
+    return getShopCatalogue(filters, sort, currentPage, pageSize, categories);
+  }, [filters, sort, currentPage, pageSize, categories]);
+
+  // Resolve human-readable name of selected category for empty state
+  const selectedCategoryName = useMemo(() => {
+    if (!filters.category) return null;
+    const found = categories.find(
+      (c) =>
+        c.slug.toLowerCase() === filters.category?.toLowerCase() ||
+        c.id.toLowerCase() === filters.category?.toLowerCase()
+    );
+    return found ? found.name : filters.category;
+  }, [filters.category, categories]);
 
   // Count of active filters for drawer badge & clear all visibility
   const activeFilterCount = useMemo(() => {
@@ -158,7 +213,9 @@ export function ShopPageContent({ pageSize = 12 }: ShopPageContentProps) {
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 onClearAll={handleClearAll}
+                categories={categories}
                 categoryCounts={catalogueResult.categoryCounts}
+                totalProductsCount={24}
                 materialCounts={catalogueResult.materialCounts}
                 sizeCounts={catalogueResult.sizeCounts}
                 minCataloguePrice={catalogueResult.minCataloguePrice}
@@ -188,7 +245,7 @@ export function ShopPageContent({ pageSize = 12 }: ShopPageContentProps) {
             {/* Product Listing Area */}
             <div className="mt-6 sm:mt-8 min-h-[400px]">
               {catalogueResult.total === 0 ? (
-                <ShopEmptyState onClearAll={handleClearAll} />
+                <ShopEmptyState onClearAll={handleClearAll} categoryName={selectedCategoryName} />
               ) : (
                 <div className={gridContainerClass}>
                   {catalogueResult.products.map((product) => (
@@ -221,7 +278,9 @@ export function ShopPageContent({ pageSize = 12 }: ShopPageContentProps) {
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearAll={handleClearAll}
+        categories={categories}
         categoryCounts={catalogueResult.categoryCounts}
+        totalProductsCount={24}
         materialCounts={catalogueResult.materialCounts}
         sizeCounts={catalogueResult.sizeCounts}
         minCataloguePrice={catalogueResult.minCataloguePrice}

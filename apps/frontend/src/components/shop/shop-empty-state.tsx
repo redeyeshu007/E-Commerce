@@ -5,10 +5,11 @@ import { Sparkles, RotateCcw } from "lucide-react";
 
 export interface ShopEmptyStateProps {
   onClearAll: () => void;
+  categoryName?: string | null;
   className?: string;
 }
 
-export function ShopEmptyState({ onClearAll, className = "" }: ShopEmptyStateProps) {
+export function ShopEmptyState({ onClearAll, categoryName, className = "" }: ShopEmptyStateProps) {
   return (
     <div
       role="status"
@@ -20,12 +21,18 @@ export function ShopEmptyState({ onClearAll, className = "" }: ShopEmptyStatePro
       </div>
 
       <h3 className="font-serif text-lg sm:text-xl font-normal text-[#111111] uppercase tracking-wider">
-        No jewellery found
+        No products found
       </h3>
 
-      <p className="mt-2 text-xs sm:text-sm text-[#666666] max-w-sm leading-relaxed">
-        Try adjusting your filters to discover more pieces from our handcrafted fine jewellery collection.
-      </p>
+      {categoryName ? (
+        <p className="mt-2 text-xs sm:text-sm text-[#666666] max-w-sm leading-relaxed">
+          There are currently no products available in the <strong className="font-medium text-[#111111]">{categoryName}</strong> collection.
+        </p>
+      ) : (
+        <p className="mt-2 text-xs sm:text-sm text-[#666666] max-w-sm leading-relaxed">
+          No jewellery found. Try adjusting your filters to discover more pieces from our handcrafted fine jewellery collection.
+        </p>
+      )}
 
       <button
         type="button"

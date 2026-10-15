@@ -1,6 +1,66 @@
 {
   "heroImage1": [
     {
+      "id": "hist_hero1_1792074189057_restored_b58839",
+      "slotId": "heroImage1",
+      "snapshot": null,
+      "version": 29,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Necklaces &",
+      "boldHeadline": "Body Jewels",
+      "description": "Look to our new season collection for girls.",
+      "createdAt": "2026-10-15T14:23:09.057Z",
+      "createdBy": "admin@peralagae.com"
+    },
+    {
+      "id": "hist_hero1_1792074189057_pre_837c65",
+      "slotId": "heroImage1",
+      "snapshot": null,
+      "version": 28,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-15T14:23:09.057Z",
+      "createdBy": "admin@peralagae.com"
+    },
+    {
+      "id": "hist_hero1_1792074185620_9988c8",
+      "slotId": "heroImage1",
+      "snapshot": null,
+      "version": 27,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-15T14:23:05.620Z",
+      "createdBy": "admin@peralagae.com"
+    },
+    {
+      "id": "hist_hero1_1792074180317_654048",
+      "slotId": "heroImage1",
+      "snapshot": null,
+      "version": 26,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Luxury &",
+      "boldHeadline": "Fine Gold",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-15T14:23:00.317Z",
+      "createdBy": "admin@peralagae.com"
+    },
+    {
+      "id": "hist_hero1_1792074173037_dd324c",
+      "slotId": "heroImage1",
+      "snapshot": null,
+      "version": 25,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Royal Jewels &",
+      "boldHeadline": "Bridal Sets",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-15T14:22:53.037Z",
+      "createdBy": "admin@peralagae.com"
+    },
+    {
       "id": "hist_hero1_1792053482740_restored_b060b0",
       "slotId": "heroImage1",
       "snapshot": null,
@@ -290,6 +350,17 @@
     }
   ],
   "heroImage2": [
+    {
+      "id": "hist_hero2_1792074177150_d225d2",
+      "slotId": "heroImage2",
+      "snapshot": null,
+      "version": 10,
+      "imageUrl": "/images/hero/banner-desk-hals.jpg",
+      "normalHeadline": "New Arrival",
+      "boldHeadline": "Diamond Chokers",
+      "createdAt": "2026-10-15T14:22:57.150Z",
+      "createdBy": "admin@peralagae.com"
+    },
     {
       "id": "hist_hero2_1792053471572_311a1d",
       "slotId": "heroImage2",

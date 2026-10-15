@@ -7,6 +7,7 @@
  */
 
 import type { Product } from "@/types/product";
+import type { CategoryItem } from "@/types/category";
 
 export interface ShopFilters {
   category?: string | null;
@@ -644,7 +645,8 @@ export function getShopCatalogue(
   filters: ShopFilters = {},
   sort: SortOption = "default",
   page = 1,
-  pageSize = 12
+  pageSize = 12,
+  categories?: CategoryItem[]
 ): ShopCatalogueResult {
   const allProducts = SHOP_PRODUCTS;
 
@@ -657,13 +659,20 @@ export function getShopCatalogue(
   const filtered = allProducts.filter((product) => {
     // Category filter
     if (filters.category && filters.category !== "all") {
+      const selectedCat = filters.category.toLowerCase().trim();
       const match =
-        product.category.toLowerCase() === filters.category.toLowerCase() ||
+        product.category.toLowerCase() === selectedCat ||
+        product.categoryKey?.toLowerCase() === selectedCat ||
         JEWELLERY_CATEGORIES.some(
           (c) =>
-            c.id === filters.category &&
+            (c.id.toLowerCase() === selectedCat || c.categoryKey.toLowerCase() === selectedCat) &&
             c.categoryKey.toLowerCase() === product.category.toLowerCase()
-        );
+        ) ||
+        (categories && categories.some(
+          (c) =>
+            (c.slug.toLowerCase() === selectedCat || c.id.toLowerCase() === selectedCat || c.name.toLowerCase() === selectedCat) &&
+            (c.name.toLowerCase() === product.category.toLowerCase() || c.slug.toLowerCase() === product.category.toLowerCase())
+        ));
       if (!match) return false;
     }
 
@@ -739,10 +748,28 @@ export function getShopCatalogue(
 
   // 4. Compute Counts for Sidebar Badges
   const categoryCounts: Record<string, number> = {};
+
+  if (categories && categories.length > 0) {
+    categories.forEach((cat) => {
+      const count =
+        typeof cat.productCount === "number"
+          ? cat.productCount
+          : allProducts.filter(
+              (p) =>
+                p.category.toLowerCase() === cat.name.toLowerCase() ||
+                p.category.toLowerCase() === cat.slug.toLowerCase()
+            ).length;
+      categoryCounts[cat.slug] = count;
+      categoryCounts[cat.id] = count;
+    });
+  }
+
   JEWELLERY_CATEGORIES.forEach((cat) => {
-    categoryCounts[cat.id] = allProducts.filter(
-      (p) => p.category.toLowerCase() === cat.categoryKey.toLowerCase()
-    ).length;
+    if (categoryCounts[cat.id] === undefined) {
+      categoryCounts[cat.id] = allProducts.filter(
+        (p) => p.category.toLowerCase() === cat.categoryKey.toLowerCase()
+      ).length;
+    }
   });
 
   const materialCounts: Record<string, number> = {};

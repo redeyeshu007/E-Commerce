@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { ShopPageContent } from "@/components/shop/shop-page-content";
 import { brandConfig } from "@/config/brand";
 
+import { fetchPublicCategories } from "@/services/category-public-service";
+
 export const metadata: Metadata = {
   title: `Shop Fine Jewellery | ${brandConfig.name}`,
   description:
@@ -38,10 +40,15 @@ function ShopLoadingSkeleton() {
   );
 }
 
+async function DynamicShopPage() {
+  const categories = await fetchPublicCategories();
+  return <ShopPageContent initialCategories={categories} />;
+}
+
 export default function ShopPage() {
   return (
     <Suspense fallback={<ShopLoadingSkeleton />}>
-      <ShopPageContent />
+      <DynamicShopPage />
     </Suspense>
   );
 }

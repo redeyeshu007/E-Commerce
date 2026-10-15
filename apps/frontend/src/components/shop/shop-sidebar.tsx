@@ -11,11 +11,15 @@ import {
   type ShopFilters,
 } from "@/services/product-service";
 
+import type { CategoryItem } from "@/types/category";
+
 export interface ShopSidebarProps {
   filters: ShopFilters;
   onFilterChange: (filters: ShopFilters) => void;
   onClearAll: () => void;
+  categories?: CategoryItem[];
   categoryCounts: Record<string, number>;
+  totalProductsCount?: number;
   materialCounts: Record<string, number>;
   sizeCounts: Record<string, number>;
   minCataloguePrice: number;
@@ -27,7 +31,9 @@ export function ShopSidebar({
   filters,
   onFilterChange,
   onClearAll,
+  categories,
   categoryCounts,
+  totalProductsCount,
   materialCounts,
   sizeCounts,
   minCataloguePrice,
@@ -158,19 +164,52 @@ export function ShopSidebar({
             >
               <span>All Jewellery</span>
               <span className="text-[11px] text-[#888888]">
-                ({Object.values(categoryCounts).reduce((a, b) => a + b, 0)})
+                ({totalProductsCount ?? 24})
               </span>
             </button>
 
-            {/* Individual Jewellery Categories */}
-            {JEWELLERY_CATEGORIES.map((cat) => {
-              const isActive = filters.category === cat.id;
-              const count = categoryCounts[cat.id] ?? 0;
+            {/* Individual Jewellery Categories (Dynamic & Authoritative) */}
+            {(categories && categories.length > 0
+              ? categories
+                  .filter((c) => c.isActive)
+                  .sort((a, b) => a.order - b.order)
+                  .map((c) => {
+                    const known: Record<string, string> = {
+                      necklaces: "Necklaces",
+                      rings: "Rings",
+                      bracelets: "Bracelets",
+                      earrings: "Earrings",
+                      "charms-bangles": "Charms & Bangles",
+                      "gift-ideas": "Gift Ideas",
+                    };
+                    const label = known[c.slug.toLowerCase()] || c.name;
+                    return {
+                      id: c.slug,
+                      slug: c.slug,
+                      label,
+                      productCount: c.productCount,
+                    };
+                  })
+              : JEWELLERY_CATEGORIES.map((c) => ({
+                  id: c.id,
+                  slug: c.id,
+                  label: c.label,
+                  productCount: categoryCounts[c.id] ?? 0,
+                }))
+            ).map((cat) => {
+              const isActive =
+                filters.category?.toLowerCase() === cat.slug.toLowerCase() ||
+                filters.category?.toLowerCase() === cat.id.toLowerCase();
+              const count =
+                categoryCounts[cat.slug] ??
+                categoryCounts[cat.id] ??
+                cat.productCount ??
+                0;
               return (
                 <button
-                  key={cat.id}
+                  key={cat.slug}
                   type="button"
-                  onClick={() => handleCategoryClick(cat.id)}
+                  onClick={() => handleCategoryClick(cat.slug)}
                   suppressHydrationWarning
                   aria-pressed={isActive}
                   className={`flex items-center justify-between text-xs sm:text-[13px] py-1 transition-colors text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black ${
