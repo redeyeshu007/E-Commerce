@@ -13,6 +13,20 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/admin/hero",
+        destination: "/admin/navbar",
+        permanent: false,
+      },
+      {
+        source: "/admin/hero-images",
+        destination: "/admin/navbar",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
     return [

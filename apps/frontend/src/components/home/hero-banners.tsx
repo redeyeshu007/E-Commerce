@@ -8,7 +8,7 @@ import {
   type HeroBannersConfig,
   defaultHeroBannersConfig,
 } from "@/config/hero-banners";
-import { useHeroSettings } from "@/services/hero-settings-service";
+import { useHeroSettings } from "@/hooks/use-hero-settings";
 import type { HeroSettingsData } from "@/types/hero";
 
 export interface OutlineButtonProps {
@@ -163,8 +163,7 @@ export function HeroBanners({
   className = "",
 }: HeroBannersProps) {
   const { config: dynamicConfig } = useHeroSettings(initialSettings);
-  const activeConfig =
-    propConfig && propConfig !== defaultHeroBannersConfig ? propConfig : dynamicConfig;
+  const activeConfig = propConfig ?? dynamicConfig;
 
   return (
     <section

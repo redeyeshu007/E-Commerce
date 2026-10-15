@@ -163,7 +163,7 @@ async function tryPrisma<T>(fn: () => Promise<T>): Promise<T | null> {
     const result = await Promise.race([
       fn(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Database operation timed out")), 1000)
+        setTimeout(() => reject(new Error("Database operation timed out")), 10000)
       ),
     ]);
     return result;
@@ -232,7 +232,7 @@ export class NavbarService {
     dbCooldownUntil = 0;
   }
 
-  static resetInMemoryState(): void {
+  static async resetInMemoryState(): Promise<void> {
     dbCooldownUntil = 0;
     memorySettings = getDefaultNavbarSettings();
     memoryTopBarHistory = [
@@ -257,27 +257,149 @@ export class NavbarService {
         createdBy: "system",
       },
     ];
+
+    try {
+      const def = getDefaultNavbarSettings();
+      await prisma.navbarSetting.upsert({
+        where: { id: "current" },
+        create: {
+          id: "current",
+          topBarText: def.topBar.text,
+          topBarBgColor: def.topBar.backgroundColor,
+          topBarTextColor: def.topBar.textColor,
+          topBarVisible: def.topBar.visible,
+          topBarDismissible: def.topBar.dismissible,
+          secondPhone: def.secondNavbar.phone,
+          secondPhoneHref: def.secondNavbar.phoneHref,
+          secondPromoText: def.secondNavbar.promoText,
+          secondCtaText: def.secondNavbar.ctaText,
+          secondCtaHref: def.secondNavbar.ctaHref,
+          secondLinks: def.secondNavbar.links as unknown as object,
+          secondPhoneVisible: def.secondNavbar.showPhone,
+          secondPromoVisible: def.secondNavbar.showPromotion,
+          secondLinksVisible: def.secondNavbar.showLinks,
+          version: 1,
+          topBarVersion: 1,
+          secondNavbarVersion: 1,
+          updatedBy: "system",
+        },
+        update: {
+          topBarText: def.topBar.text,
+          topBarBgColor: def.topBar.backgroundColor,
+          topBarTextColor: def.topBar.textColor,
+          topBarVisible: def.topBar.visible,
+          topBarDismissible: def.topBar.dismissible,
+          secondPhone: def.secondNavbar.phone,
+          secondPhoneHref: def.secondNavbar.phoneHref,
+          secondPromoText: def.secondNavbar.promoText,
+          secondCtaText: def.secondNavbar.ctaText,
+          secondCtaHref: def.secondNavbar.ctaHref,
+          secondLinks: def.secondNavbar.links as unknown as object,
+          secondPhoneVisible: def.secondNavbar.showPhone,
+          secondPromoVisible: def.secondNavbar.showPromotion,
+          secondLinksVisible: def.secondNavbar.showLinks,
+          version: 1,
+          topBarVersion: 1,
+          secondNavbarVersion: 1,
+          updatedBy: "system",
+        },
+      });
+
+      await prisma.navbarHistory.deleteMany({});
+      await prisma.navbarHistory.createMany({
+        data: [
+          {
+            id: "hist_init_top_bar",
+            section: "TOP_BAR",
+            snapshot: def as unknown as object,
+            description: "Initial baseline published Top Bar configuration",
+            version: 1,
+            createdBy: "system",
+          },
+          {
+            id: "hist_init_second_navbar",
+            section: "SECOND_NAVBAR",
+            snapshot: def as unknown as object,
+            description: "Initial baseline published Second Navbar promotional message",
+            version: 1,
+            createdBy: "system",
+          },
+        ],
+      });
+    } catch {
+      // In-memory fallback
+    }
   }
 
   /**
    * Retrieves current active Navbar settings with independent section versions.
    */
   static async getSettings(): Promise<NavbarSettings> {
-    const record = await tryPrisma(() =>
-      prisma.navbarSetting.findUnique({
+    try {
+      let record = await prisma.navbarSetting.findUnique({
         where: { id: "current" },
-      })
-    );
+      });
 
-    const topVer = await getLatestTopBarVersion();
-    const secondVer = await getLatestSecondNavbarVersion();
+      if (!record) {
+        const def = getDefaultNavbarSettings();
+        record = await prisma.navbarSetting.create({
+          data: {
+            id: "current",
+            topBarText: def.topBar.text,
+            topBarBgColor: def.topBar.backgroundColor,
+            topBarTextColor: def.topBar.textColor,
+            topBarVisible: def.topBar.visible,
+            topBarDismissible: def.topBar.dismissible,
+            secondPhone: def.secondNavbar.phone,
+            secondPhoneHref: def.secondNavbar.phoneHref,
+            secondPromoText: def.secondNavbar.promoText,
+            secondCtaText: def.secondNavbar.ctaText,
+            secondCtaHref: def.secondNavbar.ctaHref,
+            secondLinks: def.secondNavbar.links as unknown as object,
+            secondPhoneVisible: def.secondNavbar.showPhone,
+            secondPromoVisible: def.secondNavbar.showPromotion,
+            secondLinksVisible: def.secondNavbar.showLinks,
+            version: 1,
+            topBarVersion: 1,
+            secondNavbarVersion: 1,
+            updatedBy: "system",
+          },
+        });
 
-    if (record) {
+        // Seed initial history records if empty
+        const histCount = await prisma.navbarHistory.count();
+        if (histCount === 0) {
+          await prisma.navbarHistory.createMany({
+            data: [
+              {
+                id: "hist_init_top_bar",
+                section: "TOP_BAR",
+                snapshot: def as unknown as object,
+                description: "Initial baseline published Top Bar configuration",
+                version: 1,
+                createdBy: "system",
+              },
+              {
+                id: "hist_init_second_navbar",
+                section: "SECOND_NAVBAR",
+                snapshot: def as unknown as object,
+                description: "Initial baseline published Second Navbar promotional message",
+                version: 1,
+                createdBy: "system",
+              },
+            ],
+          });
+        }
+      }
+
+      const topVer = await getLatestTopBarVersion();
+      const secondVer = await getLatestSecondNavbarVersion();
+
       const parsedLinks: SecondNavbarLink[] = Array.isArray(record.secondLinks)
         ? (record.secondLinks as unknown as SecondNavbarLink[])
         : defaultSecondNavbarSettings.links;
 
-      return {
+      const result: NavbarSettings = {
         id: record.id,
         topBar: {
           text: record.topBarText,
@@ -303,14 +425,20 @@ export class NavbarService {
         updatedAt: record.updatedAt.toISOString(),
         updatedBy: record.updatedBy || "admin",
       };
-    }
 
-    return {
-      ...memorySettings,
-      topBarVersion: topVer,
-      secondNavbarVersion: secondVer,
-      version: Math.max(memorySettings.version, topVer, secondVer),
-    };
+      memorySettings = result;
+      return result;
+    } catch (err) {
+      logger.warn({ err }, "Database fetch failed for navbar settings; serving in-memory fallback");
+      const topVer = await getLatestTopBarVersion();
+      const secondVer = await getLatestSecondNavbarVersion();
+      return {
+        ...memorySettings,
+        topBarVersion: topVer,
+        secondNavbarVersion: secondVer,
+        version: Math.max(memorySettings.version, topVer, secondVer),
+      };
+    }
   }
 
   /**
@@ -349,51 +477,52 @@ export class NavbarService {
       const historyId = `hist_tb_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
       const desc = customDescription || `Updated Top Bar announcement: "${newTopBar.text.slice(0, 40)}${newTopBar.text.length > 40 ? "..." : ""}"`;
 
-      await tryPrisma(async () => {
-        await prisma.$transaction([
-          prisma.navbarHistory.create({
-            data: {
-              id: historyId,
-              section: "TOP_BAR",
-              snapshot: snapshotToSave as unknown as object,
-              description: desc,
-              version: newTopBarVersion,
-              createdBy: adminEmail,
-            },
-          }),
-          prisma.navbarSetting.upsert({
-            where: { id: "current" },
-            create: {
-              id: "current",
-              topBarText: newTopBar.text,
-              topBarBgColor: newTopBar.backgroundColor,
-              topBarTextColor: newTopBar.textColor,
-              topBarVisible: newTopBar.visible,
-              topBarDismissible: newTopBar.dismissible,
-              secondPhone: current.secondNavbar.phone,
-              secondPhoneHref: current.secondNavbar.phoneHref,
-              secondPromoText: current.secondNavbar.promoText,
-              secondCtaText: current.secondNavbar.ctaText,
-              secondCtaHref: current.secondNavbar.ctaHref,
-              secondLinks: current.secondNavbar.links as unknown as object,
-              secondPhoneVisible: current.secondNavbar.showPhone,
-              secondPromoVisible: current.secondNavbar.showPromotion,
-              secondLinksVisible: current.secondNavbar.showLinks,
-              version: Math.max(newTopBarVersion, current.secondNavbarVersion),
-              updatedBy: adminEmail,
-            },
-            update: {
-              topBarText: newTopBar.text,
-              topBarBgColor: newTopBar.backgroundColor,
-              topBarTextColor: newTopBar.textColor,
-              topBarVisible: newTopBar.visible,
-              topBarDismissible: newTopBar.dismissible,
-              version: Math.max(newTopBarVersion, current.secondNavbarVersion),
-              updatedBy: adminEmail,
-            },
-          }),
-        ]);
-      });
+      await prisma.$transaction([
+        prisma.navbarHistory.create({
+          data: {
+            id: historyId,
+            section: "TOP_BAR",
+            snapshot: snapshotToSave as unknown as object,
+            description: desc,
+            version: newTopBarVersion,
+            createdBy: adminEmail,
+          },
+        }),
+        prisma.navbarSetting.upsert({
+          where: { id: "current" },
+          create: {
+            id: "current",
+            topBarText: newTopBar.text,
+            topBarBgColor: newTopBar.backgroundColor,
+            topBarTextColor: newTopBar.textColor,
+            topBarVisible: newTopBar.visible,
+            topBarDismissible: newTopBar.dismissible,
+            secondPhone: current.secondNavbar.phone,
+            secondPhoneHref: current.secondNavbar.phoneHref,
+            secondPromoText: current.secondNavbar.promoText,
+            secondCtaText: current.secondNavbar.ctaText,
+            secondCtaHref: current.secondNavbar.ctaHref,
+            secondLinks: current.secondNavbar.links as unknown as object,
+            secondPhoneVisible: current.secondNavbar.showPhone,
+            secondPromoVisible: current.secondNavbar.showPromotion,
+            secondLinksVisible: current.secondNavbar.showLinks,
+            version: Math.max(newTopBarVersion, current.secondNavbarVersion),
+            topBarVersion: newTopBarVersion,
+            secondNavbarVersion: current.secondNavbarVersion,
+            updatedBy: adminEmail,
+          },
+          update: {
+            topBarText: newTopBar.text,
+            topBarBgColor: newTopBar.backgroundColor,
+            topBarTextColor: newTopBar.textColor,
+            topBarVisible: newTopBar.visible,
+            topBarDismissible: newTopBar.dismissible,
+            version: Math.max(newTopBarVersion, current.secondNavbarVersion),
+            topBarVersion: newTopBarVersion,
+            updatedBy: adminEmail,
+          },
+        }),
+      ]);
 
       // Update in-memory Top Bar history only
       const newRecord: NavbarHistoryRecord = {
@@ -457,47 +586,48 @@ export class NavbarService {
       const historyId = `hist_sn_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
       const desc = customDescription || `Updated promotional message: "${cleanPromo.slice(0, 40)}${cleanPromo.length > 40 ? "..." : ""}"`;
 
-      await tryPrisma(async () => {
-        await prisma.$transaction([
-          prisma.navbarHistory.create({
-            data: {
-              id: historyId,
-              section: "SECOND_NAVBAR",
-              snapshot: snapshotToSave as unknown as object,
-              description: desc,
-              version: newSecondNavbarVersion,
-              createdBy: adminEmail,
-            },
-          }),
-          prisma.navbarSetting.upsert({
-            where: { id: "current" },
-            create: {
-              id: "current",
-              topBarText: current.topBar.text,
-              topBarBgColor: current.topBar.backgroundColor,
-              topBarTextColor: current.topBar.textColor,
-              topBarVisible: current.topBar.visible,
-              topBarDismissible: current.topBar.dismissible,
-              secondPhone: current.secondNavbar.phone,
-              secondPhoneHref: current.secondNavbar.phoneHref,
-              secondPromoText: cleanPromo,
-              secondCtaText: current.secondNavbar.ctaText,
-              secondCtaHref: current.secondNavbar.ctaHref,
-              secondLinks: current.secondNavbar.links as unknown as object,
-              secondPhoneVisible: current.secondNavbar.showPhone,
-              secondPromoVisible: current.secondNavbar.showPromotion,
-              secondLinksVisible: current.secondNavbar.showLinks,
-              version: Math.max(current.topBarVersion, newSecondNavbarVersion),
-              updatedBy: adminEmail,
-            },
-            update: {
-              secondPromoText: cleanPromo,
-              version: Math.max(current.topBarVersion, newSecondNavbarVersion),
-              updatedBy: adminEmail,
-            },
-          }),
-        ]);
-      });
+      await prisma.$transaction([
+        prisma.navbarHistory.create({
+          data: {
+            id: historyId,
+            section: "SECOND_NAVBAR",
+            snapshot: snapshotToSave as unknown as object,
+            description: desc,
+            version: newSecondNavbarVersion,
+            createdBy: adminEmail,
+          },
+        }),
+        prisma.navbarSetting.upsert({
+          where: { id: "current" },
+          create: {
+            id: "current",
+            topBarText: current.topBar.text,
+            topBarBgColor: current.topBar.backgroundColor,
+            topBarTextColor: current.topBar.textColor,
+            topBarVisible: current.topBar.visible,
+            topBarDismissible: current.topBar.dismissible,
+            secondPhone: current.secondNavbar.phone,
+            secondPhoneHref: current.secondNavbar.phoneHref,
+            secondPromoText: cleanPromo,
+            secondCtaText: current.secondNavbar.ctaText,
+            secondCtaHref: current.secondNavbar.ctaHref,
+            secondLinks: current.secondNavbar.links as unknown as object,
+            secondPhoneVisible: current.secondNavbar.showPhone,
+            secondPromoVisible: current.secondNavbar.showPromotion,
+            secondLinksVisible: current.secondNavbar.showLinks,
+            version: Math.max(current.topBarVersion, newSecondNavbarVersion),
+            topBarVersion: current.topBarVersion,
+            secondNavbarVersion: newSecondNavbarVersion,
+            updatedBy: adminEmail,
+          },
+          update: {
+            secondPromoText: cleanPromo,
+            version: Math.max(current.topBarVersion, newSecondNavbarVersion),
+            secondNavbarVersion: newSecondNavbarVersion,
+            updatedBy: adminEmail,
+          },
+        }),
+      ]);
 
       // Update in-memory Second Navbar history only
       const newRecord: NavbarHistoryRecord = {
@@ -652,61 +782,62 @@ export class NavbarService {
         };
         memoryTopBarHistory.unshift(restoreRecord);
 
-        await tryPrisma(async () => {
-          await prisma.$transaction([
-            prisma.navbarHistory.create({
-              data: {
-                id: preHistoryId,
-                section: "TOP_BAR",
-                snapshot: preRestoreSnapshot as unknown as object,
-                description: preRecord.description,
-                version: preRestoreVersion,
-                createdBy: adminEmail,
-              },
-            }),
-            prisma.navbarHistory.create({
-              data: {
-                id: restoreHistoryId,
-                section: "TOP_BAR",
-                snapshot: restoredSettings as unknown as object,
-                description: restoreRecord.description,
-                version: restoredTopVersion,
-                createdBy: adminEmail,
-              },
-            }),
-            prisma.navbarSetting.upsert({
-              where: { id: "current" },
-              create: {
-                id: "current",
-                topBarText: restoredTopBar.text,
-                topBarBgColor: restoredTopBar.backgroundColor,
-                topBarTextColor: restoredTopBar.textColor,
-                topBarVisible: restoredTopBar.visible,
-                topBarDismissible: restoredTopBar.dismissible,
-                secondPhone: current.secondNavbar.phone,
-                secondPhoneHref: current.secondNavbar.phoneHref,
-                secondPromoText: current.secondNavbar.promoText,
-                secondCtaText: current.secondNavbar.ctaText,
-                secondCtaHref: current.secondNavbar.ctaHref,
-                secondLinks: current.secondNavbar.links as unknown as object,
-                secondPhoneVisible: current.secondNavbar.showPhone,
-                secondPromoVisible: current.secondNavbar.showPromotion,
-                secondLinksVisible: current.secondNavbar.showLinks,
-                version: Math.max(restoredTopVersion, current.secondNavbarVersion),
-                updatedBy: adminEmail,
-              },
-              update: {
-                topBarText: restoredTopBar.text,
-                topBarBgColor: restoredTopBar.backgroundColor,
-                topBarTextColor: restoredTopBar.textColor,
-                topBarVisible: restoredTopBar.visible,
-                topBarDismissible: restoredTopBar.dismissible,
-                version: Math.max(restoredTopVersion, current.secondNavbarVersion),
-                updatedBy: adminEmail,
-              },
-            }),
-          ]);
-        });
+        await prisma.$transaction([
+          prisma.navbarHistory.create({
+            data: {
+              id: preHistoryId,
+              section: "TOP_BAR",
+              snapshot: preRestoreSnapshot as unknown as object,
+              description: preRecord.description,
+              version: preRestoreVersion,
+              createdBy: adminEmail,
+            },
+          }),
+          prisma.navbarHistory.create({
+            data: {
+              id: restoreHistoryId,
+              section: "TOP_BAR",
+              snapshot: restoredSettings as unknown as object,
+              description: restoreRecord.description,
+              version: restoredTopVersion,
+              createdBy: adminEmail,
+            },
+          }),
+          prisma.navbarSetting.upsert({
+            where: { id: "current" },
+            create: {
+              id: "current",
+              topBarText: restoredTopBar.text,
+              topBarBgColor: restoredTopBar.backgroundColor,
+              topBarTextColor: restoredTopBar.textColor,
+              topBarVisible: restoredTopBar.visible,
+              topBarDismissible: restoredTopBar.dismissible,
+              secondPhone: current.secondNavbar.phone,
+              secondPhoneHref: current.secondNavbar.phoneHref,
+              secondPromoText: current.secondNavbar.promoText,
+              secondCtaText: current.secondNavbar.ctaText,
+              secondCtaHref: current.secondNavbar.ctaHref,
+              secondLinks: current.secondNavbar.links as unknown as object,
+              secondPhoneVisible: current.secondNavbar.showPhone,
+              secondPromoVisible: current.secondNavbar.showPromotion,
+              secondLinksVisible: current.secondNavbar.showLinks,
+              version: Math.max(restoredTopVersion, current.secondNavbarVersion),
+              topBarVersion: restoredTopVersion,
+              secondNavbarVersion: current.secondNavbarVersion,
+              updatedBy: adminEmail,
+            },
+            update: {
+              topBarText: restoredTopBar.text,
+              topBarBgColor: restoredTopBar.backgroundColor,
+              topBarTextColor: restoredTopBar.textColor,
+              topBarVisible: restoredTopBar.visible,
+              topBarDismissible: restoredTopBar.dismissible,
+              version: Math.max(restoredTopVersion, current.secondNavbarVersion),
+              topBarVersion: restoredTopVersion,
+              updatedBy: adminEmail,
+            },
+          }),
+        ]);
 
         memorySettings = restoredSettings;
         return restoredSettings;
@@ -764,57 +895,58 @@ export class NavbarService {
         };
         memorySecondNavbarHistory.unshift(restoreRecord);
 
-        await tryPrisma(async () => {
-          await prisma.$transaction([
-            prisma.navbarHistory.create({
-              data: {
-                id: preHistoryId,
-                section: "SECOND_NAVBAR",
-                snapshot: preRestoreSnapshot as unknown as object,
-                description: preRecord.description,
-                version: preRestoreVersion,
-                createdBy: adminEmail,
-              },
-            }),
-            prisma.navbarHistory.create({
-              data: {
-                id: restoreHistoryId,
-                section: "SECOND_NAVBAR",
-                snapshot: restoredSettings as unknown as object,
-                description: restoreRecord.description,
-                version: restoredSecondVersion,
-                createdBy: adminEmail,
-              },
-            }),
-            prisma.navbarSetting.upsert({
-              where: { id: "current" },
-              create: {
-                id: "current",
-                topBarText: current.topBar.text,
-                topBarBgColor: current.topBar.backgroundColor,
-                topBarTextColor: current.topBar.textColor,
-                topBarVisible: current.topBar.visible,
-                topBarDismissible: current.topBar.dismissible,
-                secondPhone: current.secondNavbar.phone,
-                secondPhoneHref: current.secondNavbar.phoneHref,
-                secondPromoText: restoredPromoText,
-                secondCtaText: current.secondNavbar.ctaText,
-                secondCtaHref: current.secondNavbar.ctaHref,
-                secondLinks: current.secondNavbar.links as unknown as object,
-                secondPhoneVisible: current.secondNavbar.showPhone,
-                secondPromoVisible: current.secondNavbar.showPromotion,
-                secondLinksVisible: current.secondNavbar.showLinks,
-                version: Math.max(current.topBarVersion, restoredSecondVersion),
-                updatedBy: adminEmail,
-              },
-              update: {
-                secondPromoText: restoredPromoText,
-                version: Math.max(current.topBarVersion, restoredSecondVersion),
-                updatedBy: adminEmail,
-              },
-            }),
-          ]);
-        });
+        await prisma.$transaction([
+          prisma.navbarHistory.create({
+            data: {
+              id: preHistoryId,
+              section: "SECOND_NAVBAR",
+              snapshot: preRestoreSnapshot as unknown as object,
+              description: preRecord.description,
+              version: preRestoreVersion,
+              createdBy: adminEmail,
+            },
+          }),
+          prisma.navbarHistory.create({
+            data: {
+              id: restoreHistoryId,
+              section: "SECOND_NAVBAR",
+              snapshot: restoredSettings as unknown as object,
+              description: restoreRecord.description,
+              version: restoredSecondVersion,
+              createdBy: adminEmail,
+            },
+          }),
+          prisma.navbarSetting.upsert({
+            where: { id: "current" },
+            create: {
+              id: "current",
+              topBarText: current.topBar.text,
+              topBarBgColor: current.topBar.backgroundColor,
+              topBarTextColor: current.topBar.textColor,
+              topBarVisible: current.topBar.visible,
+              topBarDismissible: current.topBar.dismissible,
+              secondPhone: current.secondNavbar.phone,
+              secondPhoneHref: current.secondNavbar.phoneHref,
+              secondPromoText: restoredPromoText,
+              secondCtaText: current.secondNavbar.ctaText,
+              secondCtaHref: current.secondNavbar.ctaHref,
+              secondLinks: current.secondNavbar.links as unknown as object,
+              secondPhoneVisible: current.secondNavbar.showPhone,
+              secondPromoVisible: current.secondNavbar.showPromotion,
+              secondLinksVisible: current.secondNavbar.showLinks,
+              version: Math.max(current.topBarVersion, restoredSecondVersion),
+              topBarVersion: current.topBarVersion,
+              secondNavbarVersion: restoredSecondVersion,
+              updatedBy: adminEmail,
+            },
+            update: {
+              secondPromoText: restoredPromoText,
+              version: Math.max(current.topBarVersion, restoredSecondVersion),
+              secondNavbarVersion: restoredSecondVersion,
+              updatedBy: adminEmail,
+            },
+          }),
+        ]);
 
         memorySettings = restoredSettings;
         return restoredSettings;

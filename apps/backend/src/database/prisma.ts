@@ -55,11 +55,11 @@ export async function checkDatabaseConnection(): Promise<DatabaseStatus> {
 
   const startTime = Date.now();
   try {
-    // Run a lightweight connection verification query with a 4-second timeout
+    // Run a lightweight connection verification query with a 10-second timeout
     await Promise.race([
       prisma.$queryRawUnsafe("SELECT 1"),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Database connection timed out after 4000ms")), 4000),
+        setTimeout(() => reject(new Error("Database connection timed out after 10000ms")), 10000),
       ),
     ]);
 

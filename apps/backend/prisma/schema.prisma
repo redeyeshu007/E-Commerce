@@ -48,9 +48,11 @@ model NavbarSetting {
   secondPromoVisible Boolean  @default(true)
   secondLinksVisible Boolean  @default(true)
 
-  version            Int      @default(1)
-  updatedAt          DateTime @updatedAt
-  updatedBy          String?
+  version             Int      @default(1)
+  topBarVersion       Int      @default(1)
+  secondNavbarVersion Int      @default(1)
+  updatedAt           DateTime @updatedAt
+  updatedBy           String?
 
   @@map("navbar_settings")
 }
@@ -65,5 +67,50 @@ model NavbarHistory {
   createdBy   String?
 
   @@map("navbar_history")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Hero Banner Management Models (Settings, Independent Slot History, Media)
+// ──────────────────────────────────────────────────────────────────────────
+
+model HeroSetting {
+  id                String   @id @default("current")
+  heroImage1        Json     // HeroImageSlot1
+  heroImage2        Json     // HeroImageSlot2
+  heroImage3        Json     // HeroImageSlot3
+  heroImage1Version Int      @default(1)
+  heroImage2Version Int      @default(1)
+  heroImage3Version Int      @default(1)
+  version           Int      @default(1)
+  updatedAt         DateTime @updatedAt
+  updatedBy         String?
+
+  @@map("hero_settings")
+}
+
+model HeroHistory {
+  id             String   @id @default(cuid())
+  slotId         String   // "heroImage1" | "heroImage2" | "heroImage3"
+  snapshot       Json?    // Optional full slot snapshot
+  version        Int
+  imageUrl       String
+  normalHeadline String
+  boldHeadline   String
+  description    String?
+  createdAt      DateTime @default(now())
+  createdBy      String?
+
+  @@map("hero_history")
+}
+
+model HeroMediaAsset {
+  id        String   @id // Unique identifier / filename
+  filename  String   @unique
+  mimeType  String
+  size      Int
+  data      Bytes    // Native PostgreSQL bytea binary storage (NOT base64)
+  createdAt DateTime @default(now())
+
+  @@map("hero_media_assets")
 }
 

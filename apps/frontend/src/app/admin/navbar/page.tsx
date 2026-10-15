@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  RotateCcw,
   Eye,
   Save,
-  Undo2,
+  RotateCcw,
   Clock,
   History,
   Check,
+  Upload,
+  Info,
+  ImageIcon,
 } from "lucide-react";
 import { getAdminSession, logoutAdmin } from "@/services/admin-auth-service";
 import { AdminNavbar } from "@/components/admin/admin-navbar";
@@ -29,13 +32,50 @@ import {
   NAVBAR_SETTINGS_QUERY_KEY,
   NAVBAR_SETTINGS_UPDATED_EVENT,
 } from "@/services/navbar-settings-service";
+import {
+  fetchAdminHeroSettings,
+  updateAdminHeroSlot,
+  uploadAdminHeroImage,
+  fetchAdminHeroHistory,
+  restoreAdminHeroSlot,
+} from "@/services/hero-admin-service";
+import {
+  HERO_SETTINGS_QUERY_KEY,
+  HERO_SETTINGS_UPDATED_EVENT,
+} from "@/services/hero-settings-service";
 import type {
   NavbarSettingsData,
   NavbarHistoryItem,
   TopBarConfig,
 } from "@/types/navbar";
+import {
+  defaultHeroSettingsData,
+  HERO_SLOT_SPECS,
+  type HeroSettingsData,
+  type HeroHistoryItem,
+} from "@/types/hero";
 
-type TabKey = "top_bar" | "second_navbar";
+type TabKey =
+  | "top_bar"
+  | "second_navbar"
+  | "hero_image_1"
+  | "hero_image_2"
+  | "hero_image_3";
+
+interface HeroSlotForm1 {
+  imageUrl: string;
+  imageAlt: string;
+  normalHeadline: string;
+  boldHeadline: string;
+  description: string;
+}
+
+interface HeroSlotFormSecondary {
+  imageUrl: string;
+  imageAlt: string;
+  normalHeadline: string;
+  boldHeadline: string;
+}
 
 export default function AdminNavbarPage() {
   const router = useRouter();
@@ -46,13 +86,20 @@ export default function AdminNavbarPage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Active Tab
+  // Active Tab: Navbar (Top Bar, Second Navbar) or Hero Section (Hero Image 1, 2, 3)
   const [activeTab, setActiveTab] = useState<TabKey>("top_bar");
 
-  // Server Data state
+  // Server Data state for Navbar
   const [serverSettings, setServerSettings] = useState<NavbarSettingsData | null>(null);
   const [topBarHistory, setTopBarHistory] = useState<NavbarHistoryItem[]>([]);
   const [secondNavbarHistory, setSecondNavbarHistory] = useState<NavbarHistoryItem[]>([]);
+
+  // Server Data state for Hero Section
+  const [serverHeroSettings, setServerHeroSettings] = useState<HeroSettingsData>(defaultHeroSettingsData);
+  const [hero1History, setHero1History] = useState<HeroHistoryItem[]>([]);
+  const [hero2History, setHero2History] = useState<HeroHistoryItem[]>([]);
+  const [hero3History, setHero3History] = useState<HeroHistoryItem[]>([]);
+
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
@@ -72,11 +119,65 @@ export default function AdminNavbarPage() {
   // Second Navbar Form State — Promotional Message Only
   const [secondNavbarPromo, setSecondNavbarPromo] = useState("");
 
-  // History & Restore Modal State
+  // Hero Section Form States for the 3 slots
+  const [hero1Form, setHero1Form] = useState<HeroSlotForm1>({
+    imageUrl: defaultHeroSettingsData.heroImage1.imageUrl,
+    imageAlt: defaultHeroSettingsData.heroImage1.imageAlt,
+    normalHeadline: defaultHeroSettingsData.heroImage1.normalHeadline,
+    boldHeadline: defaultHeroSettingsData.heroImage1.boldHeadline,
+    description: defaultHeroSettingsData.heroImage1.description,
+  });
+
+  const [hero2Form, setHero2Form] = useState<HeroSlotFormSecondary>({
+    imageUrl: defaultHeroSettingsData.heroImage2.imageUrl,
+    imageAlt: defaultHeroSettingsData.heroImage2.imageAlt,
+    normalHeadline: defaultHeroSettingsData.heroImage2.normalHeadline,
+    boldHeadline: defaultHeroSettingsData.heroImage2.boldHeadline,
+  });
+
+  const [hero3Form, setHero3Form] = useState<HeroSlotFormSecondary>({
+    imageUrl: defaultHeroSettingsData.heroImage3.imageUrl,
+    imageAlt: defaultHeroSettingsData.heroImage3.imageAlt,
+    normalHeadline: defaultHeroSettingsData.heroImage3.normalHeadline,
+    boldHeadline: defaultHeroSettingsData.heroImage3.boldHeadline,
+  });
+
+  // Hero Image file upload & local preview states
+  const [heroPendingFiles, setHeroPendingFiles] = useState<{
+    heroImage1?: File;
+    heroImage2?: File;
+    heroImage3?: File;
+  }>({});
+
+  const [heroPreviewUrls, setHeroPreviewUrls] = useState<{
+    heroImage1?: string;
+    heroImage2?: string;
+    heroImage3?: string;
+  }>({});
+
+  const [heroSlotErrors, setHeroSlotErrors] = useState<{
+    heroImage1?: string;
+    heroImage2?: string;
+    heroImage3?: string;
+  }>({});
+
+  const fileInputRef1 = useRef<HTMLInputElement>(null);
+  const fileInputRef2 = useRef<HTMLInputElement>(null);
+  const fileInputRef3 = useRef<HTMLInputElement>(null);
+
+  // Navbar Restore Modal State
   const [restoreConfirmTarget, setRestoreConfirmTarget] = useState<{
     item: NavbarHistoryItem;
     section: "top_bar" | "second_navbar";
   } | null>(null);
+
+  // Hero Restore Modal State
+  const [heroRestoreConfirmTarget, setHeroRestoreConfirmTarget] = useState<{
+    item: HeroHistoryItem;
+    slotId: "heroImage1" | "heroImage2" | "heroImage3";
+    slotName: string;
+  } | null>(null);
+
   const [isRestoring, setIsRestoring] = useState(false);
 
   // Verify authentication on mount
@@ -96,28 +197,72 @@ export default function AdminNavbarPage() {
     };
   }, [router]);
 
-  // Load navbar settings and separate history streams
+  // Load both Navbar and Hero settings and histories
   const loadData = useCallback(async () => {
     setIsLoadingData(true);
     try {
-      const [settings, topHistory, secondHistory] = await Promise.all([
-        fetchAdminNavbarSettings(),
-        fetchAdminNavbarHistory("top_bar"),
-        fetchAdminNavbarHistory("second_navbar"),
-      ]);
-      setServerSettings(settings);
-      setTopBarHistory(topHistory);
-      setSecondNavbarHistory(secondHistory);
+      try {
+        const [navbarSettings, topHistory, secondHistory] = await Promise.all([
+          fetchAdminNavbarSettings(),
+          fetchAdminNavbarHistory("top_bar"),
+          fetchAdminNavbarHistory("second_navbar"),
+        ]);
 
-      // Populate Top Bar form
-      setTopBarForm({ ...settings.topBar });
+        setServerSettings(navbarSettings);
+        setTopBarHistory(topHistory);
+        setSecondNavbarHistory(secondHistory);
+        setTopBarForm({ ...navbarSettings.topBar });
+        setSecondNavbarPromo(navbarSettings.secondNavbar.promoText);
+      } catch (navErr) {
+        console.error("Navbar load error:", navErr);
+      }
 
-      // Populate Second Navbar promo message
-      setSecondNavbarPromo(settings.secondNavbar.promoText);
+      try {
+        const [heroSettings, h1History, h2History, h3History] = await Promise.all([
+          fetchAdminHeroSettings(),
+          fetchAdminHeroHistory("heroImage1"),
+          fetchAdminHeroHistory("heroImage2"),
+          fetchAdminHeroHistory("heroImage3"),
+        ]);
+
+        setServerHeroSettings(heroSettings);
+        setHero1History(h1History);
+        setHero2History(h2History);
+        setHero3History(h3History);
+
+        setHero1Form({
+          imageUrl: heroSettings.heroImage1.imageUrl,
+          imageAlt: heroSettings.heroImage1.imageAlt,
+          normalHeadline: heroSettings.heroImage1.normalHeadline,
+          boldHeadline: heroSettings.heroImage1.boldHeadline,
+          description: heroSettings.heroImage1.description,
+        });
+
+        setHero2Form({
+          imageUrl: heroSettings.heroImage2.imageUrl,
+          imageAlt: heroSettings.heroImage2.imageAlt,
+          normalHeadline: heroSettings.heroImage2.normalHeadline,
+          boldHeadline: heroSettings.heroImage2.boldHeadline,
+        });
+
+        setHero3Form({
+          imageUrl: heroSettings.heroImage3.imageUrl,
+          imageAlt: heroSettings.heroImage3.imageAlt,
+          normalHeadline: heroSettings.heroImage3.normalHeadline,
+          boldHeadline: heroSettings.heroImage3.boldHeadline,
+        });
+      } catch (heroErr) {
+        console.error("Hero load error:", heroErr);
+      }
+
+      // Clear pending uploads
+      setHeroPendingFiles({});
+      setHeroPreviewUrls({});
+      setHeroSlotErrors({});
     } catch (err) {
       setStatusMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "Failed to load navbar settings",
+        text: err instanceof Error ? err.message : "Failed to load management settings",
       });
     } finally {
       setIsLoadingData(false);
@@ -130,19 +275,33 @@ export default function AdminNavbarPage() {
     }
   }, [isVerifying, loadData]);
 
+  // Clean up blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(heroPreviewUrls).forEach((url) => {
+        if (url && url.startsWith("blob:")) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [heroPreviewUrls]);
+
   // Handle Logout
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
       await logoutAdmin();
-    } finally {
       router.replace("/?auth=login");
+    } catch {
+      router.replace("/?auth=login");
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
-  // Detect Unsaved Changes
+  // ─── CHANGE DETECTORS ───────────────────────────────────────────────────────
   const hasTopBarChanges = useMemo(() => {
-    if (!serverSettings) return false;
+    if (!serverSettings?.topBar) return false;
     const s = serverSettings.topBar;
     return (
       topBarForm.text !== s.text ||
@@ -151,33 +310,64 @@ export default function AdminNavbarPage() {
       topBarForm.visible !== s.visible ||
       topBarForm.dismissible !== s.dismissible
     );
-  }, [serverSettings, topBarForm]);
+  }, [serverSettings?.topBar, topBarForm]);
 
   const hasSecondNavbarChanges = useMemo(() => {
-    if (!serverSettings) return false;
+    if (!serverSettings?.secondNavbar) return false;
     return secondNavbarPromo !== serverSettings.secondNavbar.promoText;
-  }, [serverSettings, secondNavbarPromo]);
+  }, [serverSettings?.secondNavbar, secondNavbarPromo]);
 
-  // Top Bar Cancel
+  const hasHero1Changes = useMemo(() => {
+    if (heroPendingFiles.heroImage1) return true;
+    const s = serverHeroSettings.heroImage1;
+    return (
+      hero1Form.normalHeadline !== s.normalHeadline ||
+      hero1Form.boldHeadline !== s.boldHeadline ||
+      hero1Form.description !== s.description
+    );
+  }, [serverHeroSettings.heroImage1, hero1Form, heroPendingFiles.heroImage1]);
+
+  const hasHero2Changes = useMemo(() => {
+    if (heroPendingFiles.heroImage2) return true;
+    const s = serverHeroSettings.heroImage2;
+    return (
+      hero2Form.normalHeadline !== s.normalHeadline ||
+      hero2Form.boldHeadline !== s.boldHeadline
+    );
+  }, [serverHeroSettings.heroImage2, hero2Form, heroPendingFiles.heroImage2]);
+
+  const hasHero3Changes = useMemo(() => {
+    if (heroPendingFiles.heroImage3) return true;
+    const s = serverHeroSettings.heroImage3;
+    return (
+      hero3Form.normalHeadline !== s.normalHeadline ||
+      hero3Form.boldHeadline !== s.boldHeadline
+    );
+  }, [serverHeroSettings.heroImage3, hero3Form, heroPendingFiles.heroImage3]);
+
+  // ─── TOP BAR ACTIONS ────────────────────────────────────────────────────────
   const handleCancelTopBar = () => {
-    if (!serverSettings) return;
-    setTopBarForm({ ...serverSettings.topBar });
-    setStatusMessage({ type: "info", text: "Top Bar changes discarded." });
+    if (serverSettings?.topBar) {
+      setTopBarForm({ ...serverSettings.topBar });
+    }
+    setStatusMessage({
+      type: "info",
+      text: "Top Bar changes discarded.",
+    });
   };
 
-  // Top Bar Save
   const handleSaveTopBar = async () => {
     if (!topBarForm.text.trim()) {
-      setStatusMessage({ type: "error", text: "Announcement text cannot be empty." });
-      return;
-    }
-    if (topBarForm.text.length > 250) {
-      setStatusMessage({ type: "error", text: "Announcement text must not exceed 250 characters." });
+      setStatusMessage({
+        type: "error",
+        text: "Top Bar announcement text is required.",
+      });
       return;
     }
 
     setIsSaving(true);
     setStatusMessage(null);
+
     try {
       const updated = await updateAdminTopBar({
         text: topBarForm.text.trim(),
@@ -185,23 +375,27 @@ export default function AdminNavbarPage() {
         textColor: topBarForm.textColor,
         visible: topBarForm.visible,
         dismissible: topBarForm.dismissible,
+        description: `Updated Top Bar announcement (v${(serverSettings?.topBarVersion ?? 1) + 1})`,
       });
 
       setServerSettings(updated);
       setTopBarForm({ ...updated.topBar });
+
+      const newHistory = await fetchAdminNavbarHistory("top_bar");
+      setTopBarHistory(newHistory);
+
+      queryClient.invalidateQueries({ queryKey: NAVBAR_SETTINGS_QUERY_KEY });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(NAVBAR_SETTINGS_UPDATED_EVENT, { detail: updated })
+        );
+      }
+
       const versionLabel = updated.topBarVersion ?? updated.version;
       setStatusMessage({
         type: "success",
         text: `Top Bar published successfully as v${versionLabel}! Storefront is now synchronized.`,
       });
-
-      // Refresh Top Bar history only
-      const newTopHistory = await fetchAdminNavbarHistory("top_bar");
-      setTopBarHistory(newTopHistory);
-      queryClient.invalidateQueries({ queryKey: NAVBAR_SETTINGS_QUERY_KEY });
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event(NAVBAR_SETTINGS_UPDATED_EVENT));
-      }
     } catch (err) {
       setStatusMessage({
         type: "error",
@@ -212,26 +406,29 @@ export default function AdminNavbarPage() {
     }
   };
 
-  // Second Navbar Cancel
+  // ─── SECOND NAVBAR ACTIONS ──────────────────────────────────────────────────
   const handleCancelSecondNavbar = () => {
-    if (!serverSettings) return;
-    setSecondNavbarPromo(serverSettings.secondNavbar.promoText);
-    setStatusMessage({ type: "info", text: "Second Navbar changes discarded." });
+    if (serverSettings?.secondNavbar) {
+      setSecondNavbarPromo(serverSettings.secondNavbar.promoText);
+    }
+    setStatusMessage({
+      type: "info",
+      text: "Second Navbar changes discarded.",
+    });
   };
 
-  // Second Navbar Save — Promotional Message Only
   const handleSaveSecondNavbar = async () => {
     if (!secondNavbarPromo.trim()) {
-      setStatusMessage({ type: "error", text: "Promotional message cannot be empty." });
-      return;
-    }
-    if (secondNavbarPromo.length > 120) {
-      setStatusMessage({ type: "error", text: "Promotional message must not exceed 120 characters." });
+      setStatusMessage({
+        type: "error",
+        text: "Promotional message cannot be empty.",
+      });
       return;
     }
 
     setIsSaving(true);
     setStatusMessage(null);
+
     try {
       const updated = await updateAdminSecondNavbar({
         promoText: secondNavbarPromo.trim(),
@@ -239,19 +436,22 @@ export default function AdminNavbarPage() {
 
       setServerSettings(updated);
       setSecondNavbarPromo(updated.secondNavbar.promoText);
+
+      const newHistory = await fetchAdminNavbarHistory("second_navbar");
+      setSecondNavbarHistory(newHistory);
+
+      queryClient.invalidateQueries({ queryKey: NAVBAR_SETTINGS_QUERY_KEY });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(NAVBAR_SETTINGS_UPDATED_EVENT, { detail: updated })
+        );
+      }
+
       const versionLabel = updated.secondNavbarVersion ?? updated.version;
       setStatusMessage({
         type: "success",
         text: `Second Navbar published successfully as v${versionLabel}! Storefront is now synchronized.`,
       });
-
-      // Refresh Second Navbar history only
-      const newSecondHistory = await fetchAdminNavbarHistory("second_navbar");
-      setSecondNavbarHistory(newSecondHistory);
-      queryClient.invalidateQueries({ queryKey: NAVBAR_SETTINGS_QUERY_KEY });
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event(NAVBAR_SETTINGS_UPDATED_EVENT));
-      }
     } catch (err) {
       setStatusMessage({
         type: "error",
@@ -262,37 +462,304 @@ export default function AdminNavbarPage() {
     }
   };
 
-  // Version Restore Execution
-  const handleExecuteRestore = async () => {
+  // ─── HERO FILE SELECTION & VALIDATION ───────────────────────────────────────
+  const handleHeroFileSelect = (
+    slotKey: "heroImage1" | "heroImage2" | "heroImage3",
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      setHeroSlotErrors((prev) => ({
+        ...prev,
+        [slotKey]: "Invalid file format. Please upload a JPEG, PNG, or WebP image.",
+      }));
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+      setHeroSlotErrors((prev) => ({
+        ...prev,
+        [slotKey]: `File size (${sizeMb}MB) exceeds the maximum 5MB limit.`,
+      }));
+      e.target.value = "";
+      return;
+    }
+
+    setHeroSlotErrors((prev) => {
+      const copy = { ...prev };
+      delete copy[slotKey];
+      return copy;
+    });
+
+    if (heroPreviewUrls[slotKey]?.startsWith("blob:")) {
+      URL.revokeObjectURL(heroPreviewUrls[slotKey]!);
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setHeroPreviewUrls((prev) => ({ ...prev, [slotKey]: objectUrl }));
+    setHeroPendingFiles((prev) => ({ ...prev, [slotKey]: file }));
+  };
+
+  // ─── HERO SLOT ACTIONS (INDEPENDENT) ────────────────────────────────────────
+  const handleCancelHeroSlot = (slotKey: "heroImage1" | "heroImage2" | "heroImage3") => {
+    if (heroPreviewUrls[slotKey]?.startsWith("blob:")) {
+      URL.revokeObjectURL(heroPreviewUrls[slotKey]!);
+    }
+
+    setHeroPendingFiles((prev) => {
+      const copy = { ...prev };
+      delete copy[slotKey];
+      return copy;
+    });
+    setHeroPreviewUrls((prev) => {
+      const copy = { ...prev };
+      delete copy[slotKey];
+      return copy;
+    });
+    setHeroSlotErrors((prev) => {
+      const copy = { ...prev };
+      delete copy[slotKey];
+      return copy;
+    });
+
+    if (slotKey === "heroImage1") {
+      setHero1Form({
+        imageUrl: serverHeroSettings.heroImage1.imageUrl,
+        imageAlt: serverHeroSettings.heroImage1.imageAlt,
+        normalHeadline: serverHeroSettings.heroImage1.normalHeadline,
+        boldHeadline: serverHeroSettings.heroImage1.boldHeadline,
+        description: serverHeroSettings.heroImage1.description,
+      });
+      if (fileInputRef1.current) fileInputRef1.current.value = "";
+    } else if (slotKey === "heroImage2") {
+      setHero2Form({
+        imageUrl: serverHeroSettings.heroImage2.imageUrl,
+        imageAlt: serverHeroSettings.heroImage2.imageAlt,
+        normalHeadline: serverHeroSettings.heroImage2.normalHeadline,
+        boldHeadline: serverHeroSettings.heroImage2.boldHeadline,
+      });
+      if (fileInputRef2.current) fileInputRef2.current.value = "";
+    } else {
+      setHero3Form({
+        imageUrl: serverHeroSettings.heroImage3.imageUrl,
+        imageAlt: serverHeroSettings.heroImage3.imageAlt,
+        normalHeadline: serverHeroSettings.heroImage3.normalHeadline,
+        boldHeadline: serverHeroSettings.heroImage3.boldHeadline,
+      });
+      if (fileInputRef3.current) fileInputRef3.current.value = "";
+    }
+
+    setStatusMessage({
+      type: "info",
+      text: `${HERO_SLOT_SPECS[slotKey].name} changes reverted to current published values.`,
+    });
+  };
+
+  const handleSaveHeroSlot = async (slotKey: "heroImage1" | "heroImage2" | "heroImage3") => {
+    // Validate text inputs
+    if (slotKey === "heroImage1") {
+      if (!hero1Form.normalHeadline.trim()) {
+        setStatusMessage({ type: "error", text: "Normal headline is required." });
+        return;
+      }
+      if (!hero1Form.boldHeadline.trim()) {
+        setStatusMessage({ type: "error", text: "Bold headline is required." });
+        return;
+      }
+    } else if (slotKey === "heroImage2") {
+      if (!hero2Form.normalHeadline.trim()) {
+        setStatusMessage({ type: "error", text: "Normal headline is required." });
+        return;
+      }
+      if (!hero2Form.boldHeadline.trim()) {
+        setStatusMessage({ type: "error", text: "Bold headline is required." });
+        return;
+      }
+    } else {
+      if (!hero3Form.normalHeadline.trim()) {
+        setStatusMessage({ type: "error", text: "Normal headline is required." });
+        return;
+      }
+      if (!hero3Form.boldHeadline.trim()) {
+        setStatusMessage({ type: "error", text: "Bold headline is required." });
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    setStatusMessage(null);
+
+    try {
+      let finalImageUrl =
+        slotKey === "heroImage1"
+          ? hero1Form.imageUrl
+          : slotKey === "heroImage2"
+          ? hero2Form.imageUrl
+          : hero3Form.imageUrl;
+
+      // 1. Upload pending image if one was selected for this slot
+      const pendingFile = heroPendingFiles[slotKey];
+      if (pendingFile) {
+        const uploadRes = await uploadAdminHeroImage(pendingFile);
+        finalImageUrl = uploadRes.url;
+      }
+
+      // 2. Persist slot independently
+      let payload;
+      if (slotKey === "heroImage1") {
+        payload = {
+          imageUrl: finalImageUrl,
+          imageAlt: `${hero1Form.normalHeadline.trim()} ${hero1Form.boldHeadline.trim()} - PERALAGAE`,
+          normalHeadline: hero1Form.normalHeadline.trim(),
+          boldHeadline: hero1Form.boldHeadline.trim(),
+          description: hero1Form.description.trim(),
+        };
+      } else if (slotKey === "heroImage2") {
+        payload = {
+          imageUrl: finalImageUrl,
+          imageAlt: `${hero2Form.normalHeadline.trim()} ${hero2Form.boldHeadline.trim()} - PERALAGAE`,
+          normalHeadline: hero2Form.normalHeadline.trim(),
+          boldHeadline: hero2Form.boldHeadline.trim(),
+        };
+      } else {
+        payload = {
+          imageUrl: finalImageUrl,
+          imageAlt: `${hero3Form.normalHeadline.trim()} ${hero3Form.boldHeadline.trim()} - PERALAGAE`,
+          normalHeadline: hero3Form.normalHeadline.trim(),
+          boldHeadline: hero3Form.boldHeadline.trim(),
+        };
+      }
+
+      const updated = await updateAdminHeroSlot(slotKey, payload);
+
+      // 3. Update server state
+      setServerHeroSettings(updated);
+
+      if (slotKey === "heroImage1") {
+        setHero1Form({
+          imageUrl: updated.heroImage1.imageUrl,
+          imageAlt: updated.heroImage1.imageAlt,
+          normalHeadline: updated.heroImage1.normalHeadline,
+          boldHeadline: updated.heroImage1.boldHeadline,
+          description: updated.heroImage1.description,
+        });
+        const newHist = await fetchAdminHeroHistory("heroImage1");
+        setHero1History(newHist);
+      } else if (slotKey === "heroImage2") {
+        setHero2Form({
+          imageUrl: updated.heroImage2.imageUrl,
+          imageAlt: updated.heroImage2.imageAlt,
+          normalHeadline: updated.heroImage2.normalHeadline,
+          boldHeadline: updated.heroImage2.boldHeadline,
+        });
+        const newHist = await fetchAdminHeroHistory("heroImage2");
+        setHero2History(newHist);
+      } else {
+        setHero3Form({
+          imageUrl: updated.heroImage3.imageUrl,
+          imageAlt: updated.heroImage3.imageAlt,
+          normalHeadline: updated.heroImage3.normalHeadline,
+          boldHeadline: updated.heroImage3.boldHeadline,
+        });
+        const newHist = await fetchAdminHeroHistory("heroImage3");
+        setHero3History(newHist);
+      }
+
+      // Clear pending file
+      setHeroPendingFiles((prev) => {
+        const copy = { ...prev };
+        delete copy[slotKey];
+        return copy;
+      });
+      setHeroPreviewUrls((prev) => {
+        const copy = { ...prev };
+        delete copy[slotKey];
+        return copy;
+      });
+      setHeroSlotErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[slotKey];
+        return copy;
+      });
+
+      // Synchronize live homepage
+      queryClient.invalidateQueries({ queryKey: HERO_SETTINGS_QUERY_KEY });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(HERO_SETTINGS_UPDATED_EVENT, { detail: updated })
+        );
+      }
+
+      const newVersion =
+        slotKey === "heroImage1"
+          ? updated.heroImage1Version
+          : slotKey === "heroImage2"
+          ? updated.heroImage2Version
+          : updated.heroImage3Version;
+
+      setStatusMessage({
+        type: "success",
+        text: `${HERO_SLOT_SPECS[slotKey].name} published successfully (v${newVersion}). The live homepage reflects your updates.`,
+      });
+    } catch (err: unknown) {
+      setStatusMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : `Failed to publish ${HERO_SLOT_SPECS[slotKey].name}`,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ─── RESTORE HANDLERS ───────────────────────────────────────────────────────
+  const handleExecuteNavbarRestore = async () => {
     if (!restoreConfirmTarget) return;
 
     setIsRestoring(true);
+    setStatusMessage(null);
+
     try {
       const { item, section } = restoreConfirmTarget;
-      const updated = await restoreAdminNavbarVersion(item.id, section);
+      const updated = await restoreAdminNavbarVersion(
+        item.id,
+        section
+      );
 
       setServerSettings(updated);
+
       if (section === "top_bar") {
         setTopBarForm({ ...updated.topBar });
-        const newTopHistory = await fetchAdminNavbarHistory("top_bar");
-        setTopBarHistory(newTopHistory);
+        const newHistory = await fetchAdminNavbarHistory("top_bar");
+        setTopBarHistory(newHistory);
       } else {
         setSecondNavbarPromo(updated.secondNavbar.promoText);
-        const newSecondHistory = await fetchAdminNavbarHistory("second_navbar");
-        setSecondNavbarHistory(newSecondHistory);
+        const newHistory = await fetchAdminNavbarHistory("second_navbar");
+        setSecondNavbarHistory(newHistory);
+      }
+
+      queryClient.invalidateQueries({ queryKey: NAVBAR_SETTINGS_QUERY_KEY });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(NAVBAR_SETTINGS_UPDATED_EVENT, { detail: updated })
+        );
       }
 
       const sectionTitle = section === "top_bar" ? "Top Bar" : "Second Navbar";
-      const newVer = section === "top_bar" ? (updated.topBarVersion ?? updated.version) : (updated.secondNavbarVersion ?? updated.version);
+      const newVer =
+        section === "top_bar"
+          ? (updated.topBarVersion ?? updated.version)
+          : (updated.secondNavbarVersion ?? updated.version);
+
       setStatusMessage({
         type: "success",
         text: `Version ${item.version} of the ${sectionTitle} successfully restored and published as v${newVer}! Storefront is now synchronized.`,
       });
 
-      queryClient.invalidateQueries({ queryKey: NAVBAR_SETTINGS_QUERY_KEY });
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event(NAVBAR_SETTINGS_UPDATED_EVENT));
-      }
       setRestoreConfirmTarget(null);
     } catch (err) {
       setStatusMessage({
@@ -304,19 +771,97 @@ export default function AdminNavbarPage() {
     }
   };
 
+  const handleExecuteHeroRestore = async () => {
+    if (!heroRestoreConfirmTarget) return;
+
+    setIsRestoring(true);
+    setStatusMessage(null);
+
+    const { slotId, item } = heroRestoreConfirmTarget;
+
+    try {
+      const updated = await restoreAdminHeroSlot(slotId, item.version);
+
+      setServerHeroSettings(updated);
+
+      if (slotId === "heroImage1") {
+        setHero1Form({
+          imageUrl: updated.heroImage1.imageUrl,
+          imageAlt: updated.heroImage1.imageAlt,
+          normalHeadline: updated.heroImage1.normalHeadline,
+          boldHeadline: updated.heroImage1.boldHeadline,
+          description: updated.heroImage1.description,
+        });
+        const newHist = await fetchAdminHeroHistory("heroImage1");
+        setHero1History(newHist);
+      } else if (slotId === "heroImage2") {
+        setHero2Form({
+          imageUrl: updated.heroImage2.imageUrl,
+          imageAlt: updated.heroImage2.imageAlt,
+          normalHeadline: updated.heroImage2.normalHeadline,
+          boldHeadline: updated.heroImage2.boldHeadline,
+        });
+        const newHist = await fetchAdminHeroHistory("heroImage2");
+        setHero2History(newHist);
+      } else {
+        setHero3Form({
+          imageUrl: updated.heroImage3.imageUrl,
+          imageAlt: updated.heroImage3.imageAlt,
+          normalHeadline: updated.heroImage3.normalHeadline,
+          boldHeadline: updated.heroImage3.boldHeadline,
+        });
+        const newHist = await fetchAdminHeroHistory("heroImage3");
+        setHero3History(newHist);
+      }
+
+      queryClient.invalidateQueries({ queryKey: HERO_SETTINGS_QUERY_KEY });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(HERO_SETTINGS_UPDATED_EVENT, { detail: updated })
+        );
+      }
+
+      const activeVersion =
+        slotId === "heroImage1"
+          ? updated.heroImage1Version
+          : slotId === "heroImage2"
+          ? updated.heroImage2Version
+          : updated.heroImage3Version;
+
+      setStatusMessage({
+        type: "success",
+        text: `${HERO_SLOT_SPECS[slotId].name} restored to historical v${item.version} (now live as v${activeVersion}). The live homepage reflects your restoration.`,
+      });
+
+      setHeroRestoreConfirmTarget(null);
+    } catch (err: unknown) {
+      setStatusMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : `Failed to restore ${HERO_SLOT_SPECS[slotId].name}`,
+      });
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
   if (isVerifying || isLoadingData) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#F9F9F9]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-[#C5A572]" />
-          <p className="text-sm font-medium text-gray-600">Loading Navbar Management...</p>
+          <p className="text-sm font-medium text-gray-600">Loading Management Dashboard...</p>
         </div>
       </div>
     );
   }
 
+  // Active display image URLs for Hero Section
+  const displayHero1Image = heroPreviewUrls.heroImage1 || hero1Form.imageUrl;
+  const displayHero2Image = heroPreviewUrls.heroImage2 || hero2Form.imageUrl;
+  const displayHero3Image = heroPreviewUrls.heroImage3 || hero3Form.imageUrl;
+
   return (
-    <div className="min-h-screen bg-[#F9F9F9] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F9F9F9] flex flex-col font-sans text-[#111111]">
       {/* Top Navigation */}
       <AdminNavbar
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
@@ -324,7 +869,7 @@ export default function AdminNavbarPage() {
         isLoggingOut={isLoggingOut}
       />
 
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation (Dashboard & Navbar only) */}
       <AdminSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -352,6 +897,7 @@ export default function AdminNavbarPage() {
         {/* Global Status Banner */}
         {statusMessage && (
           <div
+            data-testid="admin-global-status-banner"
             className={`mb-5 sm:mb-6 p-3.5 sm:p-4 rounded-lg flex items-start sm:items-center justify-between gap-3 text-xs sm:text-sm shadow-sm transition-all duration-300 ${
               statusMessage.type === "success"
                 ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
@@ -368,7 +914,7 @@ export default function AdminNavbarPage() {
                 <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600 shrink-0 mt-0.5 sm:mt-0" />
               )}
               {statusMessage.type === "info" && (
-                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0 mt-0.5 sm:mt-0" />
+                <Info className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0 mt-0.5 sm:mt-0" />
               )}
               <span className="font-medium break-words leading-relaxed">{statusMessage.text}</span>
             </div>
@@ -382,44 +928,114 @@ export default function AdminNavbarPage() {
           </div>
         )}
 
-        {/* Section Tabs: Horizontally scrollable on mobile */}
-        <div className="border-b border-[#E5E7EB] -mx-3.5 px-3.5 sm:mx-0 sm:px-0 overflow-x-auto scrollbar-none">
-          <nav className="flex space-x-5 sm:space-x-8 min-w-max pb-px" aria-label="Tabs">
-            <button
-              type="button"
-              onClick={() => setActiveTab("top_bar")}
-              className={`py-3 sm:py-3.5 px-1 inline-flex items-center gap-2 border-b-2 text-xs sm:text-sm font-medium transition-colors ${
-                activeTab === "top_bar"
-                  ? "border-black text-black font-semibold"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              <span>Top Bar (Announcement)</span>
-              {hasTopBarChanges && (
-                <span className="w-2 h-2 rounded-full bg-amber-500" title="Unsaved changes" />
-              )}
-            </button>
+        {/* ─── SECTION NAVIGATION & TABS ────────────────────────────────────── */}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-5 shadow-sm space-y-4 mb-6">
+          {/* Section A: Navbar Settings */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#C5A572]">
+                Section A: Navbar Settings
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                data-testid="tab-top-bar"
+                onClick={() => setActiveTab("top_bar")}
+                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                  activeTab === "top_bar"
+                    ? "bg-[#111111] text-white shadow-sm font-semibold"
+                    : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
+                }`}
+              >
+                <span>Top Bar</span>
+                {hasTopBarChanges && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Unsaved changes" />
+                )}
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("second_navbar")}
-              className={`py-3 sm:py-3.5 px-1 inline-flex items-center gap-2 border-b-2 text-xs sm:text-sm font-medium transition-colors ${
-                activeTab === "second_navbar"
-                  ? "border-black text-black font-semibold"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              <span>Second Navbar</span>
-              {hasSecondNavbarChanges && (
-                <span className="w-2 h-2 rounded-full bg-amber-500" title="Unsaved changes" />
-              )}
-            </button>
-          </nav>
+              <button
+                type="button"
+                data-testid="tab-second-navbar"
+                onClick={() => setActiveTab("second_navbar")}
+                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                  activeTab === "second_navbar"
+                    ? "bg-[#111111] text-white shadow-sm font-semibold"
+                    : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
+                }`}
+              >
+                <span>Second Navbar</span>
+                {hasSecondNavbarChanges && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Unsaved changes" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="border-t border-[#F0F0F0]" />
+
+          {/* Section B: Hero Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-[#C5A572]">
+                Section B: Hero Section
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                data-testid="tab-hero-image-1"
+                onClick={() => setActiveTab("hero_image_1")}
+                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                  activeTab === "hero_image_1"
+                    ? "bg-[#111111] text-white shadow-sm font-semibold"
+                    : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
+                }`}
+              >
+                <span>Hero Image 1</span>
+                {hasHero1Changes && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Unsaved changes" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                data-testid="tab-hero-image-2"
+                onClick={() => setActiveTab("hero_image_2")}
+                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                  activeTab === "hero_image_2"
+                    ? "bg-[#111111] text-white shadow-sm font-semibold"
+                    : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
+                }`}
+              >
+                <span>Hero Image 2</span>
+                {hasHero2Changes && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Unsaved changes" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                data-testid="tab-hero-image-3"
+                onClick={() => setActiveTab("hero_image_3")}
+                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                  activeTab === "hero_image_3"
+                    ? "bg-[#111111] text-white shadow-sm font-semibold"
+                    : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
+                }`}
+              >
+                <span>Hero Image 3</span>
+                {hasHero3Changes && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Unsaved changes" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* ─── TAB 1: TOP BAR MANAGEMENT ───────────────────────────────────── */}
         {activeTab === "top_bar" && (
-          <div className="mt-6 sm:mt-8 space-y-6 sm:space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* Live Preview Card */}
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-5 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 mb-4 border-b border-[#F0F0F0]">
@@ -452,60 +1068,53 @@ export default function AdminNavbarPage() {
                       color: topBarForm.textColor,
                     }}
                   >
-                    <span className="max-w-2xl px-5 sm:px-2 leading-relaxed">{topBarForm.text || "Your announcement message here..."}</span>
+                    <span>{topBarForm.text || "Type announcement text below..."}</span>
                     {topBarForm.dismissible && (
-                      <span className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 opacity-60 text-base cursor-pointer p-1">
+                      <span className="ml-3 opacity-60 text-xs select-none font-bold" aria-hidden="true">
                         &times;
                       </span>
                     )}
                   </div>
                 ) : (
-                  <div className="py-6 text-center text-xs text-gray-400 bg-gray-50 italic">
-                    Top Bar is currently hidden from the storefront (Visibility Toggle: Off)
+                  <div className="w-full py-3 px-4 text-center text-xs text-gray-500 italic bg-gray-100">
+                    Top Bar is currently hidden (Visibility toggle is OFF)
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Editor Form Card */}
+            {/* Editor Card */}
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4 sm:mb-5">
-                <h2 className="text-base font-medium text-[#111111]">
-                  Top Bar Announcement Settings
-                </h2>
-              </div>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-[#111111] mb-4 pb-2 border-b border-[#F0F0F0]">
+                Top Bar Announcement Settings
+              </h2>
 
-              <div className="space-y-5 sm:space-y-6">
-                {/* Announcement Text Input */}
+              <div className="space-y-4">
                 <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label
-                      htmlFor="topbar-text"
-                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333]"
-                    >
-                      Announcement Text <span className="text-rose-500">*</span>
-                    </label>
-                    <span className="text-xs text-gray-400 font-mono">
-                      {topBarForm.text.length}/250
-                    </span>
-                  </div>
+                  <label
+                    htmlFor="topbar-text"
+                    className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                  >
+                    Announcement Text
+                  </label>
                   <textarea
                     id="topbar-text"
                     rows={2}
                     value={topBarForm.text}
-                    onChange={(e) => setTopBarForm((prev) => ({ ...prev, text: e.target.value }))}
+                    onChange={(e) =>
+                      setTopBarForm((prev) => ({ ...prev, text: e.target.value }))
+                    }
                     placeholder="e.g. SUMMER SALE, Get 40% Off for all products."
-                    className="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none transition"
                     maxLength={250}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
                   />
-                  {topBarForm.text.trim().length === 0 && (
-                    <p className="text-xs text-rose-500 mt-1">Announcement text cannot be empty.</p>
-                  )}
+                  <div className="flex justify-between items-center mt-1 text-[11px] text-gray-400">
+                    <span>Promotional message shown at the top of every storefront page</span>
+                    <span>{topBarForm.text.length} / 250</span>
+                  </div>
                 </div>
 
-                {/* Styling Options: Colors & Toggles */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
-                  {/* Background Color */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                   <div>
                     <label
                       htmlFor="topbar-bg-color"
@@ -535,7 +1144,6 @@ export default function AdminNavbarPage() {
                     </div>
                   </div>
 
-                  {/* Text Color */}
                   <div>
                     <label
                       htmlFor="topbar-text-color"
@@ -565,7 +1173,6 @@ export default function AdminNavbarPage() {
                     </div>
                   </div>
 
-                  {/* Visibility Toggle */}
                   <div className="flex flex-col justify-end pt-1 sm:pt-0">
                     <label className="flex items-center cursor-pointer gap-2.5 py-1">
                       <input
@@ -581,7 +1188,6 @@ export default function AdminNavbarPage() {
                     </label>
                   </div>
 
-                  {/* Dismissible Toggle */}
                   <div className="flex flex-col justify-end pt-1 sm:pt-0">
                     <label className="flex items-center cursor-pointer gap-2.5 py-1">
                       <input
@@ -599,166 +1205,115 @@ export default function AdminNavbarPage() {
                 </div>
               </div>
 
-              {/* Action Buttons: Responsive mobile stacking */}
-              <div className="mt-6 sm:mt-8 pt-4 sm:pt-5 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2.5 sm:gap-3">
-                <button
-                  type="button"
-                  onClick={handleCancelTopBar}
-                  disabled={!hasTopBarChanges || isSaving}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
-                >
-                  <Undo2 className="w-3.5 h-3.5" />
-                  <span>Cancel Changes</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSaveTopBar}
-                  disabled={!hasTopBarChanges || isSaving}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 sm:py-2 text-xs font-medium text-white bg-[#111111] rounded hover:bg-black transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-                >
-                  {isSaving ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              {/* Action Buttons */}
+              <div className="mt-6 pt-4 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-xs text-gray-500 order-2 sm:order-1">
+                  {hasTopBarChanges ? (
+                    <span className="text-amber-700 font-medium">You have unsaved changes</span>
                   ) : (
-                    <Save className="w-3.5 h-3.5" />
+                    <span>Current settings published live (v{serverSettings?.topBarVersion ?? 1})</span>
                   )}
-                  <span>Save & Publish Changes</span>
-                </button>
+                </span>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end order-1 sm:order-2">
+                  <button
+                    type="button"
+                    onClick={handleCancelTopBar}
+                    disabled={!hasTopBarChanges || isSaving}
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Cancel Changes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveTopBar}
+                    disabled={!hasTopBarChanges || isSaving}
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                  >
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>Save & Publish Changes</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Top Bar Version History Section */}
+            {/* Top Bar Version History Table */}
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
-                <div>
-                  <h2 className="text-base font-medium text-[#111111]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-2 border-b border-[#F0F0F0]">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-[#888888]" />
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
                     Top Bar Version History
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Historical versions of the announcement bar. Restore past versions directly to the live website.
-                  </p>
+                  </h3>
                 </div>
-
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Current Live: v{serverSettings?.topBarVersion ?? 1}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-gray-50 border border-gray-200 px-3 py-1 rounded text-[#555555]">
+                    Current Live: v{serverSettings?.topBarVersion ?? 1}
                   </span>
                 </div>
               </div>
 
-              {topBarHistory.length === 0 ? (
-                <div className="py-10 sm:py-12 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
-                  <History className="w-7 h-7 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-gray-700">
-                    No previous Top Bar versions recorded yet.
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    History will appear after the first successful publication.
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-                  <table className="w-full min-w-[620px] text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50/75 text-gray-600 font-semibold uppercase tracking-wider">
-                        <th className="py-3 px-3 sm:px-4">Version</th>
-                        <th className="py-3 px-3 sm:px-4">Status</th>
-                        <th className="py-3 px-3 sm:px-4">Announcement Text</th>
-                        <th className="py-3 px-3 sm:px-4">Date & Time</th>
-                        <th className="py-3 px-3 sm:px-4">Administrator</th>
-                        <th className="py-3 px-3 sm:px-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {topBarHistory.map((item) => {
-                        const isCurrentLive =
-                          serverSettings && item.version === (serverSettings.topBarVersion ?? 1);
-
-                        return (
-                          <tr
-                            key={item.id}
-                            className={`hover:bg-gray-50/80 transition-colors ${
-                              isCurrentLive ? "bg-emerald-50/20" : ""
-                            }`}
-                          >
-                            <td className="py-3.5 px-3 sm:px-4 font-mono font-bold text-gray-900 whitespace-nowrap">
-                              v{item.version}
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 whitespace-nowrap">
-                              {isCurrentLive ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  <Check className="w-3 h-3 text-emerald-600" />
-                                  Current Live Version
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                  Previous Version
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 max-w-xs sm:max-w-sm">
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className="w-3.5 h-3.5 rounded border border-gray-300 shrink-0"
-                                  style={{ backgroundColor: item.snapshot.topBar.backgroundColor }}
-                                  title={`Color: ${item.snapshot.topBar.backgroundColor}`}
-                                />
-                                <span className="text-gray-800 truncate font-medium">
-                                  {item.snapshot.topBar.visible ? (
-                                    `"${item.snapshot.topBar.text}"`
-                                  ) : (
-                                    <span className="text-gray-400 italic">Hidden on Storefront</span>
-                                  )}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 text-gray-600 whitespace-nowrap">
-                              <span className="flex items-center gap-1.5">
-                                <Clock className="w-3 h-3 text-gray-400 shrink-0" />
-                                {new Date(item.createdAt).toLocaleString(undefined, {
-                                  dateStyle: "medium",
-                                  timeStyle: "short",
-                                })}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
+                    <tr>
+                      <th className="py-2.5 px-3 font-semibold">Version</th>
+                      <th className="py-2.5 px-3 font-semibold">Announcement Text</th>
+                      <th className="py-2.5 px-3 font-semibold">Date & Time</th>
+                      <th className="py-2.5 px-3 font-semibold">Status</th>
+                      <th className="py-2.5 px-3 font-semibold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {topBarHistory.map((item) => {
+                      const isCurrent = item.version === (serverSettings?.topBarVersion ?? 1);
+                      return (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="py-2.5 px-3 font-mono font-medium text-gray-900">
+                            v{item.version}
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-800 max-w-xs truncate">
+                            {item.snapshot.topBar.text}
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-500 whitespace-nowrap">
+                            {new Date(item.createdAt).toLocaleString(undefined, {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })}
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {isCurrent ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                <Check className="w-3 h-3" /> Active Live
                               </span>
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 text-gray-500 font-mono text-[11px] whitespace-nowrap">
-                              {item.createdBy || "admin@peralagae.com"}
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
-                              <div className="inline-flex items-center justify-end">
-                                {isCurrentLive ? (
-                                  <span className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
-                                    Active Live
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => setRestoreConfirmTarget({ item, section: "top_bar" })}
-                                    disabled={isRestoring}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-black bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-gray-300 rounded transition disabled:opacity-40"
-                                    title="Restore this Top Bar version"
-                                  >
-                                    <RotateCcw className="w-3 h-3 text-[#C5A572]" />
-                                    <span>Restore</span>
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                            ) : (
+                              <span className="text-[11px] text-gray-400">Previous</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            {!isCurrent && (
+                              <button
+                                type="button"
+                                onClick={() => setRestoreConfirmTarget({ item, section: "top_bar" })}
+                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                              >
+                                Restore
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
 
         {/* ─── TAB 2: SECOND NAVBAR MANAGEMENT ─────────────────────────────── */}
         {activeTab === "second_navbar" && (
-          <div className="mt-6 sm:mt-8 space-y-6 sm:space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* Live Preview Card */}
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-5 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 mb-4 border-b border-[#F0F0F0]">
@@ -800,252 +1355,902 @@ export default function AdminNavbarPage() {
                         )}
 
                       {serverSettings?.secondNavbar.showPromotion && secondNavbarPromo && (
-                        <span className="text-black inline-flex flex-wrap items-center gap-1.5 leading-snug break-words text-[11px] sm:text-xs lg:text-[13px]">
-                          <span className="break-words">{secondNavbarPromo}</span>
+                        <div className="flex items-center gap-2 truncate text-[11px] sm:text-xs lg:text-[13px]">
+                          <span className="text-gray-700 truncate">{secondNavbarPromo}</span>
                           {serverSettings?.secondNavbar.ctaText && (
-                            <span className="font-semibold text-black underline cursor-pointer shrink-0">
+                            <span className="font-semibold text-black underline underline-offset-2 shrink-0 cursor-pointer">
                               {serverSettings.secondNavbar.ctaText}
                             </span>
                           )}
-                        </span>
+                        </div>
                       )}
                     </div>
 
-                    {/* Right Group (Secondary Links: hidden on xs mobile, matching storefront utility bar) */}
-                    {serverSettings?.secondNavbar.showLinks && (serverSettings?.secondNavbar.links.length ?? 0) > 0 && (
-                      <div className="hidden sm:flex items-center space-x-4 sm:space-x-6 text-black shrink-0 text-xs lg:text-[13px]">
-                        {serverSettings?.secondNavbar.links.map((link) => (
-                          <span
-                            key={link.id}
-                            className="hover:opacity-75 transition-opacity cursor-pointer whitespace-nowrap"
-                          >
-                            {link.label}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    {/* Right Group: Static Secondary Links */}
+                    {serverSettings?.secondNavbar.showLinks &&
+                      serverSettings?.secondNavbar.links &&
+                      serverSettings.secondNavbar.links.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 text-[11px] sm:text-xs text-gray-700 shrink-0">
+                          {serverSettings.secondNavbar.links.map((link) => (
+                            <span key={link.id} className="hover:text-black transition">
+                              {link.label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Editor Form Card: Promotional Message ONLY */}
+            {/* Editor Card */}
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
-              <div className="mb-4 sm:mb-5">
-                <h2 className="text-base font-medium text-[#111111]">
-                  Second Navbar Promotional Message
-                </h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Edit the promotional message displayed on the storefront secondary navigation strip. Other elements such as contact phone, CTA, and secondary links continue to render from their configured values.
-                </p>
-              </div>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-[#111111] mb-4 pb-2 border-b border-[#F0F0F0]">
+                Promotional Message Only
+              </h2>
 
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label
-                      htmlFor="promo-text"
-                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333]"
-                    >
-                      Promotional Message <span className="text-rose-500">*</span>
-                    </label>
-                    <span className="text-xs text-gray-400 font-mono">
-                      {secondNavbarPromo.length}/120
-                    </span>
-                  </div>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      id="promo-text"
-                      value={secondNavbarPromo}
-                      onChange={(e) => setSecondNavbarPromo(e.target.value)}
-                      placeholder="e.g. Summer Sale 15% off!"
-                      className="w-full px-3 sm:px-3.5 py-2 sm:py-2.5 pr-16 text-xs sm:text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none transition"
-                      maxLength={120}
-                    />
-                  </div>
-
-                  {secondNavbarPromo.trim().length === 0 && (
-                    <p className="text-xs text-rose-500 mt-1">
-                      Promotional message cannot be empty.
-                    </p>
-                  )}
-
-                  {secondNavbarPromo.length > 80 && (
-                    <p className="text-xs text-amber-600 flex items-center gap-1 mt-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>Long promotional text will wrap cleanly across breakpoints on the storefront.</span>
-                    </p>
-                  )}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center mb-1.5">
+                  <label
+                    htmlFor="second-navbar-promo"
+                    className="block text-xs font-semibold uppercase tracking-wider text-[#333333]"
+                  >
+                    Promotional Message
+                  </label>
+                  <span className="text-xs text-gray-400 font-mono">
+                    {secondNavbarPromo.length}/120
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  id="second-navbar-promo"
+                  value={secondNavbarPromo}
+                  onChange={(e) => setSecondNavbarPromo(e.target.value)}
+                  placeholder="e.g. Summer Sale 15% off!"
+                  maxLength={120}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
+                />
+                <div className="flex justify-between items-center text-[11px] text-gray-400">
+                  <span>Displayed centrally in the Second Navbar strip</span>
                 </div>
               </div>
 
-              {/* Action Buttons: Responsive mobile stacking */}
-              <div className="mt-6 sm:mt-8 pt-4 sm:pt-5 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2.5 sm:gap-3">
-                <button
-                  type="button"
-                  onClick={handleCancelSecondNavbar}
-                  disabled={!hasSecondNavbarChanges || isSaving}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
-                >
-                  <Undo2 className="w-3.5 h-3.5" />
-                  <span>Cancel Changes</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSaveSecondNavbar}
-                  disabled={!hasSecondNavbarChanges || isSaving}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 sm:py-2 text-xs font-medium text-white bg-[#111111] rounded hover:bg-black transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-                >
-                  {isSaving ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              {/* Action Buttons */}
+              <div className="mt-6 pt-4 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-xs text-gray-500 order-2 sm:order-1">
+                  {hasSecondNavbarChanges ? (
+                    <span className="text-amber-700 font-medium">You have unsaved changes</span>
                   ) : (
-                    <Save className="w-3.5 h-3.5" />
+                    <span>Current settings published live (v{serverSettings?.secondNavbarVersion ?? 1})</span>
                   )}
-                  <span>Save & Publish Changes</span>
-                </button>
+                </span>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end order-1 sm:order-2">
+                  <button
+                    type="button"
+                    onClick={handleCancelSecondNavbar}
+                    disabled={!hasSecondNavbarChanges || isSaving}
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Cancel Changes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveSecondNavbar}
+                    disabled={!hasSecondNavbarChanges || isSaving}
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                  >
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>Save & Publish Changes</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Second Navbar Version History Section */}
+            {/* Second Navbar Version History Table */}
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
-                <div>
-                  <h2 className="text-base font-medium text-[#111111]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-2 border-b border-[#F0F0F0]">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-[#888888]" />
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
                     Second Navbar Version History
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Historical versions of the Second Navbar promotional message. Restore past versions directly to the live website.
-                  </p>
+                  </h3>
                 </div>
-
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Current Live: v{serverSettings?.secondNavbarVersion ?? 1}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-gray-50 border border-gray-200 px-3 py-1 rounded text-[#555555]">
+                    Current Live: v{serverSettings?.secondNavbarVersion ?? 1}
                   </span>
                 </div>
               </div>
 
-              {secondNavbarHistory.length === 0 ? (
-                <div className="py-10 sm:py-12 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
-                  <History className="w-7 h-7 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-gray-700">
-                    No previous Second Navbar versions recorded yet.
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    History will appear after the first successful publication.
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-                  <table className="w-full min-w-[580px] text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50/75 text-gray-600 font-semibold uppercase tracking-wider">
-                        <th className="py-3 px-3 sm:px-4">Version</th>
-                        <th className="py-3 px-3 sm:px-4">Status</th>
-                        <th className="py-3 px-3 sm:px-4">Content Summary</th>
-                        <th className="py-3 px-3 sm:px-4">Date & Time</th>
-                        <th className="py-3 px-3 sm:px-4">Administrator</th>
-                        <th className="py-3 px-3 sm:px-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {secondNavbarHistory.map((item) => {
-                        const isCurrentLive =
-                          serverSettings && item.version === (serverSettings.secondNavbarVersion ?? 1);
-
-                        return (
-                          <tr
-                            key={item.id}
-                            className={`hover:bg-gray-50/80 transition-colors ${
-                              isCurrentLive ? "bg-emerald-50/20" : ""
-                            }`}
-                          >
-                            <td className="py-3.5 px-3 sm:px-4 font-mono font-bold text-gray-900 whitespace-nowrap">
-                              v{item.version}
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 whitespace-nowrap">
-                              {isCurrentLive ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  <Check className="w-3 h-3 text-emerald-600" />
-                                  Current Live Version
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                  Previous Version
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 max-w-xs sm:max-w-sm">
-                              <div className="text-gray-800 font-medium truncate">
-                                {item.snapshot.secondNavbar.promoText ? (
-                                  <span>&ldquo;{item.snapshot.secondNavbar.promoText}&rdquo;</span>
-                                ) : (
-                                  <span className="text-gray-400 italic">No promotional text</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 text-gray-600 whitespace-nowrap">
-                              <span className="flex items-center gap-1.5">
-                                <Clock className="w-3 h-3 text-gray-400 shrink-0" />
-                                {new Date(item.createdAt).toLocaleString(undefined, {
-                                  dateStyle: "medium",
-                                  timeStyle: "short",
-                                })}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
+                    <tr>
+                      <th className="py-2.5 px-3 font-semibold">Version</th>
+                      <th className="py-2.5 px-3 font-semibold">Promotional Message</th>
+                      <th className="py-2.5 px-3 font-semibold">Date & Time</th>
+                      <th className="py-2.5 px-3 font-semibold">Status</th>
+                      <th className="py-2.5 px-3 font-semibold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {secondNavbarHistory.map((item) => {
+                      const isCurrent = item.version === (serverSettings?.secondNavbarVersion ?? 1);
+                      return (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="py-2.5 px-3 font-mono font-medium text-gray-900">
+                            v{item.version}
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-800 max-w-xs truncate">
+                            {item.snapshot.secondNavbar.promoText}
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-500 whitespace-nowrap">
+                            {new Date(item.createdAt).toLocaleString(undefined, {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })}
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {isCurrent ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                <Check className="w-3 h-3" /> Active Live
                               </span>
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 text-gray-500 font-mono text-[11px] whitespace-nowrap">
-                              {item.createdBy || "admin@peralagae.com"}
-                            </td>
-                            <td className="py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
-                              <div className="inline-flex items-center justify-end">
-                                {isCurrentLive ? (
-                                  <span className="px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
-                                    Active Live
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => setRestoreConfirmTarget({ item, section: "second_navbar" })}
-                                    disabled={isRestoring}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-black bg-[#F5F5F5] hover:bg-[#E5E5E5] border border-gray-300 rounded transition disabled:opacity-40"
-                                    title="Restore this Second Navbar version"
-                                  >
-                                    <RotateCcw className="w-3 h-3 text-[#C5A572]" />
-                                    <span>Restore</span>
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            ) : (
+                              <span className="text-[11px] text-gray-400">Previous</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            {!isCurrent && (
+                              <button
+                                type="button"
+                                onClick={() => setRestoreConfirmTarget({ item, section: "second_navbar" })}
+                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                              >
+                                Restore
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── TAB 3: HERO IMAGE 1 (LEFT TALL) ─────────────────────────────── */}
+        {activeTab === "hero_image_1" && (
+          <div className="space-y-6 sm:space-y-8">
+            <div
+              data-testid="hero-card-1"
+              className="bg-white border border-[#E5E7EB] rounded-lg shadow-sm overflow-hidden"
+            >
+              <div className="px-6 py-4 border-b border-[#F0F0F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
+                    Hero Image 1 — Large Left Column Banner
+                  </h2>
+                  <p className="text-[11px] text-[#666666]">
+                    {HERO_SLOT_SPECS.heroImage1.position}
+                  </p>
                 </div>
-              )}
+                <div className="text-xs bg-gray-50 border border-gray-200 px-3 py-1 rounded text-[#555555]">
+                  <span className="font-medium text-[#222222]">Recommended: </span>
+                  {HERO_SLOT_SPECS.heroImage1.recommendedDimensions} ({HERO_SLOT_SPECS.heroImage1.recommendedAspectRatio})
+                </div>
+              </div>
+
+              <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Thumbnail & File Upload */}
+                <div className="lg:col-span-5 space-y-3">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#333333]">
+                    Current Image Asset
+                  </label>
+
+                  <div className="relative aspect-[3/4] max-w-[280px] w-full rounded-md overflow-hidden bg-gray-100 border border-gray-200 shadow-inner group">
+                    <Image
+                      src={displayHero1Image}
+                      alt={hero1Form.imageAlt || "Hero Image 1 preview"}
+                      fill
+                      sizes="280px"
+                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {heroPreviewUrls.heroImage1 && (
+                      <div className="absolute top-2 left-2 z-10 bg-amber-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow">
+                        Pending Publish Preview
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <input
+                      type="file"
+                      ref={fileInputRef1}
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleHeroFileSelect("heroImage1", e)}
+                      className="hidden"
+                      id="hero-image-1-upload"
+                    />
+                    <label
+                      htmlFor="hero-image-1-upload"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium uppercase tracking-wider text-[#111111] bg-white border border-[#D1D5DB] rounded hover:bg-[#F9F9F9] cursor-pointer transition-colors"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#C5A572]" />
+                      <span>Replace Image</span>
+                    </label>
+                    <p className="mt-1 text-[11px] text-[#777777]">
+                      JPEG, PNG, or WebP up to 5MB. Applied upon publishing.
+                    </p>
+                  </div>
+
+                  {heroSlotErrors.heroImage1 && (
+                    <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2 rounded">
+                      {heroSlotErrors.heroImage1}
+                    </p>
+                  )}
+                </div>
+
+                {/* Editable Fields */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div>
+                    <label
+                      htmlFor="hero1-normal-headline"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Normal Headline (Displayed above bold headline)
+                    </label>
+                    <input
+                      type="text"
+                      id="hero1-normal-headline"
+                      data-testid="hero1-normal-headline-input"
+                      value={hero1Form.normalHeadline}
+                      onChange={(e) =>
+                        setHero1Form((prev) => ({ ...prev, normalHeadline: e.target.value }))
+                      }
+                      placeholder="e.g. Necklaces &"
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="hero1-bold-headline"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Bold Headline (Displayed below normal headline)
+                    </label>
+                    <input
+                      type="text"
+                      id="hero1-bold-headline"
+                      data-testid="hero1-bold-headline-input"
+                      value={hero1Form.boldHeadline}
+                      onChange={(e) =>
+                        setHero1Form((prev) => ({ ...prev, boldHeadline: e.target.value }))
+                      }
+                      placeholder="e.g. Body Jewels"
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="hero1-description"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Short Description (Displayed beneath headlines)
+                    </label>
+                    <textarea
+                      id="hero1-description"
+                      data-testid="hero1-description-input"
+                      rows={3}
+                      value={hero1Form.description}
+                      onChange={(e) =>
+                        setHero1Form((prev) => ({ ...prev, description: e.target.value }))
+                      }
+                      placeholder="e.g. Look to our new season collection for girls."
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-xs text-gray-500">
+                  {hasHero1Changes ? (
+                    <span className="text-amber-700 font-medium">Unsaved changes on Hero Image 1</span>
+                  ) : (
+                    <span>Published live as v{serverHeroSettings.heroImage1Version ?? 1}</span>
+                  )}
+                </span>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleCancelHeroSlot("heroImage1")}
+                    disabled={!hasHero1Changes || isSaving}
+                    data-testid="hero1-cancel-button"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Cancel Changes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveHeroSlot("heroImage1")}
+                    disabled={!hasHero1Changes || isSaving}
+                    data-testid="hero1-save-button"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                  >
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>Save & Publish Changes</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Hero Image 1 Independent Version History */}
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#F0F0F0]">
+                <History className="w-4 h-4 text-[#888888]" />
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
+                  Hero Image 1 Version History
+                </h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
+                    <tr>
+                      <th className="py-2.5 px-3 font-semibold">Version</th>
+                      <th className="py-2.5 px-3 font-semibold">Image</th>
+                      <th className="py-2.5 px-3 font-semibold">Headlines & Description</th>
+                      <th className="py-2.5 px-3 font-semibold">Date & Time</th>
+                      <th className="py-2.5 px-3 font-semibold">Status</th>
+                      <th className="py-2.5 px-3 font-semibold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {hero1History.map((item) => {
+                      const isCurrent = item.version === (serverHeroSettings.heroImage1Version ?? 1);
+                      return (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="py-2.5 px-3 font-mono font-medium text-gray-900">
+                            v{item.version}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <div className="relative w-12 h-14 rounded overflow-hidden bg-gray-100 border border-gray-200">
+                              <Image src={item.imageUrl} alt="Thumbnail" fill sizes="48px" className="object-cover" />
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-800 max-w-sm">
+                            <div className="font-medium text-gray-900 truncate">
+                              {item.normalHeadline} {item.boldHeadline}
+                            </div>
+                            {item.description && (
+                              <div className="text-[11px] text-gray-500 truncate">{item.description}</div>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-500 whitespace-nowrap">
+                            {new Date(item.createdAt).toLocaleString(undefined, {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })}
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {isCurrent ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                <Check className="w-3 h-3" /> Current Live
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-gray-400">Previous</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            {!isCurrent && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setHeroRestoreConfirmTarget({
+                                    item,
+                                    slotId: "heroImage1",
+                                    slotName: "Hero Image 1",
+                                  })
+                                }
+                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                              >
+                                Restore
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── TAB 4: HERO IMAGE 2 (UPPER RIGHT) ───────────────────────────── */}
+        {activeTab === "hero_image_2" && (
+          <div className="space-y-6 sm:space-y-8">
+            <div
+              data-testid="hero-card-2"
+              className="bg-white border border-[#E5E7EB] rounded-lg shadow-sm overflow-hidden"
+            >
+              <div className="px-6 py-4 border-b border-[#F0F0F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
+                    Hero Image 2 — Upper Right Banner
+                  </h2>
+                  <p className="text-[11px] text-[#666666]">
+                    {HERO_SLOT_SPECS.heroImage2.position}
+                  </p>
+                </div>
+                <div className="text-xs bg-gray-50 border border-gray-200 px-3 py-1 rounded text-[#555555]">
+                  <span className="font-medium text-[#222222]">Recommended: </span>
+                  {HERO_SLOT_SPECS.heroImage2.recommendedDimensions} ({HERO_SLOT_SPECS.heroImage2.recommendedAspectRatio})
+                </div>
+              </div>
+
+              <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="lg:col-span-5 space-y-3">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#333333]">
+                    Current Image Asset
+                  </label>
+
+                  <div className="relative aspect-[16/9] max-w-[340px] w-full rounded-md overflow-hidden bg-gray-100 border border-gray-200 shadow-inner group">
+                    <Image
+                      src={displayHero2Image}
+                      alt={hero2Form.imageAlt || "Hero Image 2 preview"}
+                      fill
+                      sizes="340px"
+                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {heroPreviewUrls.heroImage2 && (
+                      <div className="absolute top-2 left-2 z-10 bg-amber-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow">
+                        Pending Publish Preview
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <input
+                      type="file"
+                      ref={fileInputRef2}
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleHeroFileSelect("heroImage2", e)}
+                      className="hidden"
+                      id="hero-image-2-upload"
+                    />
+                    <label
+                      htmlFor="hero-image-2-upload"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium uppercase tracking-wider text-[#111111] bg-white border border-[#D1D5DB] rounded hover:bg-[#F9F9F9] cursor-pointer transition-colors"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#C5A572]" />
+                      <span>Replace Image</span>
+                    </label>
+                    <p className="mt-1 text-[11px] text-[#777777]">
+                      JPEG, PNG, or WebP up to 5MB. Applied upon publishing.
+                    </p>
+                  </div>
+
+                  {heroSlotErrors.heroImage2 && (
+                    <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2 rounded">
+                      {heroSlotErrors.heroImage2}
+                    </p>
+                  )}
+                </div>
+
+                {/* Editable Fields (No description field for slot 2) */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div>
+                    <label
+                      htmlFor="hero2-normal-headline"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Normal Headline
+                    </label>
+                    <input
+                      type="text"
+                      id="hero2-normal-headline"
+                      data-testid="hero2-normal-headline-input"
+                      value={hero2Form.normalHeadline}
+                      onChange={(e) =>
+                        setHero2Form((prev) => ({ ...prev, normalHeadline: e.target.value }))
+                      }
+                      placeholder="e.g. Just Lunched"
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="hero2-bold-headline"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Bold Headline
+                    </label>
+                    <input
+                      type="text"
+                      id="hero2-bold-headline"
+                      data-testid="hero2-bold-headline-input"
+                      value={hero2Form.boldHeadline}
+                      onChange={(e) =>
+                        setHero2Form((prev) => ({ ...prev, boldHeadline: e.target.value }))
+                      }
+                      placeholder="e.g. Desk The Hals"
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-xs text-gray-500">
+                  {hasHero2Changes ? (
+                    <span className="text-amber-700 font-medium">Unsaved changes on Hero Image 2</span>
+                  ) : (
+                    <span>Published live as v{serverHeroSettings.heroImage2Version ?? 1}</span>
+                  )}
+                </span>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleCancelHeroSlot("heroImage2")}
+                    disabled={!hasHero2Changes || isSaving}
+                    data-testid="hero2-cancel-button"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Cancel Changes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveHeroSlot("heroImage2")}
+                    disabled={!hasHero2Changes || isSaving}
+                    data-testid="hero2-save-button"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                  >
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>Save & Publish Changes</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Hero Image 2 Independent Version History */}
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#F0F0F0]">
+                <History className="w-4 h-4 text-[#888888]" />
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
+                  Hero Image 2 Version History
+                </h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
+                    <tr>
+                      <th className="py-2.5 px-3 font-semibold">Version</th>
+                      <th className="py-2.5 px-3 font-semibold">Image</th>
+                      <th className="py-2.5 px-3 font-semibold">Headlines</th>
+                      <th className="py-2.5 px-3 font-semibold">Date & Time</th>
+                      <th className="py-2.5 px-3 font-semibold">Status</th>
+                      <th className="py-2.5 px-3 font-semibold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {hero2History.map((item) => {
+                      const isCurrent = item.version === (serverHeroSettings.heroImage2Version ?? 1);
+                      return (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="py-2.5 px-3 font-mono font-medium text-gray-900">
+                            v{item.version}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <div className="relative w-16 h-10 rounded overflow-hidden bg-gray-100 border border-gray-200">
+                              <Image src={item.imageUrl} alt="Thumbnail" fill sizes="64px" className="object-cover" />
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-800 max-w-sm">
+                            <div className="font-medium text-gray-900 truncate">
+                              {item.normalHeadline} {item.boldHeadline}
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-500 whitespace-nowrap">
+                            {new Date(item.createdAt).toLocaleString(undefined, {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })}
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {isCurrent ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                <Check className="w-3 h-3" /> Current Live
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-gray-400">Previous</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            {!isCurrent && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setHeroRestoreConfirmTarget({
+                                    item,
+                                    slotId: "heroImage2",
+                                    slotName: "Hero Image 2",
+                                  })
+                                }
+                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                              >
+                                Restore
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── TAB 5: HERO IMAGE 3 (LOWER RIGHT) ───────────────────────────── */}
+        {activeTab === "hero_image_3" && (
+          <div className="space-y-6 sm:space-y-8">
+            <div
+              data-testid="hero-card-3"
+              className="bg-white border border-[#E5E7EB] rounded-lg shadow-sm overflow-hidden"
+            >
+              <div className="px-6 py-4 border-b border-[#F0F0F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
+                    Hero Image 3 — Lower Right Banner
+                  </h2>
+                  <p className="text-[11px] text-[#666666]">
+                    {HERO_SLOT_SPECS.heroImage3.position}
+                  </p>
+                </div>
+                <div className="text-xs bg-gray-50 border border-gray-200 px-3 py-1 rounded text-[#555555]">
+                  <span className="font-medium text-[#222222]">Recommended: </span>
+                  {HERO_SLOT_SPECS.heroImage3.recommendedDimensions} ({HERO_SLOT_SPECS.heroImage3.recommendedAspectRatio})
+                </div>
+              </div>
+
+              <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="lg:col-span-5 space-y-3">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#333333]">
+                    Current Image Asset
+                  </label>
+
+                  <div className="relative aspect-[16/9] max-w-[340px] w-full rounded-md overflow-hidden bg-gray-100 border border-gray-200 shadow-inner group">
+                    <Image
+                      src={displayHero3Image}
+                      alt={hero3Form.imageAlt || "Hero Image 3 preview"}
+                      fill
+                      sizes="340px"
+                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {heroPreviewUrls.heroImage3 && (
+                      <div className="absolute top-2 left-2 z-10 bg-amber-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow">
+                        Pending Publish Preview
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <input
+                      type="file"
+                      ref={fileInputRef3}
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleHeroFileSelect("heroImage3", e)}
+                      className="hidden"
+                      id="hero-image-3-upload"
+                    />
+                    <label
+                      htmlFor="hero-image-3-upload"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium uppercase tracking-wider text-[#111111] bg-white border border-[#D1D5DB] rounded hover:bg-[#F9F9F9] cursor-pointer transition-colors"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#C5A572]" />
+                      <span>Replace Image</span>
+                    </label>
+                    <p className="mt-1 text-[11px] text-[#777777]">
+                      JPEG, PNG, or WebP up to 5MB. Applied upon publishing.
+                    </p>
+                  </div>
+
+                  {heroSlotErrors.heroImage3 && (
+                    <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2 rounded">
+                      {heroSlotErrors.heroImage3}
+                    </p>
+                  )}
+                </div>
+
+                {/* Editable Fields (No description field for slot 3) */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div>
+                    <label
+                      htmlFor="hero3-normal-headline"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Normal Headline
+                    </label>
+                    <input
+                      type="text"
+                      id="hero3-normal-headline"
+                      data-testid="hero3-normal-headline-input"
+                      value={hero3Form.normalHeadline}
+                      onChange={(e) =>
+                        setHero3Form((prev) => ({ ...prev, normalHeadline: e.target.value }))
+                      }
+                      placeholder="e.g. Jewelry &"
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="hero3-bold-headline"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Bold Headline
+                    </label>
+                    <input
+                      type="text"
+                      id="hero3-bold-headline"
+                      data-testid="hero3-bold-headline-input"
+                      value={hero3Form.boldHeadline}
+                      onChange={(e) =>
+                        setHero3Form((prev) => ({ ...prev, boldHeadline: e.target.value }))
+                      }
+                      placeholder="e.g. Charm Bracelets"
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-xs text-gray-500">
+                  {hasHero3Changes ? (
+                    <span className="text-amber-700 font-medium">Unsaved changes on Hero Image 3</span>
+                  ) : (
+                    <span>Published live as v{serverHeroSettings.heroImage3Version ?? 1}</span>
+                  )}
+                </span>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleCancelHeroSlot("heroImage3")}
+                    disabled={!hasHero3Changes || isSaving}
+                    data-testid="hero3-cancel-button"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Cancel Changes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveHeroSlot("heroImage3")}
+                    disabled={!hasHero3Changes || isSaving}
+                    data-testid="hero3-save-button"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                  >
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>Save & Publish Changes</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Hero Image 3 Independent Version History */}
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#F0F0F0]">
+                <History className="w-4 h-4 text-[#888888]" />
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
+                  Hero Image 3 Version History
+                </h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
+                    <tr>
+                      <th className="py-2.5 px-3 font-semibold">Version</th>
+                      <th className="py-2.5 px-3 font-semibold">Image</th>
+                      <th className="py-2.5 px-3 font-semibold">Headlines</th>
+                      <th className="py-2.5 px-3 font-semibold">Date & Time</th>
+                      <th className="py-2.5 px-3 font-semibold">Status</th>
+                      <th className="py-2.5 px-3 font-semibold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {hero3History.map((item) => {
+                      const isCurrent = item.version === (serverHeroSettings.heroImage3Version ?? 1);
+                      return (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="py-2.5 px-3 font-mono font-medium text-gray-900">
+                            v{item.version}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <div className="relative w-16 h-10 rounded overflow-hidden bg-gray-100 border border-gray-200">
+                              <Image src={item.imageUrl} alt="Thumbnail" fill sizes="64px" className="object-cover" />
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-800 max-w-sm">
+                            <div className="font-medium text-gray-900 truncate">
+                              {item.normalHeadline} {item.boldHeadline}
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-gray-500 whitespace-nowrap">
+                            {new Date(item.createdAt).toLocaleString(undefined, {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })}
+                          </td>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {isCurrent ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                <Check className="w-3 h-3" /> Current Live
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-gray-400">Previous</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            {!isCurrent && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setHeroRestoreConfirmTarget({
+                                    item,
+                                    slotId: "heroImage3",
+                                    slotName: "Hero Image 3",
+                                  })
+                                }
+                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                              >
+                                Restore
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* ─── MODAL: CONFIRM RESTORE THIS VERSION (Responsive Drawer/Modal) ─── */}
+      {/* ─── NAVBAR RESTORE CONFIRMATION MODAL ─────────────────────────────── */}
       {restoreConfirmTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-[2px] animate-fade-in">
-          <div className="bg-white rounded-t-2xl sm:rounded-lg max-w-lg w-full p-5 sm:p-6 shadow-xl border border-gray-200 max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center gap-3 text-amber-600 mb-3">
-              <div className="p-2 bg-amber-50 rounded-full border border-amber-200 shrink-0">
-                <RotateCcw className="w-5 h-5 text-amber-600" />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900">
-                Restore This Version?
-              </h3>
-            </div>
+        <div
+          data-testid="navbar-restore-modal-backdrop"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white rounded-lg max-w-md w-full p-4 sm:p-6 shadow-xl border border-gray-200 transition-all my-auto">
+            <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-[#C5A572]" />
+              <span>Restore This Version?</span>
+            </h3>
 
-            <p className="text-xs text-gray-600 leading-relaxed">
+            <p className="mt-2 text-xs text-gray-600 leading-relaxed">
               {`You are about to restore this previous version of the ${
                 restoreConfirmTarget.section === "top_bar" ? "Top Bar" : "Second Navbar"
               }. The selected ${
@@ -1053,76 +2258,98 @@ export default function AdminNavbarPage() {
               } will replace the current published content on the live PERALAGAE website. Your current live version will be saved in history before the restoration.`}
             </p>
 
-            <div className="mt-4 p-3.5 bg-gray-50 rounded-md border border-gray-200 text-xs text-gray-700 space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-gray-200 gap-1">
-                <span className="font-semibold text-gray-900 font-mono text-sm">
-                  Version v{restoreConfirmTarget.item.version}
-                </span>
-                <span className="text-gray-500 text-[11px]">
-                  Published on{" "}
-                  {new Date(restoreConfirmTarget.item.createdAt).toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                </span>
+            <div className="mt-6 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2.5 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setRestoreConfirmTarget(null)}
+                disabled={isRestoring}
+                className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteNavbarRestore}
+                disabled={isRestoring}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm"
+              >
+                {isRestoring ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                <span>Confirm & Publish</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── HERO RESTORE CONFIRMATION MODAL ───────────────────────────────── */}
+      {heroRestoreConfirmTarget && (
+        <div
+          data-testid="hero-restore-modal-backdrop"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white rounded-lg max-w-md w-full p-4 sm:p-6 shadow-xl border border-gray-200 transition-all my-auto">
+            <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-[#C5A572]" />
+              <span>Confirm {heroRestoreConfirmTarget.slotName} Restoration</span>
+            </h3>
+
+            <p className="mt-2 text-xs text-gray-600 leading-relaxed">
+              You are about to restore historical <strong>v{heroRestoreConfirmTarget.item.version}</strong> of{" "}
+              <strong>{heroRestoreConfirmTarget.slotName}</strong>. This will replace the current live slot on the homepage, while preserving the other two hero images and navbar settings unchanged.
+            </p>
+
+            <div className="mt-4 p-3 bg-gray-50 rounded border border-gray-200 text-xs space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-14 rounded overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                  <Image
+                    src={heroRestoreConfirmTarget.item.imageUrl}
+                    alt="Restoring Thumbnail"
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-gray-900">
+                    {heroRestoreConfirmTarget.item.normalHeadline} {heroRestoreConfirmTarget.item.boldHeadline}
+                  </div>
+                  {heroRestoreConfirmTarget.item.description && (
+                    <div className="text-[11px] text-gray-500 truncate">
+                      {heroRestoreConfirmTarget.item.description}
+                    </div>
+                  )}
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    Originally published {new Date(heroRestoreConfirmTarget.item.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
               </div>
-
-              {restoreConfirmTarget.section === "top_bar" && (
-                <div>
-                  <span className="font-semibold text-gray-800">Top Bar Announcement: </span>
-                  <span className="text-gray-600">
-                    &ldquo;{restoreConfirmTarget.item.snapshot.topBar.text}&rdquo;
-                  </span>
-                </div>
-              )}
-
-              {restoreConfirmTarget.section === "second_navbar" && (
-                <div>
-                  <span className="font-semibold text-gray-800">Promotional Message: </span>
-                  <span className="text-gray-600">
-                    &ldquo;{restoreConfirmTarget.item.snapshot.secondNavbar.promoText}&rdquo;
-                  </span>
-                </div>
-              )}
-
-              {restoreConfirmTarget.item.createdBy && (
-                <div className="pt-1 text-[11px] text-gray-500 font-mono">
-                  Administrator: {restoreConfirmTarget.item.createdBy}
-                </div>
-              )}
             </div>
 
-            <div className="mt-4 text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded border border-emerald-200 flex items-start sm:items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
-              <span className="leading-relaxed">
-                Your current live version (v{
-                  restoreConfirmTarget.section === "top_bar"
-                    ? (serverSettings?.topBarVersion ?? 1)
-                    : (serverSettings?.secondNavbarVersion ?? 1)
-                }) will be saved in history before the restoration.
+            <div className="mt-4 text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded border border-emerald-200 flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>
+                Your current live version will be backed up in history before restoration is completed.
               </span>
             </div>
 
             <div className="mt-6 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
-                onClick={() => setRestoreConfirmTarget(null)}
+                onClick={() => setHeroRestoreConfirmTarget(null)}
                 disabled={isRestoring}
-                className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40 text-center justify-center"
+                className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={handleExecuteRestore}
+                onClick={handleExecuteHeroRestore}
                 disabled={isRestoring}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm"
               >
-                {isRestoring ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <RotateCcw className="w-3.5 h-3.5" />
-                )}
+                {isRestoring ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                 <span>Confirm & Publish</span>
               </button>
             </div>

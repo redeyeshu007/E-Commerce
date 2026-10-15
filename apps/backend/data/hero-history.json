@@ -1,0 +1,112 @@
+{
+  "heroImage1": [
+    {
+      "id": "hist_hero1_1792044339552_restored_93c24f",
+      "slotId": "heroImage1",
+      "version": 4,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Necklaces &",
+      "boldHeadline": "Body Jewels",
+      "description": "Look to our new season collection for girls.",
+      "createdAt": "2026-10-15T06:05:39.552Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792044339552_pre_918135",
+      "slotId": "heroImage1",
+      "version": 3,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Handcrafted Gold & 1792044339533",
+      "boldHeadline": "Royal Heirlooms",
+      "description": "Handcrafted luxury timeless designs.",
+      "createdAt": "2026-10-15T06:05:39.552Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792044339535_b81064",
+      "slotId": "heroImage1",
+      "version": 2,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Handcrafted Gold & 1792044339533",
+      "boldHeadline": "Royal Heirlooms",
+      "description": "Handcrafted luxury timeless designs.",
+      "createdAt": "2026-10-15T06:05:39.535Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_init",
+      "slotId": "heroImage1",
+      "version": 1,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Necklaces &",
+      "boldHeadline": "Body Jewels",
+      "description": "Look to our new season collection for girls.",
+      "createdAt": "2026-10-15T05:43:31.952Z",
+      "createdBy": "system"
+    }
+  ],
+  "heroImage2": [
+    {
+      "id": "hist_hero2_1792044160217_restored_cfcca1",
+      "slotId": "heroImage2",
+      "version": 5,
+      "imageUrl": "/images/hero/banner-desk-hals.jpg",
+      "normalHeadline": "Just Lunched",
+      "boldHeadline": "Desk The Hals",
+      "createdAt": "2026-10-15T06:02:40.217Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero2_1792044160217_pre_1f675a",
+      "slotId": "heroImage2",
+      "version": 4,
+      "imageUrl": "/uploads/hero/hero-1792044151839-b24a19aab7f21e204accd006.png",
+      "normalHeadline": "Just Lunched",
+      "boldHeadline": "Desk The Hals.",
+      "createdAt": "2026-10-15T06:02:40.217Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero2_1792044151886_be85ce",
+      "slotId": "heroImage2",
+      "version": 3,
+      "imageUrl": "/uploads/hero/hero-1792044151839-b24a19aab7f21e204accd006.png",
+      "normalHeadline": "Just Lunched",
+      "boldHeadline": "Desk The Hals.",
+      "createdAt": "2026-10-15T06:02:31.886Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero2_1792044137786_d0e0bc",
+      "slotId": "heroImage2",
+      "version": 2,
+      "imageUrl": "/images/hero/banner-desk-hals.jpg",
+      "normalHeadline": "Just Lunched",
+      "boldHeadline": "Desk The Hals.",
+      "createdAt": "2026-10-15T06:02:17.786Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero2_init",
+      "slotId": "heroImage2",
+      "version": 1,
+      "imageUrl": "/images/hero/banner-desk-hals.jpg",
+      "normalHeadline": "Just Lunched",
+      "boldHeadline": "Desk The Hals",
+      "createdAt": "2026-10-15T05:43:31.952Z",
+      "createdBy": "system"
+    }
+  ],
+  "heroImage3": [
+    {
+      "id": "hist_hero3_init",
+      "slotId": "heroImage3",
+      "version": 1,
+      "imageUrl": "/images/hero/banner-charm-bracelets.jpg",
+      "normalHeadline": "Jewelry &",
+      "boldHeadline": "Charm Bracelets",
+      "createdAt": "2026-10-15T05:43:31.952Z",
+      "createdBy": "system"
+    }
+  ]
+}

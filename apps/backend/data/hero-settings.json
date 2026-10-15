@@ -13,7 +13,7 @@
     "id": "heroImage2",
     "name": "Hero Image 2",
     "imageUrl": "/images/hero/banner-desk-hals.jpg",
-    "imageAlt": "Just Lunched Desk The Hals - PERALAGAE",
+    "imageAlt": "Just Lunched Desk The Hals. - PERALAGAE",
     "normalHeadline": "Just Lunched",
     "boldHeadline": "Desk The Hals"
   },
@@ -21,11 +21,14 @@
     "id": "heroImage3",
     "name": "Hero Image 3",
     "imageUrl": "/images/hero/banner-charm-bracelets.jpg",
-    "imageAlt": "Jewelry & Charm Bracelet - PERALAGAE",
+    "imageAlt": "Jewelry & Charm Bracelets - PERALAGAE",
     "normalHeadline": "Jewelry &",
-    "boldHeadline": "Charm Bracelet"
+    "boldHeadline": "Charm Bracelets"
   },
-  "version": 3,
-  "updatedAt": "2026-10-15T04:59:55.118Z",
+  "version": 6,
+  "heroImage1Version": 4,
+  "heroImage2Version": 5,
+  "heroImage3Version": 1,
+  "updatedAt": "2026-10-15T06:05:39.552Z",
   "updatedBy": "javixtech@gmail.com"
 }

@@ -4,9 +4,16 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AdminNavbarPage from "@/app/admin/navbar/page";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import * as adminAuthService from "@/services/admin-auth-service";
 import * as navbarAdminService from "@/services/navbar-admin-service";
+import * as heroAdminService from "@/services/hero-admin-service";
 import type { NavbarSettingsData, NavbarHistoryItem } from "@/types/navbar";
+import {
+  defaultHeroSettingsData,
+  type HeroSettingsData,
+  type HeroHistoryItem,
+} from "@/types/hero";
 
 const mockReplace = vi.fn();
 const mockPush = vi.fn();
@@ -19,7 +26,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/navbar",
 }));
 
-const mockInitialSettings: NavbarSettingsData = {
+const mockInitialNavbarSettings: NavbarSettingsData = {
   id: "current",
   topBar: {
     text: "SUMMER SALE, Get 40% Off for all products.",
@@ -54,7 +61,7 @@ const mockTopBarHistory: NavbarHistoryItem[] = [
   {
     id: "hist_top_2",
     section: "TOP_BAR",
-    snapshot: { ...mockInitialSettings, topBarVersion: 2 },
+    snapshot: { ...mockInitialNavbarSettings, topBarVersion: 2 },
     description: "Top bar update v2",
     version: 2,
     createdAt: new Date().toISOString(),
@@ -64,9 +71,9 @@ const mockTopBarHistory: NavbarHistoryItem[] = [
     id: "hist_top_1",
     section: "TOP_BAR",
     snapshot: {
-      ...mockInitialSettings,
+      ...mockInitialNavbarSettings,
       topBar: {
-        ...mockInitialSettings.topBar,
+        ...mockInitialNavbarSettings.topBar,
         text: "FALL SPECIAL SALE 30% OFF",
       },
       topBarVersion: 1,
@@ -82,7 +89,7 @@ const mockSecondNavbarHistory: NavbarHistoryItem[] = [
   {
     id: "hist_sec_1",
     section: "SECOND_NAVBAR",
-    snapshot: { ...mockInitialSettings, secondNavbarVersion: 1 },
+    snapshot: { ...mockInitialNavbarSettings, secondNavbarVersion: 1 },
     description: "Initial baseline Second Navbar promo",
     version: 1,
     createdAt: new Date().toISOString(),
@@ -92,9 +99,9 @@ const mockSecondNavbarHistory: NavbarHistoryItem[] = [
     id: "hist_sec_older",
     section: "SECOND_NAVBAR",
     snapshot: {
-      ...mockInitialSettings,
+      ...mockInitialNavbarSettings,
       secondNavbar: {
-        ...mockInitialSettings.secondNavbar,
+        ...mockInitialNavbarSettings.secondNavbar,
         promoText: "Old Festive Discount 20%",
       },
       secondNavbarVersion: 0,
@@ -102,6 +109,86 @@ const mockSecondNavbarHistory: NavbarHistoryItem[] = [
     description: "Older Second Navbar promo",
     version: 0,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
+    createdBy: "admin@peralagae.com",
+  },
+];
+
+const mockInitialHeroSettings: HeroSettingsData = {
+  ...defaultHeroSettingsData,
+  heroImage1Version: 1,
+  heroImage2Version: 1,
+  heroImage3Version: 1,
+  heroImage1: {
+    ...defaultHeroSettingsData.heroImage1,
+    imageUrl: "/images/hero-1.jpg",
+    imageAlt: "Necklaces & Body Jewels - PERALAGAE",
+    normalHeadline: "Necklaces &",
+    boldHeadline: "Body Jewels",
+    description: "Look to our new season collection for girls.",
+  },
+  heroImage2: {
+    ...defaultHeroSettingsData.heroImage2,
+    imageUrl: "/images/hero-2.jpg",
+    imageAlt: "Just Lunched Bangles - PERALAGAE",
+    normalHeadline: "Just Lunched",
+    boldHeadline: "Bangles",
+  },
+  heroImage3: {
+    ...defaultHeroSettingsData.heroImage3,
+    imageUrl: "/images/hero-3.jpg",
+    imageAlt: "Jewelry & Rings - PERALAGAE",
+    normalHeadline: "Jewelry &",
+    boldHeadline: "Rings",
+  },
+};
+
+const mockHero1History: HeroHistoryItem[] = [
+  {
+    id: "h1_v1",
+    slotId: "heroImage1",
+    version: 1,
+    imageUrl: "/images/hero-1.jpg",
+    normalHeadline: "Necklaces &",
+    boldHeadline: "Body Jewels",
+    description: "Look to our new season collection for girls.",
+    createdAt: new Date().toISOString(),
+    createdBy: "admin@peralagae.com",
+  },
+  {
+    id: "h1_v0",
+    slotId: "heroImage1",
+    version: 0,
+    imageUrl: "/images/hero-1-old.jpg",
+    normalHeadline: "Vintage Necklaces &",
+    boldHeadline: "Fine Jewels",
+    description: "Old collection description.",
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    createdBy: "admin@peralagae.com",
+  },
+];
+
+const mockHero2History: HeroHistoryItem[] = [
+  {
+    id: "h2_v1",
+    slotId: "heroImage2",
+    version: 1,
+    imageUrl: "/images/hero-2.jpg",
+    normalHeadline: "Just Lunched",
+    boldHeadline: "Bangles",
+    createdAt: new Date().toISOString(),
+    createdBy: "admin@peralagae.com",
+  },
+];
+
+const mockHero3History: HeroHistoryItem[] = [
+  {
+    id: "h3_v1",
+    slotId: "heroImage3",
+    version: 1,
+    imageUrl: "/images/hero-3.jpg",
+    normalHeadline: "Jewelry &",
+    boldHeadline: "Rings",
+    createdAt: new Date().toISOString(),
     createdBy: "admin@peralagae.com",
   },
 ];
@@ -122,16 +209,65 @@ describe("Navbar Management Module (Frontend)", () => {
       email: "admin@peralagae.com",
       role: "admin",
     });
-    vi.spyOn(navbarAdminService, "fetchAdminNavbarSettings").mockResolvedValue(mockInitialSettings);
-    vi.spyOn(navbarAdminService, "fetchAdminNavbarHistory").mockImplementation(async (section?: string) => {
-      if (section === "top_bar") return mockTopBarHistory;
-      if (section === "second_navbar") return mockSecondNavbarHistory;
-      return [...mockTopBarHistory, ...mockSecondNavbarHistory];
+
+    vi.spyOn(navbarAdminService, "fetchAdminNavbarSettings").mockResolvedValue(
+      mockInitialNavbarSettings
+    );
+    vi.spyOn(navbarAdminService, "fetchAdminNavbarHistory").mockImplementation(
+      async (section?: string) => {
+        if (section === "top_bar") return mockTopBarHistory;
+        if (section === "second_navbar") return mockSecondNavbarHistory;
+        return [...mockTopBarHistory, ...mockSecondNavbarHistory];
+      }
+    );
+
+    vi.spyOn(heroAdminService, "fetchAdminHeroSettings").mockResolvedValue(
+      mockInitialHeroSettings
+    );
+    vi.spyOn(heroAdminService, "fetchAdminHeroHistory").mockImplementation(
+      async (slotId?: string) => {
+        if (slotId === "heroImage1") return mockHero1History;
+        if (slotId === "heroImage2") return mockHero2History;
+        if (slotId === "heroImage3") return mockHero3History;
+        return [];
+      }
+    );
+
+    vi.spyOn(heroAdminService, "updateAdminHeroSlot").mockImplementation(
+      async (slotId, payload) => ({
+        ...mockInitialHeroSettings,
+        [slotId]: {
+          ...mockInitialHeroSettings[slotId],
+          ...payload,
+        },
+        [`${slotId}Version`]:
+          (mockInitialHeroSettings[`${slotId}Version` as keyof HeroSettingsData] as number) + 1,
+      })
+    );
+
+    vi.spyOn(heroAdminService, "uploadAdminHeroImage").mockResolvedValue({
+      url: "/uploads/hero/hero-new-uploaded.jpg",
+      filename: "hero-new-uploaded.jpg",
+      mimetype: "image/jpeg",
+      size: 102400,
     });
+
+    vi.spyOn(heroAdminService, "restoreAdminHeroSlot").mockImplementation(
+      async (slotId, _version) => ({
+        ...mockInitialHeroSettings,
+        [slotId]: {
+          ...mockInitialHeroSettings[slotId],
+          normalHeadline: "Vintage Necklaces &",
+          boldHeadline: "Fine Jewels",
+        },
+        [`${slotId}Version`]:
+          (mockInitialHeroSettings[`${slotId}Version` as keyof HeroSettingsData] as number) + 1,
+      })
+    );
   });
 
-  describe("1. Page Header & Tab Layout", () => {
-    it("renders page title, description, and two management tabs without standalone history tab", async () => {
+  describe("1. Page Header & Nested Section Structure", () => {
+    it("renders Section A (Top Bar, Second Navbar) and Section B (Hero Image 1, 2, 3) inside Navbar management", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
@@ -139,10 +275,29 @@ describe("Navbar Management Module (Frontend)", () => {
         expect(
           screen.getByText(/manage the storefront announcement bar and secondary navigation bar/i)
         ).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /^top bar/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: /version history/i })).not.toBeInTheDocument();
       });
+
+      // Section A headers and tabs
+      expect(screen.getByText(/section a: navbar settings/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^top bar/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^second navbar/i })).toBeInTheDocument();
+
+      // Section B headers and tabs
+      expect(screen.getByText(/section b: hero section/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^hero image 1/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^hero image 2/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^hero image 3/i })).toBeInTheDocument();
+
+      // No separate standalone history tab
+      expect(screen.queryByRole("button", { name: /version history/i })).not.toBeInTheDocument();
+    });
+
+    it("verifies sidebar navigation contains only Dashboard and Navbar, with NO Hero Images item", () => {
+      render(<AdminSidebar isOpen={true} onClose={vi.fn()} />);
+
+      expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /navbar/i })).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /hero/i })).not.toBeInTheDocument();
     });
 
     it("redirects unauthenticated users to /?auth=login", async () => {
@@ -157,7 +312,7 @@ describe("Navbar Management Module (Frontend)", () => {
   });
 
   describe("2. Top Bar Management", () => {
-    it("populates existing announcement text and displays live storefront preview without device toggle controls", async () => {
+    it("populates existing announcement text and displays live storefront preview", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
@@ -171,9 +326,9 @@ describe("Navbar Management Module (Frontend)", () => {
 
     it("allows updating announcement text, shows unsaved changes badge, and publishes via API", async () => {
       const updateSpy = vi.spyOn(navbarAdminService, "updateAdminTopBar").mockResolvedValue({
-        ...mockInitialSettings,
+        ...mockInitialNavbarSettings,
         topBar: {
-          ...mockInitialSettings.topBar,
+          ...mockInitialNavbarSettings.topBar,
           text: "WINTER FESTIVAL SALE 50% OFF",
         },
         topBarVersion: 3,
@@ -190,7 +345,6 @@ describe("Navbar Management Module (Frontend)", () => {
       await userEvent.clear(textarea);
       await userEvent.type(textarea, "WINTER FESTIVAL SALE 50% OFF");
 
-      // Verify unsaved indicator appears
       expect(screen.getByText(/previewing unsaved changes/i)).toBeInTheDocument();
 
       const saveButton = screen.getByRole("button", { name: /save & publish changes/i });
@@ -221,7 +375,7 @@ describe("Navbar Management Module (Frontend)", () => {
       const cancelButton = screen.getByRole("button", { name: /cancel changes/i });
       await userEvent.click(cancelButton);
 
-      expect(textarea.value).toBe(mockInitialSettings.topBar.text);
+      expect(textarea.value).toBe(mockInitialNavbarSettings.topBar.text);
       expect(screen.getByText(/top bar changes discarded/i)).toBeInTheDocument();
     });
   });
@@ -236,7 +390,6 @@ describe("Navbar Management Module (Frontend)", () => {
 
       await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
 
-      // Promotional message input is present and populated
       const promoInput = screen.getByLabelText(/promotional message/i) as HTMLInputElement;
       expect(promoInput).toBeInTheDocument();
       expect(promoInput.value).toBe("Summer Sale 15% off!");
@@ -249,8 +402,6 @@ describe("Navbar Management Module (Frontend)", () => {
       expect(screen.queryByLabelText(/cta url/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/secondary navigation links/i)).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /add link/i })).not.toBeInTheDocument();
-      expect(screen.queryByTitle(/move up/i)).not.toBeInTheDocument();
-      expect(screen.queryByTitle(/remove link/i)).not.toBeInTheDocument();
 
       // Live Storefront preview still renders phone, CTA, and secondary links from active settings
       expect(screen.getByText("+91 98765 43210")).toBeInTheDocument();
@@ -269,7 +420,6 @@ describe("Navbar Management Module (Frontend)", () => {
 
       await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
 
-      // Character counter matches initial length
       expect(screen.getByText("20/120")).toBeInTheDocument();
 
       const promoInput = screen.getByLabelText(/promotional message/i);
@@ -302,9 +452,9 @@ describe("Navbar Management Module (Frontend)", () => {
 
     it("publishes updated promotional message via updateAdminSecondNavbar without altering other fields", async () => {
       const updateSecondSpy = vi.spyOn(navbarAdminService, "updateAdminSecondNavbar").mockResolvedValue({
-        ...mockInitialSettings,
+        ...mockInitialNavbarSettings,
         secondNavbar: {
-          ...mockInitialSettings.secondNavbar,
+          ...mockInitialNavbarSettings.secondNavbar,
           promoText: "Diwali Dhamaka 25% Off Jewellery",
         },
         secondNavbarVersion: 2,
@@ -345,20 +495,17 @@ describe("Navbar Management Module (Frontend)", () => {
         expect(screen.getByRole("heading", { name: "Top Bar Version History" })).toBeInTheDocument();
       });
 
-      // Top Bar specific indicator
       expect(screen.getByText("Current Live: v2")).toBeInTheDocument();
       expect(screen.getByText("Active Live")).toBeInTheDocument();
       expect(screen.getByText(/FALL SPECIAL SALE 30% OFF/i)).toBeInTheDocument();
-
-      // Does not show Second Navbar snapshots
       expect(screen.queryByText(/Summer Sale 15% off!/i)).not.toBeInTheDocument();
     });
 
     it("restores Top Bar version via API upon Confirm & Publish", async () => {
       const restoreSpy = vi.spyOn(navbarAdminService, "restoreAdminNavbarVersion").mockResolvedValue({
-        ...mockInitialSettings,
+        ...mockInitialNavbarSettings,
         topBar: {
-          ...mockInitialSettings.topBar,
+          ...mockInitialNavbarSettings.topBar,
           text: "FALL SPECIAL SALE 30% OFF",
         },
         topBarVersion: 3,
@@ -400,26 +547,16 @@ describe("Navbar Management Module (Frontend)", () => {
       await userEvent.click(screen.getByRole("button", { name: /^second navbar/i }));
 
       expect(screen.getByRole("heading", { name: "Second Navbar Version History" })).toBeInTheDocument();
-
-      // Second Navbar specific Current Live indicator reflecting v1
       expect(screen.getByText("Current Live: v1")).toBeInTheDocument();
-
-      // Content summary shows promotional message
       expect(screen.getByText(/Old Festive Discount 20%/i)).toBeInTheDocument();
-
-      // Summary does NOT show phone or link count strings
-      expect(screen.queryByText(/secondary link\(s\)/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Phone: \+91/i)).not.toBeInTheDocument();
-
-      // Does not show Top Bar snapshots
       expect(screen.queryByText(/FALL SPECIAL SALE 30% OFF/i)).not.toBeInTheDocument();
     });
 
     it("restores Second Navbar version with section='second_navbar' and preserves Top Bar", async () => {
       const restoreSpy = vi.spyOn(navbarAdminService, "restoreAdminNavbarVersion").mockResolvedValue({
-        ...mockInitialSettings,
+        ...mockInitialNavbarSettings,
         secondNavbar: {
-          ...mockInitialSettings.secondNavbar,
+          ...mockInitialNavbarSettings.secondNavbar,
           promoText: "Old Festive Discount 20%",
         },
         secondNavbarVersion: 2,
@@ -451,6 +588,187 @@ describe("Navbar Management Module (Frontend)", () => {
           screen.getByText(/version 0 of the second navbar successfully restored/i)
         ).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("6. Section B: Hero Image 1 Tab Management", () => {
+    it("exposes permitted fields: Image, Normal headline, Bold headline, and Short description", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-1")).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByTestId("tab-hero-image-1"));
+
+      expect(screen.getByTestId("hero-card-1")).toBeInTheDocument();
+      expect(screen.getByTestId("hero1-normal-headline-input")).toBeInTheDocument();
+      expect(screen.getByTestId("hero1-bold-headline-input")).toBeInTheDocument();
+      expect(screen.getByTestId("hero1-description-input")).toBeInTheDocument();
+      expect(screen.getByText(/896 × 1200 px/i)).toBeInTheDocument();
+    });
+
+    it("displays independent Hero Image 1 Version History with Current Live indicator", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-1")).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByTestId("tab-hero-image-1"));
+
+      expect(screen.getByRole("heading", { name: "Hero Image 1 Version History" })).toBeInTheDocument();
+      expect(screen.getByText("Published live as v1")).toBeInTheDocument();
+      expect(screen.getByText(/Necklaces & Body Jewels/i)).toBeInTheDocument();
+      expect(screen.getByText(/Vintage Necklaces & Fine Jewels/i)).toBeInTheDocument();
+    });
+
+    it("publishes Hero Image 1 updates independently without modifying Hero 2 or Hero 3", async () => {
+      const user = userEvent.setup();
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-1")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByTestId("tab-hero-image-1"));
+
+      const normalInput = screen.getByTestId("hero1-normal-headline-input");
+      await user.clear(normalInput);
+      await user.type(normalInput, "Exclusive Pendants &");
+
+      const saveBtn = screen.getByTestId("hero1-save-button");
+      await user.click(saveBtn);
+
+      await waitFor(() => {
+        expect(heroAdminService.updateAdminHeroSlot).toHaveBeenCalledWith(
+          "heroImage1",
+          expect.objectContaining({
+            normalHeadline: "Exclusive Pendants &",
+          })
+        );
+        expect(screen.getByText(/Hero Image 1 published successfully \(v2\)/i)).toBeInTheDocument();
+      });
+    });
+
+    it("restores historical Hero Image 1 snapshot with confirmation modal and pre-restore backup", async () => {
+      const user = userEvent.setup();
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-1")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByTestId("tab-hero-image-1"));
+
+      const restoreButtons = screen.getAllByRole("button", { name: /^restore$/i });
+      await user.click(restoreButtons[0]);
+
+      expect(screen.getByRole("heading", { name: /confirm hero image 1 restoration/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(/Your current live version will be backed up in history before restoration is completed/i)
+      ).toBeInTheDocument();
+
+      const confirmBtn = screen.getByRole("button", { name: /confirm & publish/i });
+      await user.click(confirmBtn);
+
+      await waitFor(() => {
+        expect(heroAdminService.restoreAdminHeroSlot).toHaveBeenCalledWith("heroImage1", 0);
+        expect(screen.getByText(/hero image 1 restored to historical v0/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("7. Section B: Hero Image 2 Tab Management", () => {
+    it("exposes Image, Normal headline, and Bold headline, but NO description field", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-2")).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByTestId("tab-hero-image-2"));
+
+      expect(screen.getByTestId("hero-card-2")).toBeInTheDocument();
+      expect(screen.getByTestId("hero2-normal-headline-input")).toBeInTheDocument();
+      expect(screen.getByTestId("hero2-bold-headline-input")).toBeInTheDocument();
+      // Description must NOT exist on Hero Image 2
+      expect(screen.queryByTestId("hero2-description-input")).not.toBeInTheDocument();
+      expect(screen.getByText(/1376 × 768 px/i)).toBeInTheDocument();
+    });
+
+    it("displays independent Hero Image 2 Version History", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-2")).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByTestId("tab-hero-image-2"));
+
+      expect(screen.getByRole("heading", { name: "Hero Image 2 Version History" })).toBeInTheDocument();
+      expect(screen.getByText(/Just Lunched Bangles/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Vintage Necklaces & Fine Jewels/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("8. Section B: Hero Image 3 Tab Management", () => {
+    it("exposes Image, Normal headline, and Bold headline, but NO description field", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-3")).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByTestId("tab-hero-image-3"));
+
+      expect(screen.getByTestId("hero-card-3")).toBeInTheDocument();
+      expect(screen.getByTestId("hero3-normal-headline-input")).toBeInTheDocument();
+      expect(screen.getByTestId("hero3-bold-headline-input")).toBeInTheDocument();
+      // Description must NOT exist on Hero Image 3
+      expect(screen.queryByTestId("hero3-description-input")).not.toBeInTheDocument();
+      expect(screen.getByText(/1376 × 768 px/i)).toBeInTheDocument();
+    });
+
+    it("displays independent Hero Image 3 Version History", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-3")).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByTestId("tab-hero-image-3"));
+
+      expect(screen.getByRole("heading", { name: "Hero Image 3 Version History" })).toBeInTheDocument();
+      expect(screen.getByText(/Jewelry & Rings/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Just Lunched Bangles/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("9. Image Upload Client-Side Validation", () => {
+    it("validates file format and displays error for invalid types", async () => {
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-1")).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByTestId("tab-hero-image-1"));
+
+      const invalidFile = new File(["dummy text"], "doc.pdf", { type: "application/pdf" });
+      const fileInput = document.getElementById("hero-image-1-upload") as HTMLInputElement;
+
+      Object.defineProperty(fileInput, "files", {
+        value: [invalidFile],
+        writable: true,
+      });
+      await waitFor(() => {
+        fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+
+      expect(
+        screen.getByText(/Invalid file format\. Please upload a JPEG, PNG, or WebP image\./i)
+      ).toBeInTheDocument();
     });
   });
 });

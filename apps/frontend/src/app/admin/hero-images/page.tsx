@@ -1,1 +1,5 @@
-export { default } from "../hero/page";
+import { redirect } from "next/navigation";
+
+export default function AdminHeroImagesRedirectPage() {
+  redirect("/admin/navbar");
+}

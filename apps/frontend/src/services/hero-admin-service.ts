@@ -6,6 +6,7 @@ import type {
   HeroSlot1UpdateInput,
   HeroSlot2UpdateInput,
   HeroSlot3UpdateInput,
+  HeroHistoryItem,
 } from "@/types/hero";
 
 function getAuthHeaders(includeContentType = true): HeadersInit {
@@ -123,6 +124,56 @@ export async function uploadAdminHeroImage(file: File): Promise<UploadImageResul
 
   if (!res.ok) {
     throw new Error(json?.error?.message || `Image upload failed (HTTP ${res.status})`);
+  }
+
+  return json.data;
+}
+
+/**
+ * Fetches independent history records for a specific hero slot.
+ */
+export async function fetchAdminHeroHistory(
+  slotId: "heroImage1" | "heroImage2" | "heroImage3"
+): Promise<HeroHistoryItem[]> {
+  const url = `${API_BASE_URL}/hero/admin/history?slotId=${slotId}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: getAuthHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({}));
+    throw new Error(
+      errorBody?.error?.message || `Failed to fetch history for ${slotId} (HTTP ${res.status})`
+    );
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+/**
+ * Restores a specific version of a hero slot independently.
+ */
+export async function restoreAdminHeroSlot(
+  slotId: "heroImage1" | "heroImage2" | "heroImage3",
+  version: number
+): Promise<HeroSettingsData> {
+  const url = `${API_BASE_URL}/hero/admin/restore`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    credentials: "include",
+    body: JSON.stringify({ slotId, version }),
+  });
+
+  const json = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(
+      json?.error?.message || `Failed to restore ${slotId} v${version} (HTTP ${res.status})`
+    );
   }
 
   return json.data;

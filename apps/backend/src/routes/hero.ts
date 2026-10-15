@@ -7,6 +7,7 @@ import { z } from "zod";
 import type { EnvConfig } from "../config/env.js";
 import { createAdminAuthMiddleware } from "../middleware/admin-auth.js";
 import { HeroService } from "../services/hero-service.js";
+import { HeroMediaService } from "../services/hero-media-service.js";
 import { logger } from "../utils/logger.js";
 
 // Upload destinations
@@ -173,7 +174,7 @@ export function createHeroRouter(env: EnvConfig): Router {
     "/admin/upload",
     requireAdminAuth,
     (req: Request, res: Response) => {
-      upload.single("image")(req, res, (err: unknown) => {
+      upload.single("image")(req, res, async (err: unknown) => {
         if (err instanceof multer.MulterError) {
           if (err.code === "LIMIT_FILE_SIZE") {
             return res.status(400).json({
@@ -232,6 +233,24 @@ export function createHeroRouter(env: EnvConfig): Router {
 
         const filename = req.file.filename;
         const relativeUrl = `/uploads/hero/${filename}`;
+
+        // Save image binary to PostgreSQL durable object storage
+        try {
+          const buffer = fs.readFileSync(uploadedFilePath);
+          await HeroMediaService.saveAsset(filename, req.file.mimetype, buffer);
+        } catch (dbErr) {
+          logger.error({ dbErr, filename }, "Failed to persist uploaded image to PostgreSQL");
+          try {
+            fs.unlinkSync(uploadedFilePath);
+          } catch {}
+          return res.status(500).json({
+            success: false,
+            error: {
+              code: "STORAGE_ERROR",
+              message: "Failed to persist image to durable storage",
+            },
+          });
+        }
 
         // Also copy to frontend public directory if reachable for immediate dev access
         try {
@@ -354,6 +373,87 @@ export function createHeroRouter(env: EnvConfig): Router {
         error: {
           code: "SERVER_ERROR",
           message: "Failed to update hero settings",
+        },
+      });
+    }
+  });
+  /**
+   * GET /api/v1/hero/admin/history
+   * Retrieves independent history for a specific slot (?slotId=heroImage1).
+   */
+  router.get("/admin/history", requireAdminAuth, async (req: Request, res: Response) => {
+    const slotId = req.query["slotId"] as string;
+
+    if (slotId !== "heroImage1" && slotId !== "heroImage2" && slotId !== "heroImage3") {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_SLOT",
+          message: "slotId query parameter must be 'heroImage1', 'heroImage2', or 'heroImage3'",
+        },
+      });
+    }
+
+    try {
+      const history = await HeroService.getHistory(slotId);
+      return res.status(200).json({
+        success: true,
+        data: history,
+      });
+    } catch {
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: "SERVER_ERROR",
+          message: "Failed to retrieve hero history",
+        },
+      });
+    }
+  });
+
+  /**
+   * POST /api/v1/hero/admin/restore
+   * Restores a historic version of a specific hero slot independently.
+   */
+  router.post("/admin/restore", requireAdminAuth, async (req: Request, res: Response) => {
+    const { slotId, version } = req.body;
+
+    if (slotId !== "heroImage1" && slotId !== "heroImage2" && slotId !== "heroImage3") {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_SLOT",
+          message: "slotId must be 'heroImage1', 'heroImage2', or 'heroImage3'",
+        },
+      });
+    }
+
+    const versionNum = typeof version === "number" ? version : parseInt(version, 10);
+    if (!Number.isInteger(versionNum) || versionNum < 1) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_VERSION",
+          message: "A valid positive integer version number is required",
+        },
+      });
+    }
+
+    try {
+      const adminEmail = req.admin?.email || "admin";
+      const updated = await HeroService.restoreSlot(slotId, versionNum, adminEmail);
+
+      return res.status(200).json({
+        success: true,
+        data: updated,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to restore hero slot";
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "RESTORE_FAILED",
+          message: msg,
         },
       });
     }

@@ -25,6 +25,15 @@ const server: Server = app.listen(PORT, () => {
     },
     `PERALAGAE Backend API running on port ${PORT}`,
   );
+
+  // Background sync of legacy settings and media to PostgreSQL
+  import("./services/hero-service.js")
+    .then(({ HeroService }) => HeroService.syncLegacyData())
+    .catch((err) => logger.warn({ err }, "Initial hero sync failed"));
+
+  import("./services/hero-media-service.js")
+    .then(({ HeroMediaService }) => HeroMediaService.syncDiskToDatabase())
+    .catch((err) => logger.warn({ err }, "Initial media sync failed"));
 });
 
 // ── Graceful Process Shutdown ───────────────────────────────────────────────

@@ -41,6 +41,9 @@ export interface HeroSettingsData {
   heroImage2: HeroImageSlot2;
   heroImage3: HeroImageSlot3;
   version: number;
+  heroImage1Version: number;
+  heroImage2Version: number;
+  heroImage3Version: number;
   updatedAt: string;
   updatedBy: string;
 }
@@ -73,6 +76,19 @@ export interface HeroSettingsUpdateInput {
   heroImage3?: HeroSlot3UpdateInput;
 }
 
+export interface HeroHistoryItem {
+  id: string;
+  slotId: "heroImage1" | "heroImage2" | "heroImage3";
+  version: number;
+  imageUrl: string;
+  normalHeadline: string;
+  boldHeadline: string;
+  description?: string;
+  createdAt: string;
+  createdBy: string;
+  isCurrent?: boolean;
+}
+
 export const defaultHeroSettingsData: HeroSettingsData = {
   id: "current",
   heroImage1: {
@@ -101,6 +117,9 @@ export const defaultHeroSettingsData: HeroSettingsData = {
     boldHeadline: "Charm Bracelets",
   },
   version: 1,
+  heroImage1Version: 1,
+  heroImage2Version: 1,
+  heroImage3Version: 1,
   updatedAt: new Date().toISOString(),
   updatedBy: "system",
 };

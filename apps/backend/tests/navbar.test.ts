@@ -10,8 +10,8 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
 
   let adminCookie: string;
 
-  beforeEach(() => {
-    NavbarService.resetInMemoryState();
+  beforeEach(async () => {
+    await NavbarService.resetInMemoryState();
   });
 
   // Helper to obtain admin session cookie

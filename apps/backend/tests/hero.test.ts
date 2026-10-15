@@ -4,14 +4,14 @@ import { validateEnv } from "../src/config/env.js";
 import { createApp } from "../src/app.js";
 import { HeroService } from "../src/services/hero-service.js";
 
-describe("Hero Images Management API Test Suite", () => {
+describe("Hero Images Management API & Independent Histories Test Suite", () => {
   const env = validateEnv();
   const app = createApp(env);
 
   let adminCookie: string;
 
-  beforeEach(() => {
-    HeroService.resetToDefault();
+  beforeEach(async () => {
+    await HeroService.resetToDefault();
   });
 
   async function getAdminCookie(): Promise<string> {
@@ -59,6 +59,11 @@ describe("Hero Images Management API Test Suite", () => {
       expect(heroImage3.normalHeadline).toBe("Jewelry &");
       expect(heroImage3.boldHeadline).toBe("Charm Bracelets");
       expect(heroImage3.description).toBeUndefined();
+
+      // Independent version counters exist
+      expect(res.body.data.heroImage1Version).toBe(1);
+      expect(res.body.data.heroImage2Version).toBe(1);
+      expect(res.body.data.heroImage3Version).toBe(1);
     });
   });
 
@@ -95,14 +100,17 @@ describe("Hero Images Management API Test Suite", () => {
     });
   });
 
-  describe("3. Independent Slot Editing", () => {
-    it("updating Hero Image 1 does NOT modify Hero Image 2 or Hero Image 3", async () => {
+  describe("3. Independent Slot Editing & Independent Version Counters", () => {
+    it("updating Hero Image 1 increments ONLY heroImage1Version and does NOT modify Hero Image 2 or 3", async () => {
       const cookie = await getAdminCookie();
 
       // Read baseline
       const initial = await request(app).get("/api/v1/hero");
       const initialHero2 = initial.body.data.heroImage2;
       const initialHero3 = initial.body.data.heroImage3;
+      expect(initial.body.data.heroImage1Version).toBe(1);
+      expect(initial.body.data.heroImage2Version).toBe(1);
+      expect(initial.body.data.heroImage3Version).toBe(1);
 
       // Update Hero Image 1 only
       const updateRes = await request(app)
@@ -122,6 +130,11 @@ describe("Hero Images Management API Test Suite", () => {
         "Exclusive handcrafted bridal collections for the modern era."
       );
 
+      // Version counters: only Hero 1 incremented!
+      expect(updateRes.body.data.heroImage1Version).toBe(2);
+      expect(updateRes.body.data.heroImage2Version).toBe(1);
+      expect(updateRes.body.data.heroImage3Version).toBe(1);
+
       // Verify Hero Image 2 and Hero Image 3 are completely untouched
       expect(updateRes.body.data.heroImage2.normalHeadline).toBe(initialHero2.normalHeadline);
       expect(updateRes.body.data.heroImage2.boldHeadline).toBe(initialHero2.boldHeadline);
@@ -132,7 +145,7 @@ describe("Hero Images Management API Test Suite", () => {
       expect(updateRes.body.data.heroImage3.imageUrl).toBe(initialHero3.imageUrl);
     });
 
-    it("updating Hero Image 2 does NOT modify Hero Image 1 or Hero Image 3", async () => {
+    it("updating Hero Image 2 increments ONLY heroImage2Version and does NOT modify Hero Image 1 or 3", async () => {
       const cookie = await getAdminCookie();
 
       const initial = await request(app).get("/api/v1/hero");
@@ -152,39 +165,110 @@ describe("Hero Images Management API Test Suite", () => {
       expect(updateRes.body.data.heroImage2.normalHeadline).toBe("New Arrival");
       expect(updateRes.body.data.heroImage2.boldHeadline).toBe("Diamond Chokers");
 
+      // Version counters: only Hero 2 incremented
+      expect(updateRes.body.data.heroImage2Version).toBe(2);
+      expect(updateRes.body.data.heroImage1Version).toBe(1);
+      expect(updateRes.body.data.heroImage3Version).toBe(1);
+
       // Verify Hero 1 and Hero 3 unchanged
       expect(updateRes.body.data.heroImage1.normalHeadline).toBe(initialHero1.normalHeadline);
       expect(updateRes.body.data.heroImage1.description).toBe(initialHero1.description);
       expect(updateRes.body.data.heroImage3.normalHeadline).toBe(initialHero3.normalHeadline);
     });
+  });
 
-    it("updating Hero Image 3 does NOT modify Hero Image 1 or Hero Image 2", async () => {
+  describe("4. Independent Version History Streams (GET /api/v1/hero/admin/history)", () => {
+    it("retrieves only Hero Image 1 history when slotId=heroImage1", async () => {
       const cookie = await getAdminCookie();
 
-      const initial = await request(app).get("/api/v1/hero");
-      const initialHero1 = initial.body.data.heroImage1;
-      const initialHero2 = initial.body.data.heroImage2;
-
-      const updateRes = await request(app)
-        .put("/api/v1/hero/admin/slot/heroImage3")
+      // Publish an update for heroImage1
+      await request(app)
+        .put("/api/v1/hero/admin/slot/heroImage1")
         .set("Cookie", cookie)
         .send({
-          normalHeadline: "Handcrafted",
-          boldHeadline: "Kundan Bangles",
+          normalHeadline: "Luxury &",
+          boldHeadline: "Fine Gold",
         });
 
-      expect(updateRes.status).toBe(200);
-      expect(updateRes.body.success).toBe(true);
-      expect(updateRes.body.data.heroImage3.normalHeadline).toBe("Handcrafted");
-      expect(updateRes.body.data.heroImage3.boldHeadline).toBe("Kundan Bangles");
+      const res = await request(app)
+        .get("/api/v1/hero/admin/history?slotId=heroImage1")
+        .set("Cookie", cookie);
 
-      // Verify Hero 1 and Hero 2 unchanged
-      expect(updateRes.body.data.heroImage1.normalHeadline).toBe(initialHero1.normalHeadline);
-      expect(updateRes.body.data.heroImage2.normalHeadline).toBe(initialHero2.normalHeadline);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+
+      // All items must belong to heroImage1
+      for (const item of res.body.data) {
+        expect(item.slotId).toBe("heroImage1");
+      }
+
+      // Newest item should be v2 and marked as current
+      expect(res.body.data[0].version).toBe(2);
+      expect(res.body.data[0].isCurrent).toBe(true);
+    });
+
+    it("retrieves only Hero Image 2 history when slotId=heroImage2", async () => {
+      const cookie = await getAdminCookie();
+
+      const res = await request(app)
+        .get("/api/v1/hero/admin/history?slotId=heroImage2")
+        .set("Cookie", cookie);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data)).toBe(true);
+
+      for (const item of res.body.data) {
+        expect(item.slotId).toBe("heroImage2");
+      }
     });
   });
 
-  describe("4. Image Upload & Validation", () => {
+  describe("5. Slot Restoration Behavior (POST /api/v1/hero/admin/restore)", () => {
+    it("restoring Hero Image 1 restores its historical state and does NOT modify Hero Image 2 or 3", async () => {
+      const cookie = await getAdminCookie();
+
+      // 1. Initial baseline: Hero 1 has "Necklaces &"
+      const baseline = await request(app).get("/api/v1/hero");
+      const originalHero2 = baseline.body.data.heroImage2;
+      const originalHero3 = baseline.body.data.heroImage3;
+
+      // 2. Modify Hero 1 to v2
+      await request(app)
+        .put("/api/v1/hero/admin/slot/heroImage1")
+        .set("Cookie", cookie)
+        .send({
+          normalHeadline: "Temporary Text &",
+          boldHeadline: "Temporary Jewels",
+        });
+
+      // Verify v2 is live
+      const v2Live = await request(app).get("/api/v1/hero");
+      expect(v2Live.body.data.heroImage1.normalHeadline).toBe("Temporary Text &");
+
+      // 3. Restore Hero 1 back to v1
+      const restoreRes = await request(app)
+        .post("/api/v1/hero/admin/restore")
+        .set("Cookie", cookie)
+        .send({
+          slotId: "heroImage1",
+          version: 1,
+        });
+
+      expect(restoreRes.status).toBe(200);
+      expect(restoreRes.body.success).toBe(true);
+      expect(restoreRes.body.data.heroImage1.normalHeadline).toBe("Necklaces &");
+      expect(restoreRes.body.data.heroImage1.boldHeadline).toBe("Body Jewels");
+
+      // Hero 2 and Hero 3 remain strictly unmodified
+      expect(restoreRes.body.data.heroImage2.normalHeadline).toBe(originalHero2.normalHeadline);
+      expect(restoreRes.body.data.heroImage3.normalHeadline).toBe(originalHero3.normalHeadline);
+    });
+  });
+
+  describe("6. Image Upload & Validation", () => {
     it("rejects non-image upload with 400", async () => {
       const cookie = await getAdminCookie();
       const fakeTextFile = Buffer.from("Hello world, this is a plain text file, not an image!");
@@ -214,7 +298,6 @@ describe("Hero Images Management API Test Suite", () => {
 
     it("accepts valid JPEG image and returns persistent url", async () => {
       const cookie = await getAdminCookie();
-      // Valid minimal JPEG header: FF D8 FF E0 ...
       const validJpeg = Buffer.from([
         0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
         0x01, 0x01, 0x00, 0x60, 0x00, 0x60, 0x00, 0x00, 0xff, 0xd9,

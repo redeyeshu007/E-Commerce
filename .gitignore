@@ -70,4 +70,5 @@ apps/backend/uploads/hero/*
 !apps/backend/uploads/hero/.gitkeep
 apps/frontend/public/uploads/hero/*
 !apps/frontend/public/uploads/hero/.gitkeep
-
+# Local scratch directories
+scratch/

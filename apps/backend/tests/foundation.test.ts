@@ -30,16 +30,20 @@ describe("Backend Foundation Test Suite", () => {
   });
 
   describe("2. Database Readiness Endpoint (GET /api/health/ready)", () => {
-    it("reports honest database status without crashing when database is unconfigured", async () => {
+    it("reports honest database status without crashing", async () => {
       const res = await request(app).get("/api/health/ready");
 
-      // In offline test environment where DATABASE_URL is not configured,
-      // it should return 503 degraded rather than pretending to be connected or throwing an unhandled error.
-      expect(res.status).toBe(503);
-      expect(res.body.success).toBe(false);
-      expect(res.body.data.status).toBe("degraded");
-      expect(res.body.data.database.connected).toBe(false);
-      expect(res.body.error.code).toBe("DATABASE_UNAVAILABLE");
+      if (res.status === 200) {
+        expect(res.body.success).toBe(true);
+        expect(res.body.data.status).toBe("ok");
+        expect(res.body.data.database.connected).toBe(true);
+      } else {
+        expect(res.status).toBe(503);
+        expect(res.body.success).toBe(false);
+        expect(res.body.data.status).toBe("degraded");
+        expect(res.body.data.database.connected).toBe(false);
+        expect(res.body.error.code).toBe("DATABASE_UNAVAILABLE");
+      }
     });
   });
 

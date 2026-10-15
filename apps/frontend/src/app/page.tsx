@@ -1,6 +1,4 @@
-import React from "react";
 import { HeroBanners } from "@/components/home/hero-banners";
-import { defaultHeroBannersConfig } from "@/config/hero-banners";
 import { ShopOurCollections } from "@/components/home/shop-our-collections";
 import { defaultCollectionsConfig } from "@/config/collections";
 import { NewCollectionSection } from "@/components/home/new-collection";
@@ -40,7 +38,7 @@ export default function HomePage() {
       <h1 className="sr-only">Gold Commerce Platform</h1>
 
       {/* Hero & Promotional Banner Grid */}
-      <HeroBanners config={defaultHeroBannersConfig} />
+      <HeroBanners />
 
       {/* Shop Our Collections Category Gallery Section */}
       <ShopOurCollections config={defaultCollectionsConfig} />

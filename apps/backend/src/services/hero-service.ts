@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
+import { prisma } from "../database/prisma.js";
 import { logger } from "../utils/logger.js";
 
 export interface HeroImageSlot1 {
@@ -36,6 +38,9 @@ export interface HeroSettings {
   heroImage2: HeroImageSlot2;
   heroImage3: HeroImageSlot3;
   version: number;
+  heroImage1Version: number;
+  heroImage2Version: number;
+  heroImage3Version: number;
   updatedAt: string;
   updatedBy: string;
 }
@@ -68,6 +73,19 @@ export interface HeroSettingsUpdateInput {
   heroImage3?: HeroSlot3UpdateInput | undefined;
 }
 
+export interface HeroHistoryItem {
+  id: string;
+  slotId: "heroImage1" | "heroImage2" | "heroImage3";
+  version: number;
+  imageUrl: string;
+  normalHeadline: string;
+  boldHeadline: string;
+  description?: string | undefined;
+  createdAt: string;
+  createdBy: string;
+  isCurrent?: boolean | undefined;
+}
+
 export const defaultHeroSettings: HeroSettings = {
   id: "current",
   heroImage1: {
@@ -96,97 +114,355 @@ export const defaultHeroSettings: HeroSettings = {
     boldHeadline: "Charm Bracelets",
   },
   version: 1,
+  heroImage1Version: 1,
+  heroImage2Version: 1,
+  heroImage3Version: 1,
   updatedAt: new Date().toISOString(),
   updatedBy: "system",
 };
 
-// Data persistence file path
+// Data persistence file paths for legacy import
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const SETTINGS_FILE_PATH = path.join(DATA_DIR, "hero-settings.json");
+const HISTORY_FILE_PATH = path.join(DATA_DIR, "hero-history.json");
 
+// In-memory cache for fast read performance
 let memoryHeroSettings: HeroSettings = { ...defaultHeroSettings };
+let memoryHero1History: HeroHistoryItem[] = [];
+let memoryHero2History: HeroHistoryItem[] = [];
+let memoryHero3History: HeroHistoryItem[] = [];
+let isSeeded = false;
 
-/**
- * Loads hero settings from disk file if available, or initializes with defaults.
- */
-function initializeSettings(): void {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-
-    if (fs.existsSync(SETTINGS_FILE_PATH)) {
-      const content = fs.readFileSync(SETTINGS_FILE_PATH, "utf-8");
-      const parsed = JSON.parse(content);
-      if (parsed && parsed.heroImage1 && parsed.heroImage2 && parsed.heroImage3) {
-        memoryHeroSettings = parsed;
-        logger.info("Hero settings loaded successfully from disk persistence");
-        return;
-      }
-    }
-
-    // Write defaults if not existing or invalid
-    fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(defaultHeroSettings, null, 2), "utf-8");
-    memoryHeroSettings = { ...defaultHeroSettings };
-    logger.info("Hero settings initialized with default configuration");
-  } catch (err) {
-    logger.warn({ err }, "Failed to read/write hero-settings.json; using in-memory state");
-  }
-}
-
-// Initialize on module load
-initializeSettings();
-
-/**
- * Persists current settings to disk.
- */
-function persistSettings(settings: HeroSettings): void {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    const tempPath = `${SETTINGS_FILE_PATH}.tmp.${Date.now()}`;
-    fs.writeFileSync(tempPath, JSON.stringify(settings, null, 2), "utf-8");
-    fs.renameSync(tempPath, SETTINGS_FILE_PATH);
-  } catch (err) {
-    logger.error({ err }, "Failed to persist hero settings to disk");
-  }
+function createDefaultHistory(): {
+  heroImage1: HeroHistoryItem[];
+  heroImage2: HeroHistoryItem[];
+  heroImage3: HeroHistoryItem[];
+} {
+  const initDate = new Date().toISOString();
+  return {
+    heroImage1: [
+      {
+        id: "hist_hero1_init",
+        slotId: "heroImage1",
+        version: 1,
+        imageUrl: defaultHeroSettings.heroImage1.imageUrl,
+        normalHeadline: defaultHeroSettings.heroImage1.normalHeadline,
+        boldHeadline: defaultHeroSettings.heroImage1.boldHeadline,
+        description: defaultHeroSettings.heroImage1.description,
+        createdAt: initDate,
+        createdBy: "system",
+      },
+    ],
+    heroImage2: [
+      {
+        id: "hist_hero2_init",
+        slotId: "heroImage2",
+        version: 1,
+        imageUrl: defaultHeroSettings.heroImage2.imageUrl,
+        normalHeadline: defaultHeroSettings.heroImage2.normalHeadline,
+        boldHeadline: defaultHeroSettings.heroImage2.boldHeadline,
+        createdAt: initDate,
+        createdBy: "system",
+      },
+    ],
+    heroImage3: [
+      {
+        id: "hist_hero3_init",
+        slotId: "heroImage3",
+        version: 1,
+        imageUrl: defaultHeroSettings.heroImage3.imageUrl,
+        normalHeadline: defaultHeroSettings.heroImage3.normalHeadline,
+        boldHeadline: defaultHeroSettings.heroImage3.boldHeadline,
+        createdAt: initDate,
+        createdBy: "system",
+      },
+    ],
+  };
 }
 
 export class HeroService {
   /**
-   * Resets settings back to baseline defaults (useful in tests).
+   * Idempotently seeds PostgreSQL with legacy JSON or default hero settings & history if table is empty.
    */
-  static resetToDefault(): void {
+  static async syncLegacyData(): Promise<void> {
+    if (isSeeded) return;
+    try {
+      const existingSettings = await prisma.heroSetting.findUnique({
+        where: { id: "current" },
+      });
+
+      if (!existingSettings) {
+        let initialSettings = defaultHeroSettings;
+        if (fs.existsSync(SETTINGS_FILE_PATH)) {
+          try {
+            const raw = JSON.parse(fs.readFileSync(SETTINGS_FILE_PATH, "utf-8"));
+            if (raw && raw.heroImage1 && raw.heroImage2 && raw.heroImage3) {
+              initialSettings = {
+                ...defaultHeroSettings,
+                ...raw,
+                heroImage1Version: raw.heroImage1Version ?? 1,
+                heroImage2Version: raw.heroImage2Version ?? 1,
+                heroImage3Version: raw.heroImage3Version ?? 1,
+                version: raw.version ?? 1,
+              };
+            }
+          } catch {
+            // Use default if file parse fails
+          }
+        }
+
+        await prisma.heroSetting.create({
+          data: {
+            id: "current",
+            heroImage1: initialSettings.heroImage1 as unknown as object,
+            heroImage2: initialSettings.heroImage2 as unknown as object,
+            heroImage3: initialSettings.heroImage3 as unknown as object,
+            heroImage1Version: initialSettings.heroImage1Version,
+            heroImage2Version: initialSettings.heroImage2Version,
+            heroImage3Version: initialSettings.heroImage3Version,
+            version: initialSettings.version,
+            updatedBy: initialSettings.updatedBy || "system",
+          },
+        });
+        logger.info("Hero settings initialized in PostgreSQL");
+      }
+
+      const historyCount = await prisma.heroHistory.count();
+      if (historyCount === 0) {
+        let historyToSeed = createDefaultHistory();
+        if (fs.existsSync(HISTORY_FILE_PATH)) {
+          try {
+            const rawHist = JSON.parse(fs.readFileSync(HISTORY_FILE_PATH, "utf-8"));
+            if (rawHist.heroImage1 || rawHist.heroImage2 || rawHist.heroImage3) {
+              historyToSeed = {
+                heroImage1: Array.isArray(rawHist.heroImage1) ? rawHist.heroImage1 : historyToSeed.heroImage1,
+                heroImage2: Array.isArray(rawHist.heroImage2) ? rawHist.heroImage2 : historyToSeed.heroImage2,
+                heroImage3: Array.isArray(rawHist.heroImage3) ? rawHist.heroImage3 : historyToSeed.heroImage3,
+              };
+            }
+          } catch {
+            // Use default history
+          }
+        }
+
+        const allItems = [
+          ...historyToSeed.heroImage1,
+          ...historyToSeed.heroImage2,
+          ...historyToSeed.heroImage3,
+        ];
+
+        for (const item of allItems) {
+          await prisma.heroHistory.create({
+            data: {
+              id: item.id || `hist_${item.slotId}_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
+              slotId: item.slotId,
+              version: item.version,
+              imageUrl: item.imageUrl,
+              normalHeadline: item.normalHeadline,
+              boldHeadline: item.boldHeadline,
+              description: item.description ?? null,
+              createdAt: new Date(item.createdAt || Date.now()),
+              createdBy: item.createdBy || "system",
+            },
+          });
+        }
+        logger.info({ count: allItems.length }, "Hero history initialized in PostgreSQL");
+      }
+
+      isSeeded = true;
+    } catch (err) {
+      logger.warn({ err }, "Could not sync legacy hero data to PostgreSQL");
+    }
+  }
+
+  /**
+   * Resets settings and history back to baseline defaults (useful in tests).
+   */
+  static async resetToDefault(): Promise<void> {
     memoryHeroSettings = {
       ...defaultHeroSettings,
       updatedAt: new Date().toISOString(),
       updatedBy: "system",
     };
-    persistSettings(memoryHeroSettings);
+    const defHist = createDefaultHistory();
+    memoryHero1History = defHist.heroImage1;
+    memoryHero2History = defHist.heroImage2;
+    memoryHero3History = defHist.heroImage3;
+
+    try {
+      await prisma.heroSetting.upsert({
+        where: { id: "current" },
+        create: {
+          id: "current",
+          heroImage1: defaultHeroSettings.heroImage1 as unknown as object,
+          heroImage2: defaultHeroSettings.heroImage2 as unknown as object,
+          heroImage3: defaultHeroSettings.heroImage3 as unknown as object,
+          heroImage1Version: 1,
+          heroImage2Version: 1,
+          heroImage3Version: 1,
+          version: 1,
+          updatedBy: "system",
+        },
+        update: {
+          heroImage1: defaultHeroSettings.heroImage1 as unknown as object,
+          heroImage2: defaultHeroSettings.heroImage2 as unknown as object,
+          heroImage3: defaultHeroSettings.heroImage3 as unknown as object,
+          heroImage1Version: 1,
+          heroImage2Version: 1,
+          heroImage3Version: 1,
+          version: 1,
+          updatedBy: "system",
+        },
+      });
+
+      await prisma.heroHistory.deleteMany({});
+      const allDef = [...defHist.heroImage1, ...defHist.heroImage2, ...defHist.heroImage3];
+      for (const item of allDef) {
+        await prisma.heroHistory.create({
+          data: {
+            id: item.id,
+            slotId: item.slotId,
+            version: item.version,
+            imageUrl: item.imageUrl,
+            normalHeadline: item.normalHeadline,
+            boldHeadline: item.boldHeadline,
+            description: item.description ?? null,
+            createdBy: "system",
+          },
+        });
+      }
+    } catch {
+      // In-memory fallback
+    }
   }
 
   /**
-   * Retrieves the current published Hero Settings.
+   * Retrieves current published Hero Settings from Supabase PostgreSQL.
    */
   static async getSettings(): Promise<HeroSettings> {
+    try {
+      await this.syncLegacyData();
+
+      const record = await prisma.heroSetting.findUnique({
+        where: { id: "current" },
+      });
+
+      if (record) {
+        const formatted: HeroSettings = {
+          id: record.id,
+          heroImage1: record.heroImage1 as unknown as HeroImageSlot1,
+          heroImage2: record.heroImage2 as unknown as HeroImageSlot2,
+          heroImage3: record.heroImage3 as unknown as HeroImageSlot3,
+          version: record.version,
+          heroImage1Version: record.heroImage1Version,
+          heroImage2Version: record.heroImage2Version,
+          heroImage3Version: record.heroImage3Version,
+          updatedAt: record.updatedAt.toISOString(),
+          updatedBy: record.updatedBy || "system",
+        };
+        memoryHeroSettings = formatted;
+        return formatted;
+      }
+    } catch (err) {
+      logger.warn({ err }, "Database fetch failed for hero settings; serving in-memory fallback");
+    }
+
     return { ...memoryHeroSettings };
   }
 
   /**
-   * Updates an individual slot independently without touching the other two slots.
+   * Retrieves independent history for a specific slot from Supabase PostgreSQL.
+   */
+  static async getHistory(slotId: "heroImage1" | "heroImage2" | "heroImage3"): Promise<HeroHistoryItem[]> {
+    const current = await this.getSettings();
+    let currentVersion: number;
+    if (slotId === "heroImage1") {
+      currentVersion = current.heroImage1Version;
+    } else if (slotId === "heroImage2") {
+      currentVersion = current.heroImage2Version;
+    } else {
+      currentVersion = current.heroImage3Version;
+    }
+
+    try {
+      await this.syncLegacyData();
+
+      const records = await prisma.heroHistory.findMany({
+        where: { slotId },
+        orderBy: { version: "desc" },
+        take: 100,
+      });
+
+      if (records.length > 0) {
+        return records.map((r) => ({
+          id: r.id,
+          slotId: r.slotId as "heroImage1" | "heroImage2" | "heroImage3",
+          version: r.version,
+          imageUrl: r.imageUrl,
+          normalHeadline: r.normalHeadline,
+          boldHeadline: r.boldHeadline,
+          description: r.description ?? undefined,
+          createdAt: r.createdAt.toISOString(),
+          createdBy: r.createdBy || "system",
+          isCurrent: r.version === currentVersion,
+        }));
+      }
+    } catch (err) {
+      logger.warn({ err, slotId }, "Failed to fetch hero history from database");
+    }
+
+    // Memory fallback
+    let list: HeroHistoryItem[];
+    if (slotId === "heroImage1") {
+      list = memoryHero1History;
+    } else if (slotId === "heroImage2") {
+      list = memoryHero2History;
+    } else {
+      list = memoryHero3History;
+    }
+
+    if (list.length === 0) {
+      const defHist = createDefaultHistory();
+      list = defHist[slotId];
+    }
+
+    return list.map((item) => ({
+      ...item,
+      isCurrent: item.version === currentVersion,
+    }));
+  }
+
+  /**
+   * Updates an individual slot independently in Supabase PostgreSQL:
+   * Increments that slot's version, creates an independent history record,
+   * leaves sibling slots untouched, and throws honestly if database fails.
    */
   static async updateSlot(
     slotId: "heroImage1" | "heroImage2" | "heroImage3",
     input: HeroSlot1UpdateInput | HeroSlot2UpdateInput | HeroSlot3UpdateInput,
     adminUser = "admin"
   ): Promise<HeroSettings> {
-    const current = { ...memoryHeroSettings };
-    const now = new Date().toISOString();
+    await this.syncLegacyData();
+    const current = await this.getSettings();
+    const now = new Date();
+
+    let newSlotVersion: number;
+    let updatedSlot: HeroImageSlot1 | HeroImageSlot2 | HeroImageSlot3;
+    let historyRecordData: {
+      id: string;
+      slotId: string;
+      version: number;
+      imageUrl: string;
+      normalHeadline: string;
+      boldHeadline: string;
+      description?: string;
+      createdBy: string;
+      createdAt: Date;
+    };
 
     if (slotId === "heroImage1") {
       const slotInput = input as HeroSlot1UpdateInput;
-      current.heroImage1 = {
+      const s1: HeroImageSlot1 = {
         ...current.heroImage1,
         imageUrl: slotInput.imageUrl !== undefined ? slotInput.imageUrl : current.heroImage1.imageUrl,
         imageAlt: slotInput.imageAlt !== undefined ? slotInput.imageAlt : current.heroImage1.imageAlt,
@@ -194,94 +470,358 @@ export class HeroService {
         boldHeadline: slotInput.boldHeadline !== undefined ? slotInput.boldHeadline : current.heroImage1.boldHeadline,
         description: slotInput.description !== undefined ? slotInput.description : current.heroImage1.description,
       };
+      updatedSlot = s1;
+      newSlotVersion = (current.heroImage1Version || 1) + 1;
+
+      historyRecordData = {
+        id: `hist_hero1_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
+        slotId: "heroImage1",
+        version: newSlotVersion,
+        imageUrl: s1.imageUrl,
+        normalHeadline: s1.normalHeadline,
+        boldHeadline: s1.boldHeadline,
+        description: s1.description,
+        createdBy: adminUser,
+        createdAt: now,
+      };
     } else if (slotId === "heroImage2") {
       const slotInput = input as HeroSlot2UpdateInput;
-      current.heroImage2 = {
+      const s2: HeroImageSlot2 = {
         ...current.heroImage2,
         imageUrl: slotInput.imageUrl !== undefined ? slotInput.imageUrl : current.heroImage2.imageUrl,
         imageAlt: slotInput.imageAlt !== undefined ? slotInput.imageAlt : current.heroImage2.imageAlt,
         normalHeadline: slotInput.normalHeadline !== undefined ? slotInput.normalHeadline : current.heroImage2.normalHeadline,
         boldHeadline: slotInput.boldHeadline !== undefined ? slotInput.boldHeadline : current.heroImage2.boldHeadline,
       };
+      updatedSlot = s2;
+      newSlotVersion = (current.heroImage2Version || 1) + 1;
+
+      historyRecordData = {
+        id: `hist_hero2_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
+        slotId: "heroImage2",
+        version: newSlotVersion,
+        imageUrl: s2.imageUrl,
+        normalHeadline: s2.normalHeadline,
+        boldHeadline: s2.boldHeadline,
+        createdBy: adminUser,
+        createdAt: now,
+      };
     } else if (slotId === "heroImage3") {
       const slotInput = input as HeroSlot3UpdateInput;
-      current.heroImage3 = {
+      const s3: HeroImageSlot3 = {
         ...current.heroImage3,
         imageUrl: slotInput.imageUrl !== undefined ? slotInput.imageUrl : current.heroImage3.imageUrl,
         imageAlt: slotInput.imageAlt !== undefined ? slotInput.imageAlt : current.heroImage3.imageAlt,
         normalHeadline: slotInput.normalHeadline !== undefined ? slotInput.normalHeadline : current.heroImage3.normalHeadline,
         boldHeadline: slotInput.boldHeadline !== undefined ? slotInput.boldHeadline : current.heroImage3.boldHeadline,
       };
+      updatedSlot = s3;
+      newSlotVersion = (current.heroImage3Version || 1) + 1;
+
+      historyRecordData = {
+        id: `hist_hero3_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
+        slotId: "heroImage3",
+        version: newSlotVersion,
+        imageUrl: s3.imageUrl,
+        normalHeadline: s3.normalHeadline,
+        boldHeadline: s3.boldHeadline,
+        createdBy: adminUser,
+        createdAt: now,
+      };
     } else {
       throw new Error(`Invalid slot identifier: ${slotId}`);
     }
 
-    current.version += 1;
-    current.updatedAt = now;
-    current.updatedBy = adminUser;
+    const newOverallVersion = current.version + 1;
 
-    memoryHeroSettings = current;
-    persistSettings(current);
+    // Authoritative atomic database write
+    const updatePayload: Record<string, unknown> = {
+      version: newOverallVersion,
+      updatedBy: adminUser,
+    };
+    if (slotId === "heroImage1") {
+      updatePayload["heroImage1"] = updatedSlot as unknown as object;
+      updatePayload["heroImage1Version"] = newSlotVersion;
+    } else if (slotId === "heroImage2") {
+      updatePayload["heroImage2"] = updatedSlot as unknown as object;
+      updatePayload["heroImage2Version"] = newSlotVersion;
+    } else {
+      updatePayload["heroImage3"] = updatedSlot as unknown as object;
+      updatePayload["heroImage3Version"] = newSlotVersion;
+    }
 
-    logger.info({ slotId, version: current.version, adminUser }, "Hero slot updated and persisted");
-    return { ...memoryHeroSettings };
+    // Must NOT silently suppress database errors!
+    const [savedRecord] = await prisma.$transaction([
+      prisma.heroSetting.upsert({
+        where: { id: "current" },
+        create: {
+          id: "current",
+          heroImage1: (slotId === "heroImage1" ? updatedSlot : current.heroImage1) as unknown as object,
+          heroImage2: (slotId === "heroImage2" ? updatedSlot : current.heroImage2) as unknown as object,
+          heroImage3: (slotId === "heroImage3" ? updatedSlot : current.heroImage3) as unknown as object,
+          heroImage1Version: slotId === "heroImage1" ? newSlotVersion : current.heroImage1Version,
+          heroImage2Version: slotId === "heroImage2" ? newSlotVersion : current.heroImage2Version,
+          heroImage3Version: slotId === "heroImage3" ? newSlotVersion : current.heroImage3Version,
+          version: newOverallVersion,
+          updatedBy: adminUser,
+        },
+        update: updatePayload,
+      }),
+      prisma.heroHistory.create({
+        data: historyRecordData,
+      }),
+    ]);
+
+    const result: HeroSettings = {
+      id: savedRecord.id,
+      heroImage1: savedRecord.heroImage1 as unknown as HeroImageSlot1,
+      heroImage2: savedRecord.heroImage2 as unknown as HeroImageSlot2,
+      heroImage3: savedRecord.heroImage3 as unknown as HeroImageSlot3,
+      version: savedRecord.version,
+      heroImage1Version: savedRecord.heroImage1Version,
+      heroImage2Version: savedRecord.heroImage2Version,
+      heroImage3Version: savedRecord.heroImage3Version,
+      updatedAt: savedRecord.updatedAt.toISOString(),
+      updatedBy: savedRecord.updatedBy || adminUser,
+    };
+
+    memoryHeroSettings = result;
+    logger.info({ slotId, version: result.version, adminUser }, "Hero slot updated and persisted to PostgreSQL");
+    return result;
   }
 
   /**
-   * Updates multiple hero slots at once while preserving slots that are not included in the payload.
+   * Updates multiple hero slots at once while preserving slots that are not included.
    */
   static async updateSettings(
     input: HeroSettingsUpdateInput,
     adminUser = "admin"
   ): Promise<HeroSettings> {
-    const current = { ...memoryHeroSettings };
-    const now = new Date().toISOString();
-    let hasChanges = false;
-
     if (input.heroImage1) {
-      current.heroImage1 = {
-        ...current.heroImage1,
-        imageUrl: input.heroImage1.imageUrl !== undefined ? input.heroImage1.imageUrl : current.heroImage1.imageUrl,
-        imageAlt: input.heroImage1.imageAlt !== undefined ? input.heroImage1.imageAlt : current.heroImage1.imageAlt,
-        normalHeadline: input.heroImage1.normalHeadline !== undefined ? input.heroImage1.normalHeadline : current.heroImage1.normalHeadline,
-        boldHeadline: input.heroImage1.boldHeadline !== undefined ? input.heroImage1.boldHeadline : current.heroImage1.boldHeadline,
-        description: input.heroImage1.description !== undefined ? input.heroImage1.description : current.heroImage1.description,
-      };
-      hasChanges = true;
+      await this.updateSlot("heroImage1", input.heroImage1, adminUser);
     }
-
     if (input.heroImage2) {
-      current.heroImage2 = {
-        ...current.heroImage2,
-        imageUrl: input.heroImage2.imageUrl !== undefined ? input.heroImage2.imageUrl : current.heroImage2.imageUrl,
-        imageAlt: input.heroImage2.imageAlt !== undefined ? input.heroImage2.imageAlt : current.heroImage2.imageAlt,
-        normalHeadline: input.heroImage2.normalHeadline !== undefined ? input.heroImage2.normalHeadline : current.heroImage2.normalHeadline,
-        boldHeadline: input.heroImage2.boldHeadline !== undefined ? input.heroImage2.boldHeadline : current.heroImage2.boldHeadline,
-      };
-      hasChanges = true;
+      await this.updateSlot("heroImage2", input.heroImage2, adminUser);
     }
-
     if (input.heroImage3) {
-      current.heroImage3 = {
-        ...current.heroImage3,
-        imageUrl: input.heroImage3.imageUrl !== undefined ? input.heroImage3.imageUrl : current.heroImage3.imageUrl,
-        imageAlt: input.heroImage3.imageAlt !== undefined ? input.heroImage3.imageAlt : current.heroImage3.imageAlt,
-        normalHeadline: input.heroImage3.normalHeadline !== undefined ? input.heroImage3.normalHeadline : current.heroImage3.normalHeadline,
-        boldHeadline: input.heroImage3.boldHeadline !== undefined ? input.heroImage3.boldHeadline : current.heroImage3.boldHeadline,
+      await this.updateSlot("heroImage3", input.heroImage3, adminUser);
+    }
+    return this.getSettings();
+  }
+
+  /**
+   * Restores a historic snapshot of an individual hero image slot:
+   * 1. Confirms target record exists in that slot's history.
+   * 2. Takes a backup snapshot of current live slot before restoring.
+   * 3. Restores image and text from historic snapshot.
+   * 4. Increments that slot's independent version counter.
+   * 5. Creates a newly published history record.
+   * 6. Leaves the other two slots completely unchanged!
+   * 7. Must throw on DB failure (no false success).
+   */
+  static async restoreSlot(
+    slotId: "heroImage1" | "heroImage2" | "heroImage3",
+    targetVersion: number,
+    adminUser = "admin"
+  ): Promise<HeroSettings> {
+    await this.syncLegacyData();
+
+    // 1. Locate the target history item in PostgreSQL
+    const targetRecord = await prisma.heroHistory.findFirst({
+      where: { slotId, version: targetVersion },
+    });
+
+    if (!targetRecord) {
+      throw new Error(`History version ${targetVersion} not found for ${slotId}`);
+    }
+
+    const current = await this.getSettings();
+    const now = new Date();
+
+    let preRestoreSlotVersion: number;
+    let restoredSlotVersion: number;
+    let preRecordData: {
+      id: string;
+      slotId: string;
+      version: number;
+      imageUrl: string;
+      normalHeadline: string;
+      boldHeadline: string;
+      description?: string;
+      createdBy: string;
+      createdAt: Date;
+    };
+    let postRecordData: {
+      id: string;
+      slotId: string;
+      version: number;
+      imageUrl: string;
+      normalHeadline: string;
+      boldHeadline: string;
+      description?: string;
+      createdBy: string;
+      createdAt: Date;
+    };
+    let restoredSlot: HeroImageSlot1 | HeroImageSlot2 | HeroImageSlot3;
+
+    if (slotId === "heroImage1") {
+      preRestoreSlotVersion = (current.heroImage1Version || 1) + 1;
+      restoredSlotVersion = preRestoreSlotVersion + 1;
+
+      preRecordData = {
+        id: `hist_hero1_${Date.now()}_pre_${crypto.randomBytes(3).toString("hex")}`,
+        slotId: "heroImage1",
+        version: preRestoreSlotVersion,
+        imageUrl: current.heroImage1.imageUrl,
+        normalHeadline: current.heroImage1.normalHeadline,
+        boldHeadline: current.heroImage1.boldHeadline,
+        description: current.heroImage1.description,
+        createdAt: now,
+        createdBy: adminUser,
       };
-      hasChanges = true;
+
+      const s1: HeroImageSlot1 = {
+        ...current.heroImage1,
+        imageUrl: targetRecord.imageUrl,
+        normalHeadline: targetRecord.normalHeadline,
+        boldHeadline: targetRecord.boldHeadline,
+        description: targetRecord.description || current.heroImage1.description,
+      };
+      restoredSlot = s1;
+
+      postRecordData = {
+        id: `hist_hero1_${Date.now()}_restored_${crypto.randomBytes(3).toString("hex")}`,
+        slotId: "heroImage1",
+        version: restoredSlotVersion,
+        imageUrl: s1.imageUrl,
+        normalHeadline: s1.normalHeadline,
+        boldHeadline: s1.boldHeadline,
+        description: s1.description,
+        createdAt: now,
+        createdBy: adminUser,
+      };
+    } else if (slotId === "heroImage2") {
+      preRestoreSlotVersion = (current.heroImage2Version || 1) + 1;
+      restoredSlotVersion = preRestoreSlotVersion + 1;
+
+      preRecordData = {
+        id: `hist_hero2_${Date.now()}_pre_${crypto.randomBytes(3).toString("hex")}`,
+        slotId: "heroImage2",
+        version: preRestoreSlotVersion,
+        imageUrl: current.heroImage2.imageUrl,
+        normalHeadline: current.heroImage2.normalHeadline,
+        boldHeadline: current.heroImage2.boldHeadline,
+        createdAt: now,
+        createdBy: adminUser,
+      };
+
+      const s2: HeroImageSlot2 = {
+        ...current.heroImage2,
+        imageUrl: targetRecord.imageUrl,
+        normalHeadline: targetRecord.normalHeadline,
+        boldHeadline: targetRecord.boldHeadline,
+      };
+      restoredSlot = s2;
+
+      postRecordData = {
+        id: `hist_hero2_${Date.now()}_restored_${crypto.randomBytes(3).toString("hex")}`,
+        slotId: "heroImage2",
+        version: restoredSlotVersion,
+        imageUrl: s2.imageUrl,
+        normalHeadline: s2.normalHeadline,
+        boldHeadline: s2.boldHeadline,
+        createdAt: now,
+        createdBy: adminUser,
+      };
+    } else if (slotId === "heroImage3") {
+      preRestoreSlotVersion = (current.heroImage3Version || 1) + 1;
+      restoredSlotVersion = preRestoreSlotVersion + 1;
+
+      preRecordData = {
+        id: `hist_hero3_${Date.now()}_pre_${crypto.randomBytes(3).toString("hex")}`,
+        slotId: "heroImage3",
+        version: preRestoreSlotVersion,
+        imageUrl: current.heroImage3.imageUrl,
+        normalHeadline: current.heroImage3.normalHeadline,
+        boldHeadline: current.heroImage3.boldHeadline,
+        createdAt: now,
+        createdBy: adminUser,
+      };
+
+      const s3: HeroImageSlot3 = {
+        ...current.heroImage3,
+        imageUrl: targetRecord.imageUrl,
+        normalHeadline: targetRecord.normalHeadline,
+        boldHeadline: targetRecord.boldHeadline,
+      };
+      restoredSlot = s3;
+
+      postRecordData = {
+        id: `hist_hero3_${Date.now()}_restored_${crypto.randomBytes(3).toString("hex")}`,
+        slotId: "heroImage3",
+        version: restoredSlotVersion,
+        imageUrl: s3.imageUrl,
+        normalHeadline: s3.normalHeadline,
+        boldHeadline: s3.boldHeadline,
+        createdAt: now,
+        createdBy: adminUser,
+      };
+    } else {
+      throw new Error(`Invalid slot identifier: ${slotId}`);
     }
 
-    if (hasChanges) {
-      current.version += 1;
-      current.updatedAt = now;
-      current.updatedBy = adminUser;
-
-      memoryHeroSettings = current;
-      persistSettings(current);
-      logger.info({ version: current.version, adminUser }, "Hero settings updated and persisted");
+    const newOverallVersion = current.version + 1;
+    const updatePayload: Record<string, unknown> = {
+      version: newOverallVersion,
+      updatedBy: adminUser,
+    };
+    if (slotId === "heroImage1") {
+      updatePayload["heroImage1"] = restoredSlot as unknown as object;
+      updatePayload["heroImage1Version"] = restoredSlotVersion;
+    } else if (slotId === "heroImage2") {
+      updatePayload["heroImage2"] = restoredSlot as unknown as object;
+      updatePayload["heroImage2Version"] = restoredSlotVersion;
+    } else {
+      updatePayload["heroImage3"] = restoredSlot as unknown as object;
+      updatePayload["heroImage3Version"] = restoredSlotVersion;
     }
 
-    return { ...memoryHeroSettings };
+    // Atomic transaction for pre-snapshot, post-snapshot, and settings update
+    const [savedRecord] = await prisma.$transaction([
+      prisma.heroSetting.upsert({
+        where: { id: "current" },
+        create: {
+          id: "current",
+          heroImage1: (slotId === "heroImage1" ? restoredSlot : current.heroImage1) as unknown as object,
+          heroImage2: (slotId === "heroImage2" ? restoredSlot : current.heroImage2) as unknown as object,
+          heroImage3: (slotId === "heroImage3" ? restoredSlot : current.heroImage3) as unknown as object,
+          heroImage1Version: slotId === "heroImage1" ? restoredSlotVersion : current.heroImage1Version,
+          heroImage2Version: slotId === "heroImage2" ? restoredSlotVersion : current.heroImage2Version,
+          heroImage3Version: slotId === "heroImage3" ? restoredSlotVersion : current.heroImage3Version,
+          version: newOverallVersion,
+          updatedBy: adminUser,
+        },
+        update: updatePayload,
+      }),
+      prisma.heroHistory.create({ data: preRecordData }),
+      prisma.heroHistory.create({ data: postRecordData }),
+    ]);
+
+    const result: HeroSettings = {
+      id: savedRecord.id,
+      heroImage1: savedRecord.heroImage1 as unknown as HeroImageSlot1,
+      heroImage2: savedRecord.heroImage2 as unknown as HeroImageSlot2,
+      heroImage3: savedRecord.heroImage3 as unknown as HeroImageSlot3,
+      version: savedRecord.version,
+      heroImage1Version: savedRecord.heroImage1Version,
+      heroImage2Version: savedRecord.heroImage2Version,
+      heroImage3Version: savedRecord.heroImage3Version,
+      updatedAt: savedRecord.updatedAt.toISOString(),
+      updatedBy: savedRecord.updatedBy || adminUser,
+    };
+
+    memoryHeroSettings = result;
+    logger.info({ slotId, targetVersion, restoredToVersion: result.version }, "Hero slot version restored successfully in PostgreSQL");
+    return result;
   }
 }
