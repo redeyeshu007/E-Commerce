@@ -8,12 +8,52 @@ import {
 export const HERO_SETTINGS_QUERY_KEY = ["hero-settings"] as const;
 export const HERO_SETTINGS_UPDATED_EVENT = "peralagae:hero-settings-updated";
 
+import type { CategoryItem } from "@/types/category";
+
+/**
+ * Resolves the destination URL for a hero slot CTA button.
+ * - Resolves to /shop?category=${category.slug} from the selected category record.
+ * - If the category was selected but is deleted/unavailable, safely falls back to /shop.
+ * - If no category was selected, falls back to the default banner href.
+ */
+export function resolveHeroCtaHref(
+  slot: { categoryId?: string | null; categorySlug?: string | null },
+  defaultHref: string,
+  categories?: CategoryItem[]
+): string {
+  if (!slot.categoryId) {
+    return defaultHref;
+  }
+
+  if (categories && categories.length > 0) {
+    const match = categories.find(
+      (c) =>
+        c.id === slot.categoryId ||
+        c.slug === slot.categoryId ||
+        (slot.categorySlug && c.slug === slot.categorySlug)
+    );
+    if (match) {
+      return `/shop?category=${encodeURIComponent(match.slug)}`;
+    }
+    // Selected category is not available or deleted — fall back safely to shop
+    return "/shop";
+  }
+
+  // If category list is not yet loaded, fall back to stored slug if available
+  if (slot.categorySlug) {
+    return `/shop?category=${encodeURIComponent(slot.categorySlug)}`;
+  }
+
+  return defaultHref;
+}
+
 /**
  * Transforms backend HeroSettingsData into the frontend HeroBannersConfig
  * format expected by the HeroBanners component, preserving all CTA buttons and destinations.
  */
 export function transformHeroSettingsToConfig(
-  settings: HeroSettingsData
+  settings: HeroSettingsData,
+  categories?: CategoryItem[]
 ): HeroBannersConfig {
   return {
     featuredBanner: {
@@ -21,7 +61,14 @@ export function transformHeroSettingsToConfig(
       subheading: settings.heroImage1.normalHeadline,
       title: settings.heroImage1.boldHeadline,
       description: settings.heroImage1.description,
-      cta: defaultHeroBannersConfig.featuredBanner.cta,
+      cta: {
+        ...defaultHeroBannersConfig.featuredBanner.cta,
+        href: resolveHeroCtaHref(
+          settings.heroImage1,
+          defaultHeroBannersConfig.featuredBanner.cta.href,
+          categories
+        ),
+      },
       image: {
         src: settings.heroImage1.imageUrl,
         alt:
@@ -36,7 +83,14 @@ export function transformHeroSettingsToConfig(
       id: "hero-secondary-desk-hals",
       subheading: settings.heroImage2.normalHeadline,
       title: settings.heroImage2.boldHeadline,
-      cta: defaultHeroBannersConfig.secondaryTopBanner.cta,
+      cta: {
+        ...defaultHeroBannersConfig.secondaryTopBanner.cta,
+        href: resolveHeroCtaHref(
+          settings.heroImage2,
+          defaultHeroBannersConfig.secondaryTopBanner.cta.href,
+          categories
+        ),
+      },
       image: {
         src: settings.heroImage2.imageUrl,
         alt:
@@ -51,7 +105,14 @@ export function transformHeroSettingsToConfig(
       id: "hero-secondary-charm-bracelets",
       subheading: settings.heroImage3.normalHeadline,
       title: settings.heroImage3.boldHeadline,
-      cta: defaultHeroBannersConfig.secondaryBottomBanner.cta,
+      cta: {
+        ...defaultHeroBannersConfig.secondaryBottomBanner.cta,
+        href: resolveHeroCtaHref(
+          settings.heroImage3,
+          defaultHeroBannersConfig.secondaryBottomBanner.cta.href,
+          categories
+        ),
+      },
       image: {
         src: settings.heroImage3.imageUrl,
         alt:

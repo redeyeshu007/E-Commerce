@@ -139,6 +139,8 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
   );
 }
 
+import type { CategoryItem } from "@/types/category";
+
 export interface HeroBannersProps {
   /**
    * Promotional banner configuration.
@@ -146,6 +148,7 @@ export interface HeroBannersProps {
    */
   config?: HeroBannersConfig;
   initialSettings?: HeroSettingsData;
+  initialCategories?: CategoryItem[];
   className?: string;
 }
 
@@ -160,9 +163,10 @@ export interface HeroBannersProps {
 export function HeroBanners({
   config: propConfig,
   initialSettings,
+  initialCategories,
   className = "",
 }: HeroBannersProps) {
-  const { config: dynamicConfig, isError } = useHeroSettings(initialSettings);
+  const { config: dynamicConfig, isError } = useHeroSettings(initialSettings, initialCategories);
   const activeConfig = propConfig ?? dynamicConfig;
 
   if (isError && !propConfig && !initialSettings) {

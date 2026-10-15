@@ -604,6 +604,7 @@ describe("Navbar Management Module (Frontend)", () => {
       expect(screen.getByTestId("hero-card-1")).toBeInTheDocument();
       expect(screen.getByTestId("hero1-normal-headline-input")).toBeInTheDocument();
       expect(screen.getByTestId("hero1-bold-headline-input")).toBeInTheDocument();
+      expect(screen.getByTestId("hero1-category-select")).toBeInTheDocument();
       expect(screen.getByTestId("hero1-description-input")).toBeInTheDocument();
       expect(screen.getByText(/896 × 1200 px/i)).toBeInTheDocument();
     });
@@ -692,6 +693,7 @@ describe("Navbar Management Module (Frontend)", () => {
       expect(screen.getByTestId("hero-card-2")).toBeInTheDocument();
       expect(screen.getByTestId("hero2-normal-headline-input")).toBeInTheDocument();
       expect(screen.getByTestId("hero2-bold-headline-input")).toBeInTheDocument();
+      expect(screen.getByTestId("hero2-category-select")).toBeInTheDocument();
       // Description must NOT exist on Hero Image 2
       expect(screen.queryByTestId("hero2-description-input")).not.toBeInTheDocument();
       expect(screen.getByText(/1376 × 768 px/i)).toBeInTheDocument();
@@ -725,6 +727,7 @@ describe("Navbar Management Module (Frontend)", () => {
       expect(screen.getByTestId("hero-card-3")).toBeInTheDocument();
       expect(screen.getByTestId("hero3-normal-headline-input")).toBeInTheDocument();
       expect(screen.getByTestId("hero3-bold-headline-input")).toBeInTheDocument();
+      expect(screen.getByTestId("hero3-category-select")).toBeInTheDocument();
       // Description must NOT exist on Hero Image 3
       expect(screen.queryByTestId("hero3-description-input")).not.toBeInTheDocument();
       expect(screen.getByText(/1376 × 768 px/i)).toBeInTheDocument();

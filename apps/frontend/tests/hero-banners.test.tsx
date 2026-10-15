@@ -116,5 +116,84 @@ describe("PERALAGAE Hero & Promotional Banners Component Suite", () => {
         "/category/bridal",
       );
     });
+
+    it("connects hero image slots dynamically to selected category shop URLs", async () => {
+      const { resolveHeroCtaHref, transformHeroSettingsToConfig } = await import(
+        "@/services/hero-settings-service"
+      );
+
+      const mockCategories = [
+        {
+          id: "cat-necklaces",
+          name: "NECKLACES",
+          slug: "necklaces",
+          order: 0,
+          isActive: true,
+          productCount: 10,
+        },
+        {
+          id: "cat-charms",
+          name: "Charms & Bangles",
+          slug: "charms-bangles",
+          order: 1,
+          isActive: true,
+          productCount: 0,
+        },
+      ];
+
+      // 1. Matched category links directly to /shop?category=${slug}
+      const href = resolveHeroCtaHref(
+        { categoryId: "cat-charms", categorySlug: "charms-bangles" },
+        "/shop?category=bracelets",
+        mockCategories
+      );
+      expect(href).toBe("/shop?category=charms-bangles");
+
+      // 2. Deleted or unavailable category falls back safely to /shop
+      const fallbackHref = resolveHeroCtaHref(
+        { categoryId: "deleted-category-id" },
+        "/shop?category=necklaces",
+        mockCategories
+      );
+      expect(fallbackHref).toBe("/shop");
+
+      // 3. No category set falls back to default CTA href
+      const defaultHref = resolveHeroCtaHref(
+        { categoryId: null },
+        "/shop?category=necklaces",
+        mockCategories
+      );
+      expect(defaultHref).toBe("/shop?category=necklaces");
+
+      // 4. transformHeroSettingsToConfig correctly injects resolved URLs
+      const mockSettings = {
+        heroImage1: {
+          imageUrl: "/img1.jpg",
+          normalHeadline: "Handmade",
+          boldHeadline: "Necklaces",
+          description: "Finest gold.",
+          categoryId: "cat-charms",
+          categorySlug: "charms-bangles",
+        },
+        heroImage2: {
+          imageUrl: "/img2.jpg",
+          normalHeadline: "Classic",
+          boldHeadline: "Rings",
+          categoryId: "deleted-id",
+        },
+        heroImage3: {
+          imageUrl: "/img3.jpg",
+          normalHeadline: "Latest",
+          boldHeadline: "Earrings",
+          categoryId: null,
+        },
+      };
+
+      const transformed = transformHeroSettingsToConfig(mockSettings as any, mockCategories);
+      expect(transformed.featuredBanner.cta.href).toBe("/shop?category=charms-bangles");
+      expect(transformed.secondaryTopBanner.cta.href).toBe("/shop");
+      expect(transformed.secondaryBottomBanner.cta.href).toBe("/shop?category=bracelets");
+    });
   });
 });
+

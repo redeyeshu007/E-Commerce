@@ -15,6 +15,8 @@ export interface HeroImageSlot1 {
   normalHeadline: string;
   boldHeadline: string;
   description: string;
+  categoryId?: string | null;
+  categorySlug?: string | null;
 }
 
 export interface HeroImageSlot2 {
@@ -24,6 +26,8 @@ export interface HeroImageSlot2 {
   imageAlt: string;
   normalHeadline: string;
   boldHeadline: string;
+  categoryId?: string | null;
+  categorySlug?: string | null;
 }
 
 export interface HeroImageSlot3 {
@@ -33,6 +37,8 @@ export interface HeroImageSlot3 {
   imageAlt: string;
   normalHeadline: string;
   boldHeadline: string;
+  categoryId?: string | null;
+  categorySlug?: string | null;
 }
 
 export interface HeroSettingsData {
@@ -54,6 +60,8 @@ export interface HeroSlot1UpdateInput {
   normalHeadline?: string;
   boldHeadline?: string;
   description?: string;
+  categoryId?: string | null;
+  categorySlug?: string | null;
 }
 
 export interface HeroSlot2UpdateInput {
@@ -61,6 +69,8 @@ export interface HeroSlot2UpdateInput {
   imageAlt?: string;
   normalHeadline?: string;
   boldHeadline?: string;
+  categoryId?: string | null;
+  categorySlug?: string | null;
 }
 
 export interface HeroSlot3UpdateInput {
@@ -68,6 +78,8 @@ export interface HeroSlot3UpdateInput {
   imageAlt?: string;
   normalHeadline?: string;
   boldHeadline?: string;
+  categoryId?: string | null;
+  categorySlug?: string | null;
 }
 
 export interface HeroSettingsUpdateInput {
@@ -84,6 +96,8 @@ export interface HeroHistoryItem {
   normalHeadline: string;
   boldHeadline: string;
   description?: string;
+  categoryId?: string | null;
+  categorySlug?: string | null;
   createdAt: string;
   createdBy: string;
   isCurrent?: boolean;

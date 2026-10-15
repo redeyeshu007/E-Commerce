@@ -9,9 +9,10 @@ export const CATEGORIES_UPDATED_EVENT = "peralagae:categories-updated";
  */
 export async function fetchPublicCategories(): Promise<CategoryItem[]> {
   const isServer = typeof window === "undefined";
-  const baseUrl = isServer
-    ? getBackendOrigin()
-    : (typeof window !== "undefined" && window.location?.origin ? "" : getBackendOrigin());
+  const hasWindowOrigin =
+    typeof window !== "undefined" &&
+    Boolean(window.location?.origin && window.location.origin !== "null");
+  const baseUrl = isServer || !hasWindowOrigin ? getBackendOrigin() : "";
   const url = `${baseUrl}/api/v1/categories`;
   try {
     const res = await fetch(url, {
@@ -21,14 +22,12 @@ export async function fetchPublicCategories(): Promise<CategoryItem[]> {
     });
 
     if (!res.ok) {
-      console.warn(`[fetchPublicCategories] Non-200 response: ${res.status}`);
       return [];
     }
 
     const json = await res.json();
     return json.data || [];
-  } catch (err) {
-    console.warn("[fetchPublicCategories] Failed to retrieve categories:", err);
+  } catch {
     return [];
   }
 }

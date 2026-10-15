@@ -17,6 +17,20 @@ import { HomePageAnchorManager } from "@/components/home/anchor-manager";
 
 import React, { Suspense } from "react";
 import { fetchPublicCategories } from "@/services/category-public-service";
+import { fetchPublicHeroSettings } from "@/services/hero-settings-service";
+
+async function DynamicHeroBanners() {
+  const [heroSettings, categories] = await Promise.all([
+    fetchPublicHeroSettings(),
+    fetchPublicCategories(),
+  ]);
+  return (
+    <HeroBanners
+      initialSettings={heroSettings ?? undefined}
+      initialCategories={categories}
+    />
+  );
+}
 
 async function DynamicShopOurCollections() {
   const categories = await fetchPublicCategories();
@@ -46,7 +60,9 @@ export default function HomePage() {
       <h1 className="sr-only">Gold Commerce Platform</h1>
 
       {/* Hero & Promotional Banner Grid */}
-      <HeroBanners />
+      <Suspense fallback={<HeroBanners />}>
+        <DynamicHeroBanners />
+      </Suspense>
 
       {/* Shop Our Collections Category Gallery Section */}
       <Suspense fallback={<div className="h-64 animate-pulse bg-neutral-50" />}>

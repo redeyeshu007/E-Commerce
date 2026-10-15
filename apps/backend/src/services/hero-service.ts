@@ -12,6 +12,8 @@ export interface HeroImageSlot1 {
   normalHeadline: string;
   boldHeadline: string;
   description: string;
+  categoryId?: string | null | undefined;
+  categorySlug?: string | null | undefined;
 }
 
 export interface HeroImageSlot2 {
@@ -21,6 +23,8 @@ export interface HeroImageSlot2 {
   imageAlt: string;
   normalHeadline: string;
   boldHeadline: string;
+  categoryId?: string | null | undefined;
+  categorySlug?: string | null | undefined;
 }
 
 export interface HeroImageSlot3 {
@@ -30,6 +34,8 @@ export interface HeroImageSlot3 {
   imageAlt: string;
   normalHeadline: string;
   boldHeadline: string;
+  categoryId?: string | null | undefined;
+  categorySlug?: string | null | undefined;
 }
 
 export interface HeroSettings {
@@ -51,6 +57,8 @@ export interface HeroSlot1UpdateInput {
   normalHeadline?: string | undefined;
   boldHeadline?: string | undefined;
   description?: string | undefined;
+  categoryId?: string | null | undefined;
+  categorySlug?: string | null | undefined;
 }
 
 export interface HeroSlot2UpdateInput {
@@ -58,6 +66,8 @@ export interface HeroSlot2UpdateInput {
   imageAlt?: string | undefined;
   normalHeadline?: string | undefined;
   boldHeadline?: string | undefined;
+  categoryId?: string | null | undefined;
+  categorySlug?: string | null | undefined;
 }
 
 export interface HeroSlot3UpdateInput {
@@ -65,6 +75,8 @@ export interface HeroSlot3UpdateInput {
   imageAlt?: string | undefined;
   normalHeadline?: string | undefined;
   boldHeadline?: string | undefined;
+  categoryId?: string | null | undefined;
+  categorySlug?: string | null | undefined;
 }
 
 export interface HeroSettingsUpdateInput {
@@ -81,6 +93,8 @@ export interface HeroHistoryItem {
   normalHeadline: string;
   boldHeadline: string;
   description?: string | undefined;
+  categoryId?: string | null | undefined;
+  categorySlug?: string | null | undefined;
   createdAt: string;
   createdBy: string;
   isCurrent?: boolean | undefined;
@@ -452,18 +466,23 @@ export class HeroService {
       });
 
       if (records.length > 0) {
-        return records.map((r) => ({
-          id: r.id,
-          slotId: r.slotId as "heroImage1" | "heroImage2" | "heroImage3",
-          version: r.version,
-          imageUrl: r.imageUrl,
-          normalHeadline: r.normalHeadline,
-          boldHeadline: r.boldHeadline,
-          description: r.description ?? undefined,
-          createdAt: r.createdAt.toISOString(),
-          createdBy: r.createdBy || "system",
-          isCurrent: r.version === currentVersion,
-        }));
+        return records.map((r) => {
+          const snapshot = r.snapshot as Record<string, unknown> | null;
+          return {
+            id: r.id,
+            slotId: r.slotId as "heroImage1" | "heroImage2" | "heroImage3",
+            version: r.version,
+            imageUrl: r.imageUrl,
+            normalHeadline: r.normalHeadline,
+            boldHeadline: r.boldHeadline,
+            description: r.description ?? undefined,
+            categoryId: (snapshot?.["categoryId"] as string) ?? undefined,
+            categorySlug: (snapshot?.["categorySlug"] as string) ?? undefined,
+            createdAt: r.createdAt.toISOString(),
+            createdBy: r.createdBy || "system",
+            isCurrent: r.version === currentVersion,
+          };
+        });
       }
     } catch (err) {
       logger.warn({ err, slotId }, "Failed to fetch hero history from database");
@@ -510,6 +529,7 @@ export class HeroService {
       id: string;
       slotId: string;
       version: number;
+      snapshot?: object;
       imageUrl: string;
       normalHeadline: string;
       boldHeadline: string;
@@ -527,6 +547,8 @@ export class HeroService {
         normalHeadline: slotInput.normalHeadline !== undefined ? slotInput.normalHeadline : current.heroImage1.normalHeadline,
         boldHeadline: slotInput.boldHeadline !== undefined ? slotInput.boldHeadline : current.heroImage1.boldHeadline,
         description: slotInput.description !== undefined ? slotInput.description : current.heroImage1.description,
+        categoryId: slotInput.categoryId !== undefined ? slotInput.categoryId : current.heroImage1.categoryId,
+        categorySlug: slotInput.categorySlug !== undefined ? slotInput.categorySlug : current.heroImage1.categorySlug,
       };
       updatedSlot = s1;
       newSlotVersion = (current.heroImage1Version || 1) + 1;
@@ -535,6 +557,7 @@ export class HeroService {
         id: `hist_hero1_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
         slotId: "heroImage1",
         version: newSlotVersion,
+        snapshot: s1 as unknown as object,
         imageUrl: s1.imageUrl,
         normalHeadline: s1.normalHeadline,
         boldHeadline: s1.boldHeadline,
@@ -550,6 +573,8 @@ export class HeroService {
         imageAlt: slotInput.imageAlt !== undefined ? slotInput.imageAlt : current.heroImage2.imageAlt,
         normalHeadline: slotInput.normalHeadline !== undefined ? slotInput.normalHeadline : current.heroImage2.normalHeadline,
         boldHeadline: slotInput.boldHeadline !== undefined ? slotInput.boldHeadline : current.heroImage2.boldHeadline,
+        categoryId: slotInput.categoryId !== undefined ? slotInput.categoryId : current.heroImage2.categoryId,
+        categorySlug: slotInput.categorySlug !== undefined ? slotInput.categorySlug : current.heroImage2.categorySlug,
       };
       updatedSlot = s2;
       newSlotVersion = (current.heroImage2Version || 1) + 1;
@@ -558,6 +583,7 @@ export class HeroService {
         id: `hist_hero2_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
         slotId: "heroImage2",
         version: newSlotVersion,
+        snapshot: s2 as unknown as object,
         imageUrl: s2.imageUrl,
         normalHeadline: s2.normalHeadline,
         boldHeadline: s2.boldHeadline,
@@ -572,6 +598,8 @@ export class HeroService {
         imageAlt: slotInput.imageAlt !== undefined ? slotInput.imageAlt : current.heroImage3.imageAlt,
         normalHeadline: slotInput.normalHeadline !== undefined ? slotInput.normalHeadline : current.heroImage3.normalHeadline,
         boldHeadline: slotInput.boldHeadline !== undefined ? slotInput.boldHeadline : current.heroImage3.boldHeadline,
+        categoryId: slotInput.categoryId !== undefined ? slotInput.categoryId : current.heroImage3.categoryId,
+        categorySlug: slotInput.categorySlug !== undefined ? slotInput.categorySlug : current.heroImage3.categorySlug,
       };
       updatedSlot = s3;
       newSlotVersion = (current.heroImage3Version || 1) + 1;
@@ -580,6 +608,7 @@ export class HeroService {
         id: `hist_hero3_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
         slotId: "heroImage3",
         version: newSlotVersion,
+        snapshot: s3 as unknown as object,
         imageUrl: s3.imageUrl,
         normalHeadline: s3.normalHeadline,
         boldHeadline: s3.boldHeadline,
@@ -697,12 +726,23 @@ export class HeroService {
     const current = await this.getSettings();
     const now = new Date();
 
+    const targetSnapshot = targetRecord.snapshot as Record<string, unknown> | null;
+    const restoredCatId =
+      (targetSnapshot?.["categoryId"] as string | undefined) ??
+      (targetRecord as unknown as { categoryId?: string }).categoryId ??
+      null;
+    const restoredCatSlug =
+      (targetSnapshot?.["categorySlug"] as string | undefined) ??
+      (targetRecord as unknown as { categorySlug?: string }).categorySlug ??
+      null;
+
     let preRestoreSlotVersion: number;
     let restoredSlotVersion: number;
     let preRecordData: {
       id: string;
       slotId: string;
       version: number;
+      snapshot?: object;
       imageUrl: string;
       normalHeadline: string;
       boldHeadline: string;
@@ -714,6 +754,7 @@ export class HeroService {
       id: string;
       slotId: string;
       version: number;
+      snapshot?: object;
       imageUrl: string;
       normalHeadline: string;
       boldHeadline: string;
@@ -731,6 +772,7 @@ export class HeroService {
         id: `hist_hero1_${Date.now()}_pre_${crypto.randomBytes(3).toString("hex")}`,
         slotId: "heroImage1",
         version: preRestoreSlotVersion,
+        snapshot: current.heroImage1 as unknown as object,
         imageUrl: current.heroImage1.imageUrl,
         normalHeadline: current.heroImage1.normalHeadline,
         boldHeadline: current.heroImage1.boldHeadline,
@@ -745,6 +787,8 @@ export class HeroService {
         normalHeadline: targetRecord.normalHeadline,
         boldHeadline: targetRecord.boldHeadline,
         description: targetRecord.description || current.heroImage1.description,
+        categoryId: restoredCatId,
+        categorySlug: restoredCatSlug,
       };
       restoredSlot = s1;
 
@@ -752,6 +796,7 @@ export class HeroService {
         id: `hist_hero1_${Date.now()}_restored_${crypto.randomBytes(3).toString("hex")}`,
         slotId: "heroImage1",
         version: restoredSlotVersion,
+        snapshot: s1 as unknown as object,
         imageUrl: s1.imageUrl,
         normalHeadline: s1.normalHeadline,
         boldHeadline: s1.boldHeadline,
@@ -767,6 +812,7 @@ export class HeroService {
         id: `hist_hero2_${Date.now()}_pre_${crypto.randomBytes(3).toString("hex")}`,
         slotId: "heroImage2",
         version: preRestoreSlotVersion,
+        snapshot: current.heroImage2 as unknown as object,
         imageUrl: current.heroImage2.imageUrl,
         normalHeadline: current.heroImage2.normalHeadline,
         boldHeadline: current.heroImage2.boldHeadline,
@@ -779,6 +825,8 @@ export class HeroService {
         imageUrl: targetRecord.imageUrl,
         normalHeadline: targetRecord.normalHeadline,
         boldHeadline: targetRecord.boldHeadline,
+        categoryId: restoredCatId,
+        categorySlug: restoredCatSlug,
       };
       restoredSlot = s2;
 
@@ -786,6 +834,7 @@ export class HeroService {
         id: `hist_hero2_${Date.now()}_restored_${crypto.randomBytes(3).toString("hex")}`,
         slotId: "heroImage2",
         version: restoredSlotVersion,
+        snapshot: s2 as unknown as object,
         imageUrl: s2.imageUrl,
         normalHeadline: s2.normalHeadline,
         boldHeadline: s2.boldHeadline,
@@ -800,6 +849,7 @@ export class HeroService {
         id: `hist_hero3_${Date.now()}_pre_${crypto.randomBytes(3).toString("hex")}`,
         slotId: "heroImage3",
         version: preRestoreSlotVersion,
+        snapshot: current.heroImage3 as unknown as object,
         imageUrl: current.heroImage3.imageUrl,
         normalHeadline: current.heroImage3.normalHeadline,
         boldHeadline: current.heroImage3.boldHeadline,
@@ -812,6 +862,8 @@ export class HeroService {
         imageUrl: targetRecord.imageUrl,
         normalHeadline: targetRecord.normalHeadline,
         boldHeadline: targetRecord.boldHeadline,
+        categoryId: restoredCatId,
+        categorySlug: restoredCatSlug,
       };
       restoredSlot = s3;
 
@@ -819,6 +871,7 @@ export class HeroService {
         id: `hist_hero3_${Date.now()}_restored_${crypto.randomBytes(3).toString("hex")}`,
         slotId: "heroImage3",
         version: restoredSlotVersion,
+        snapshot: s3 as unknown as object,
         imageUrl: s3.imageUrl,
         normalHeadline: s3.normalHeadline,
         boldHeadline: s3.boldHeadline,

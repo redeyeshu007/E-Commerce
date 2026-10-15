@@ -54,6 +54,27 @@ import {
   type HeroSettingsData,
   type HeroHistoryItem,
 } from "@/types/hero";
+import {
+  fetchPublicCategories,
+  CATEGORIES_UPDATED_EVENT,
+} from "@/services/category-public-service";
+import type { CategoryItem } from "@/types/category";
+
+function formatCategoryDisplayName(name: string): string {
+  if (name === name.toUpperCase()) {
+    return name
+      .toLowerCase()
+      .split(" ")
+      .map((word) => {
+        if (word === "&") return "&";
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(" ");
+  }
+  return name;
+}
+
+const formatCategoryLabel = formatCategoryDisplayName;
 
 type TabKey =
   | "top_bar"
@@ -68,6 +89,7 @@ interface HeroSlotForm1 {
   normalHeadline: string;
   boldHeadline: string;
   description: string;
+  categoryId?: string | null;
 }
 
 interface HeroSlotFormSecondary {
@@ -75,6 +97,7 @@ interface HeroSlotFormSecondary {
   imageAlt: string;
   normalHeadline: string;
   boldHeadline: string;
+  categoryId?: string | null;
 }
 
 export default function AdminNavbarPage() {
@@ -99,6 +122,7 @@ export default function AdminNavbarPage() {
   const [hero1History, setHero1History] = useState<HeroHistoryItem[]>([]);
   const [hero2History, setHero2History] = useState<HeroHistoryItem[]>([]);
   const [hero3History, setHero3History] = useState<HeroHistoryItem[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
 
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -126,6 +150,7 @@ export default function AdminNavbarPage() {
     normalHeadline: defaultHeroSettingsData.heroImage1.normalHeadline,
     boldHeadline: defaultHeroSettingsData.heroImage1.boldHeadline,
     description: defaultHeroSettingsData.heroImage1.description,
+    categoryId: defaultHeroSettingsData.heroImage1.categoryId ?? null,
   });
 
   const [hero2Form, setHero2Form] = useState<HeroSlotFormSecondary>({
@@ -133,6 +158,7 @@ export default function AdminNavbarPage() {
     imageAlt: defaultHeroSettingsData.heroImage2.imageAlt,
     normalHeadline: defaultHeroSettingsData.heroImage2.normalHeadline,
     boldHeadline: defaultHeroSettingsData.heroImage2.boldHeadline,
+    categoryId: defaultHeroSettingsData.heroImage2.categoryId ?? null,
   });
 
   const [hero3Form, setHero3Form] = useState<HeroSlotFormSecondary>({
@@ -140,6 +166,7 @@ export default function AdminNavbarPage() {
     imageAlt: defaultHeroSettingsData.heroImage3.imageAlt,
     normalHeadline: defaultHeroSettingsData.heroImage3.normalHeadline,
     boldHeadline: defaultHeroSettingsData.heroImage3.boldHeadline,
+    categoryId: defaultHeroSettingsData.heroImage3.categoryId ?? null,
   });
 
   // Hero Image file upload & local preview states
@@ -218,17 +245,19 @@ export default function AdminNavbarPage() {
       }
 
       try {
-        const [heroSettings, h1History, h2History, h3History] = await Promise.all([
+        const [heroSettings, h1History, h2History, h3History, fetchedCategories] = await Promise.all([
           fetchAdminHeroSettings(),
           fetchAdminHeroHistory("heroImage1"),
           fetchAdminHeroHistory("heroImage2"),
           fetchAdminHeroHistory("heroImage3"),
+          fetchPublicCategories(),
         ]);
 
         setServerHeroSettings(heroSettings);
         setHero1History(h1History);
         setHero2History(h2History);
         setHero3History(h3History);
+        setCategories(fetchedCategories || []);
 
         setHero1Form({
           imageUrl: heroSettings.heroImage1.imageUrl,
@@ -236,6 +265,7 @@ export default function AdminNavbarPage() {
           normalHeadline: heroSettings.heroImage1.normalHeadline,
           boldHeadline: heroSettings.heroImage1.boldHeadline,
           description: heroSettings.heroImage1.description,
+          categoryId: heroSettings.heroImage1.categoryId ?? null,
         });
 
         setHero2Form({
@@ -243,6 +273,7 @@ export default function AdminNavbarPage() {
           imageAlt: heroSettings.heroImage2.imageAlt,
           normalHeadline: heroSettings.heroImage2.normalHeadline,
           boldHeadline: heroSettings.heroImage2.boldHeadline,
+          categoryId: heroSettings.heroImage2.categoryId ?? null,
         });
 
         setHero3Form({
@@ -250,6 +281,7 @@ export default function AdminNavbarPage() {
           imageAlt: heroSettings.heroImage3.imageAlt,
           normalHeadline: heroSettings.heroImage3.normalHeadline,
           boldHeadline: heroSettings.heroImage3.boldHeadline,
+          categoryId: heroSettings.heroImage3.categoryId ?? null,
         });
       } catch (heroErr) {
         console.error("Hero load error:", heroErr);
@@ -274,6 +306,34 @@ export default function AdminNavbarPage() {
       loadData();
     }
   }, [isVerifying, loadData]);
+
+  // Listen for category updates across admin sessions
+  useEffect(() => {
+    const handleCategoriesSync = async () => {
+      try {
+        const cats = await fetchPublicCategories();
+        if (cats && cats.length > 0) {
+          setCategories(cats);
+        }
+      } catch (err) {
+        console.warn("Failed to sync categories:", err);
+      }
+    };
+    window.addEventListener(CATEGORIES_UPDATED_EVENT, handleCategoriesSync);
+    return () => {
+      window.removeEventListener(CATEGORIES_UPDATED_EVENT, handleCategoriesSync);
+    };
+  }, []);
+
+  // Resolves the selected category ID for dropdowns (matches by id or slug)
+  const getSelectedCategoryValue = useCallback(
+    (catIdOrSlug?: string | null): string => {
+      if (!catIdOrSlug) return "";
+      const match = categories.find((c) => c.id === catIdOrSlug || c.slug === catIdOrSlug);
+      return match ? match.id : "";
+    },
+    [categories]
+  );
 
   // Clean up blob URLs on unmount
   useEffect(() => {
@@ -320,28 +380,37 @@ export default function AdminNavbarPage() {
   const hasHero1Changes = useMemo(() => {
     if (heroPendingFiles.heroImage1) return true;
     const s = serverHeroSettings.heroImage1;
+    const currentCat = hero1Form.categoryId || null;
+    const serverCat = s.categoryId || null;
     return (
       hero1Form.normalHeadline !== s.normalHeadline ||
       hero1Form.boldHeadline !== s.boldHeadline ||
-      hero1Form.description !== s.description
+      hero1Form.description !== s.description ||
+      currentCat !== serverCat
     );
   }, [serverHeroSettings.heroImage1, hero1Form, heroPendingFiles.heroImage1]);
 
   const hasHero2Changes = useMemo(() => {
     if (heroPendingFiles.heroImage2) return true;
     const s = serverHeroSettings.heroImage2;
+    const currentCat = hero2Form.categoryId || null;
+    const serverCat = s.categoryId || null;
     return (
       hero2Form.normalHeadline !== s.normalHeadline ||
-      hero2Form.boldHeadline !== s.boldHeadline
+      hero2Form.boldHeadline !== s.boldHeadline ||
+      currentCat !== serverCat
     );
   }, [serverHeroSettings.heroImage2, hero2Form, heroPendingFiles.heroImage2]);
 
   const hasHero3Changes = useMemo(() => {
     if (heroPendingFiles.heroImage3) return true;
     const s = serverHeroSettings.heroImage3;
+    const currentCat = hero3Form.categoryId || null;
+    const serverCat = s.categoryId || null;
     return (
       hero3Form.normalHeadline !== s.normalHeadline ||
-      hero3Form.boldHeadline !== s.boldHeadline
+      hero3Form.boldHeadline !== s.boldHeadline ||
+      currentCat !== serverCat
     );
   }, [serverHeroSettings.heroImage3, hero3Form, heroPendingFiles.heroImage3]);
 
@@ -534,6 +603,7 @@ export default function AdminNavbarPage() {
         normalHeadline: serverHeroSettings.heroImage1.normalHeadline,
         boldHeadline: serverHeroSettings.heroImage1.boldHeadline,
         description: serverHeroSettings.heroImage1.description,
+        categoryId: serverHeroSettings.heroImage1.categoryId ?? null,
       });
       if (fileInputRef1.current) fileInputRef1.current.value = "";
     } else if (slotKey === "heroImage2") {
@@ -542,6 +612,7 @@ export default function AdminNavbarPage() {
         imageAlt: serverHeroSettings.heroImage2.imageAlt,
         normalHeadline: serverHeroSettings.heroImage2.normalHeadline,
         boldHeadline: serverHeroSettings.heroImage2.boldHeadline,
+        categoryId: serverHeroSettings.heroImage2.categoryId ?? null,
       });
       if (fileInputRef2.current) fileInputRef2.current.value = "";
     } else {
@@ -550,6 +621,7 @@ export default function AdminNavbarPage() {
         imageAlt: serverHeroSettings.heroImage3.imageAlt,
         normalHeadline: serverHeroSettings.heroImage3.normalHeadline,
         boldHeadline: serverHeroSettings.heroImage3.boldHeadline,
+        categoryId: serverHeroSettings.heroImage3.categoryId ?? null,
       });
       if (fileInputRef3.current) fileInputRef3.current.value = "";
     }
@@ -612,26 +684,41 @@ export default function AdminNavbarPage() {
       // 2. Persist slot independently
       let payload;
       if (slotKey === "heroImage1") {
+        const selectedCat = categories.find(
+          (c) => c.id === hero1Form.categoryId || c.slug === hero1Form.categoryId
+        );
         payload = {
           imageUrl: finalImageUrl,
           imageAlt: `${hero1Form.normalHeadline.trim()} ${hero1Form.boldHeadline.trim()} - PERALAGAE`,
           normalHeadline: hero1Form.normalHeadline.trim(),
           boldHeadline: hero1Form.boldHeadline.trim(),
           description: hero1Form.description.trim(),
+          categoryId: hero1Form.categoryId || null,
+          categorySlug: selectedCat ? selectedCat.slug : null,
         };
       } else if (slotKey === "heroImage2") {
+        const selectedCat = categories.find(
+          (c) => c.id === hero2Form.categoryId || c.slug === hero2Form.categoryId
+        );
         payload = {
           imageUrl: finalImageUrl,
           imageAlt: `${hero2Form.normalHeadline.trim()} ${hero2Form.boldHeadline.trim()} - PERALAGAE`,
           normalHeadline: hero2Form.normalHeadline.trim(),
           boldHeadline: hero2Form.boldHeadline.trim(),
+          categoryId: hero2Form.categoryId || null,
+          categorySlug: selectedCat ? selectedCat.slug : null,
         };
       } else {
+        const selectedCat = categories.find(
+          (c) => c.id === hero3Form.categoryId || c.slug === hero3Form.categoryId
+        );
         payload = {
           imageUrl: finalImageUrl,
           imageAlt: `${hero3Form.normalHeadline.trim()} ${hero3Form.boldHeadline.trim()} - PERALAGAE`,
           normalHeadline: hero3Form.normalHeadline.trim(),
           boldHeadline: hero3Form.boldHeadline.trim(),
+          categoryId: hero3Form.categoryId || null,
+          categorySlug: selectedCat ? selectedCat.slug : null,
         };
       }
 
@@ -647,6 +734,7 @@ export default function AdminNavbarPage() {
           normalHeadline: updated.heroImage1.normalHeadline,
           boldHeadline: updated.heroImage1.boldHeadline,
           description: updated.heroImage1.description,
+          categoryId: updated.heroImage1.categoryId ?? null,
         });
         const newHist = await fetchAdminHeroHistory("heroImage1");
         setHero1History(newHist);
@@ -656,6 +744,7 @@ export default function AdminNavbarPage() {
           imageAlt: updated.heroImage2.imageAlt,
           normalHeadline: updated.heroImage2.normalHeadline,
           boldHeadline: updated.heroImage2.boldHeadline,
+          categoryId: updated.heroImage2.categoryId ?? null,
         });
         const newHist = await fetchAdminHeroHistory("heroImage2");
         setHero2History(newHist);
@@ -665,6 +754,7 @@ export default function AdminNavbarPage() {
           imageAlt: updated.heroImage3.imageAlt,
           normalHeadline: updated.heroImage3.normalHeadline,
           boldHeadline: updated.heroImage3.boldHeadline,
+          categoryId: updated.heroImage3.categoryId ?? null,
         });
         const newHist = await fetchAdminHeroHistory("heroImage3");
         setHero3History(newHist);
@@ -791,6 +881,7 @@ export default function AdminNavbarPage() {
           normalHeadline: updated.heroImage1.normalHeadline,
           boldHeadline: updated.heroImage1.boldHeadline,
           description: updated.heroImage1.description,
+          categoryId: updated.heroImage1.categoryId ?? null,
         });
         const newHist = await fetchAdminHeroHistory("heroImage1");
         setHero1History(newHist);
@@ -800,6 +891,7 @@ export default function AdminNavbarPage() {
           imageAlt: updated.heroImage2.imageAlt,
           normalHeadline: updated.heroImage2.normalHeadline,
           boldHeadline: updated.heroImage2.boldHeadline,
+          categoryId: updated.heroImage2.categoryId ?? null,
         });
         const newHist = await fetchAdminHeroHistory("heroImage2");
         setHero2History(newHist);
@@ -809,6 +901,7 @@ export default function AdminNavbarPage() {
           imageAlt: updated.heroImage3.imageAlt,
           normalHeadline: updated.heroImage3.normalHeadline,
           boldHeadline: updated.heroImage3.boldHeadline,
+          categoryId: updated.heroImage3.categoryId ?? null,
         });
         const newHist = await fetchAdminHeroHistory("heroImage3");
         setHero3History(newHist);
@@ -1654,6 +1747,34 @@ export default function AdminNavbarPage() {
                       className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors resize-none"
                     />
                   </div>
+
+                  <div>
+                    <label
+                      htmlFor="hero1-category"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Category
+                    </label>
+                    <select
+                      id="hero1-category"
+                      data-testid="hero1-category-select"
+                      value={getSelectedCategoryValue(hero1Form.categoryId)}
+                      onChange={(e) =>
+                        setHero1Form((prev) => ({ ...prev, categoryId: e.target.value || null }))
+                      }
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] bg-white border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="">Select a category</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {formatCategoryLabel(c.name)}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-[11px] text-[#777777]">
+                      Connects the &quot;Shop Now&quot; button to products in this category.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -1731,6 +1852,11 @@ export default function AdminNavbarPage() {
                             </div>
                             {item.description && (
                               <div className="text-[11px] text-gray-500 truncate">{item.description}</div>
+                            )}
+                            {item.categoryId && (
+                              <div className="text-[10px] text-amber-700 font-medium truncate mt-0.5">
+                                Category: {categories.find((c) => c.id === item.categoryId || c.slug === item.categoryId)?.name ? formatCategoryLabel(categories.find((c) => c.id === item.categoryId || c.slug === item.categoryId)!.name) : (item.categorySlug || item.categoryId)}
+                              </div>
                             )}
                           </td>
                           <td className="py-2.5 px-3 text-gray-500 whitespace-nowrap">
@@ -1887,6 +2013,34 @@ export default function AdminNavbarPage() {
                       className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
                     />
                   </div>
+
+                  <div>
+                    <label
+                      htmlFor="hero2-category"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Category
+                    </label>
+                    <select
+                      id="hero2-category"
+                      data-testid="hero2-category-select"
+                      value={getSelectedCategoryValue(hero2Form.categoryId)}
+                      onChange={(e) =>
+                        setHero2Form((prev) => ({ ...prev, categoryId: e.target.value || null }))
+                      }
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] bg-white border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="">Select a category</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {formatCategoryLabel(c.name)}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-[11px] text-[#777777]">
+                      Connects the &quot;Shop Now&quot; button to products in this category.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -1962,6 +2116,11 @@ export default function AdminNavbarPage() {
                             <div className="font-medium text-gray-900 truncate">
                               {item.normalHeadline} {item.boldHeadline}
                             </div>
+                            {item.categoryId && (
+                              <div className="text-[10px] text-amber-700 font-medium truncate mt-0.5">
+                                Category: {categories.find((c) => c.id === item.categoryId || c.slug === item.categoryId)?.name ? formatCategoryLabel(categories.find((c) => c.id === item.categoryId || c.slug === item.categoryId)!.name) : (item.categorySlug || item.categoryId)}
+                              </div>
+                            )}
                           </td>
                           <td className="py-2.5 px-3 text-gray-500 whitespace-nowrap">
                             {new Date(item.createdAt).toLocaleString(undefined, {
@@ -2117,6 +2276,34 @@ export default function AdminNavbarPage() {
                       className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
                     />
                   </div>
+
+                  <div>
+                    <label
+                      htmlFor="hero3-category"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#333333] mb-1.5"
+                    >
+                      Category
+                    </label>
+                    <select
+                      id="hero3-category"
+                      data-testid="hero3-category-select"
+                      value={getSelectedCategoryValue(hero3Form.categoryId)}
+                      onChange={(e) =>
+                        setHero3Form((prev) => ({ ...prev, categoryId: e.target.value || null }))
+                      }
+                      className="w-full px-3.5 py-2 text-sm text-[#111111] bg-white border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="">Select a category</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {formatCategoryLabel(c.name)}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-[11px] text-[#777777]">
+                      Connects the &quot;Shop Now&quot; button to products in this category.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -2192,6 +2379,11 @@ export default function AdminNavbarPage() {
                             <div className="font-medium text-gray-900 truncate">
                               {item.normalHeadline} {item.boldHeadline}
                             </div>
+                            {item.categoryId && (
+                              <div className="text-[10px] text-amber-700 font-medium truncate mt-0.5">
+                                Category: {categories.find((c) => c.id === item.categoryId || c.slug === item.categoryId)?.name ? formatCategoryLabel(categories.find((c) => c.id === item.categoryId || c.slug === item.categoryId)!.name) : (item.categorySlug || item.categoryId)}
+                              </div>
+                            )}
                           </td>
                           <td className="py-2.5 px-3 text-gray-500 whitespace-nowrap">
                             {new Date(item.createdAt).toLocaleString(undefined, {

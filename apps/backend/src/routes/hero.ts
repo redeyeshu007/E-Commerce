@@ -101,6 +101,8 @@ const heroSlot1Schema = z.object({
   normalHeadline: z.string().trim().min(1, "Normal headline is required").max(100, "Normal headline must not exceed 100 characters").optional(),
   boldHeadline: z.string().trim().min(1, "Bold headline is required").max(100, "Bold headline must not exceed 100 characters").optional(),
   description: z.string().trim().max(300, "Description must not exceed 300 characters").optional(),
+  categoryId: z.string().trim().nullable().optional(),
+  categorySlug: z.string().trim().nullable().optional(),
 });
 
 const heroSlotSecondarySchema = z.object({
@@ -108,6 +110,8 @@ const heroSlotSecondarySchema = z.object({
   imageAlt: z.string().trim().max(150).optional(),
   normalHeadline: z.string().trim().min(1, "Normal headline is required").max(100, "Normal headline must not exceed 100 characters").optional(),
   boldHeadline: z.string().trim().min(1, "Bold headline is required").max(100, "Bold headline must not exceed 100 characters").optional(),
+  categoryId: z.string().trim().nullable().optional(),
+  categorySlug: z.string().trim().nullable().optional(),
 });
 
 const heroSettingsUpdateSchema = z.object({
