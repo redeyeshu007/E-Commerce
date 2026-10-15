@@ -267,13 +267,13 @@ describe("Navbar Management Module (Frontend)", () => {
   });
 
   describe("1. Page Header & Nested Section Structure", () => {
-    it("renders Section A (Top Bar, Second Navbar) and Section B (Hero Image 1, 2, 3) inside Navbar management", async () => {
+    it("renders Section A (Top Bar, Second Navbar) and Section B (Hero Image 1, 2, 3) inside Header management", async () => {
       renderWithClient(<AdminNavbarPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("heading", { name: "Navbar Management" })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Header Management" })).toBeInTheDocument();
         expect(
-          screen.getByText(/manage the storefront announcement bar and secondary navigation bar/i)
+          screen.getByText(/manage the storefront announcement bar, secondary navigation bar, and hero banners/i)
         ).toBeInTheDocument();
       });
 
@@ -292,11 +292,11 @@ describe("Navbar Management Module (Frontend)", () => {
       expect(screen.queryByRole("button", { name: /version history/i })).not.toBeInTheDocument();
     });
 
-    it("verifies sidebar navigation contains only Dashboard and Navbar, with NO Hero Images item", () => {
+    it("verifies sidebar navigation contains only Dashboard and Header Management, with NO Hero Images item", () => {
       render(<AdminSidebar isOpen={true} onClose={vi.fn()} />);
 
       expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /navbar/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /header management/i })).toBeInTheDocument();
       expect(screen.queryByRole("link", { name: /hero/i })).not.toBeInTheDocument();
     });
 

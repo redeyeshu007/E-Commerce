@@ -130,7 +130,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               }`}
               aria-hidden="true"
             />
-            <span>Navbar</span>
+            <span>Header Management</span>
           </Link>
         </nav>
       </aside>

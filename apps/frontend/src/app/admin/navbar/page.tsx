@@ -883,13 +883,13 @@ export default function AdminNavbarPage() {
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
               <span>Admin</span>
               <span>/</span>
-              <span className="text-gray-900 font-medium">Navbar</span>
+              <span className="text-gray-900 font-medium">Header Management</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#111111]">
-              Navbar Management
+              Header Management
             </h1>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Manage the storefront announcement bar and secondary navigation bar with live previews and independent version histories.
+              Manage the storefront announcement bar, secondary navigation bar, and hero banners with live previews and independent version histories.
             </p>
           </div>
         </div>
