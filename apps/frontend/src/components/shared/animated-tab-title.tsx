@@ -24,9 +24,9 @@ const DEFAULT_FRAMES = ["Peralagae", "Peralagae ⟡ Jewellery", "Peralagae Jewel
  * AnimatedTabTitle
  *
  * Drives both the browser tab title and tab favicon:
- * 1. Favicon: Ensures the tab icon is a luxury black disc with the "P" monogram (never the Next.js "N" logo).
+ * 1. Favicon: Ensures the tab icon displays the official Peralagae brand logo (never the Next.js "N" logo or obsolete letters).
  * 2. Title: Elegant Title Case ("Peralagae Jewellery") — no full uppercase.
- * 3. Graceful settlement: Settles on crisp static "P" icon and "Peralagae Jewellery".
+ * 3. Graceful settlement: Settles on crisp static Peralagae logo and "Peralagae Jewellery".
  */
 export function AnimatedTabTitle({
   baseTitle = "Peralagae Jewellery",
@@ -42,7 +42,7 @@ export function AnimatedTabTitle({
 
     isDestroyedRef.current = false;
 
-    // Ensure favicon points to the luxury J monogram icon, never Next.js "N"
+    // Ensure favicon points to the official Peralagae brand logo, never Next.js "N"
     const updateFavicon = (href: string) => {
       let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement | null;
       if (!link) {

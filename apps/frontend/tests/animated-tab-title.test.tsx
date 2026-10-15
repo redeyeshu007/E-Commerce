@@ -36,7 +36,7 @@ describe("AnimatedTabTitle Component", () => {
     expect(document.title).not.toBe("PERALAGAE");
   });
 
-  it("updates the favicon link to /icon.svg (P monogram)", () => {
+  it("updates the favicon link to /icon.svg (Peralagae logo)", () => {
     render(<AnimatedTabTitle baseTitle="Peralagae Jewellery" />);
 
     const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement | null;
