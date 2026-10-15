@@ -70,6 +70,7 @@ export interface ProductFilterInput {
 export interface ProductListResult {
   products: FormattedProduct[];
   total: number;
+  totalCatalogueCount?: number;
   page: number;
   pageSize: number;
   totalPages: number;
@@ -418,6 +419,7 @@ export class ProductService {
     return {
       products: paginatedProducts,
       total,
+      totalCatalogueCount: allDbProducts.length,
       page: safePage,
       pageSize,
       totalPages,

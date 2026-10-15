@@ -40,7 +40,7 @@ model NavbarSetting {
 
   secondPhone        String   @default("+91 98765 43210")
   secondPhoneHref    String   @default("tel:+919876543210")
-  secondPromoText    String   @default("Summer Sale 15% off!")
+  secondPromoText    String   @default("")
   secondCtaText      String   @default("Shop Now!")
   secondCtaHref      String   @default("/shop")
   secondLinks        Json     @default("[]")

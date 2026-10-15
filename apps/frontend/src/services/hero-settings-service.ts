@@ -76,21 +76,26 @@ export async function fetchPublicHeroSettings(): Promise<HeroSettingsData | null
     ? `${getBackendOrigin()}/api/v1/hero`
     : (typeof window !== "undefined" && window.location?.origin ? "/api/v1/hero" : `${getBackendOrigin()}/api/v1/hero`);
 
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    throw new Error(`Failed to retrieve hero banner settings from database API: ${res.status}`);
-  }
+    if (!res.ok) {
+      return null;
+    }
 
-  const json = await res.json();
-  if (json?.success && json?.data) {
-    return json.data as HeroSettingsData;
+    const json = await res.json();
+    if (json?.success && json?.data) {
+      return json.data as HeroSettingsData;
+    }
+  } catch (err) {
+    // Return null during offline prerender/build so server render does not crash
+    return null;
   }
 
   return null;

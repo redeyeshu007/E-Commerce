@@ -261,22 +261,30 @@ export class HeroService {
             ...(Array.isArray(rawHist.heroImage3) ? rawHist.heroImage3 : []),
           ];
 
-          for (const item of allItems) {
-            const id = item.id || `hist_${item.slotId}_${item.version}`;
-            const existing = await prisma.heroHistory.findUnique({ where: { id } });
-            if (!existing) {
-              await prisma.heroHistory.create({
-                data: {
-                  id,
-                  slotId: item.slotId,
-                  version: item.version,
-                  imageUrl: item.imageUrl,
-                  normalHeadline: item.normalHeadline,
-                  boldHeadline: item.boldHeadline,
-                  description: item.description ?? null,
-                  createdAt: new Date(item.createdAt || Date.now()),
-                  createdBy: item.createdBy || "system",
-                },
+          if (allItems.length > 0) {
+            const existingRecords = await prisma.heroHistory.findMany({
+              select: { id: true },
+            });
+            const existingIdSet = new Set(existingRecords.map((r) => r.id));
+
+            const toCreate = allItems
+              .map((item) => ({
+                id: (item.id || `hist_${item.slotId}_${item.version}`) as string,
+                slotId: item.slotId as string,
+                version: item.version as number,
+                imageUrl: item.imageUrl as string,
+                normalHeadline: item.normalHeadline as string,
+                boldHeadline: item.boldHeadline as string,
+                description: (item.description ?? null) as string | null,
+                createdAt: new Date(item.createdAt || Date.now()),
+                createdBy: (item.createdBy || "system") as string,
+              }))
+              .filter((item) => !existingIdSet.has(item.id));
+
+            if (toCreate.length > 0) {
+              await prisma.heroHistory.createMany({
+                data: toCreate,
+                skipDuplicates: true,
               });
             }
           }

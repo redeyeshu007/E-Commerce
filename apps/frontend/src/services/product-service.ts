@@ -30,6 +30,7 @@ export type SortOption =
 export interface ShopCatalogueResult {
   products: Product[];
   total: number;
+  totalCatalogueCount?: number;
   page: number;
   pageSize: number;
   totalPages: number;
@@ -788,6 +789,7 @@ export function getShopCatalogue(
   return {
     products: paginatedProducts,
     total,
+    totalCatalogueCount: allProducts.length,
     page: safePage,
     pageSize: safePageSize,
     totalPages,

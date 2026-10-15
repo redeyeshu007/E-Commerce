@@ -170,6 +170,21 @@ export function ShopPageContent({
     return found ? found.name : filters.category;
   }, [filters.category, categories]);
 
+  // Authoritative total catalogue count from database
+  const totalCatalogueProductsCount = useMemo(() => {
+    if (typeof catalogueResult.totalCatalogueCount === "number") {
+      return catalogueResult.totalCatalogueCount;
+    }
+    if (categories && categories.length > 0 && catalogueResult.categoryCounts) {
+      const sum = categories.reduce(
+        (acc, c) => acc + (catalogueResult.categoryCounts[c.slug] ?? c.productCount ?? 0),
+        0
+      );
+      if (sum > 0) return sum;
+    }
+    return catalogueResult.total;
+  }, [catalogueResult, categories]);
+
   // Count of active filters for drawer badge & clear all visibility
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -257,7 +272,7 @@ export function ShopPageContent({
                 onClearAll={handleClearAll}
                 categories={categories}
                 categoryCounts={catalogueResult.categoryCounts}
-                totalProductsCount={24}
+                totalProductsCount={totalCatalogueProductsCount}
                 materialCounts={catalogueResult.materialCounts}
                 sizeCounts={catalogueResult.sizeCounts}
                 minCataloguePrice={catalogueResult.minCataloguePrice}
@@ -322,7 +337,7 @@ export function ShopPageContent({
         onClearAll={handleClearAll}
         categories={categories}
         categoryCounts={catalogueResult.categoryCounts}
-        totalProductsCount={24}
+        totalProductsCount={totalCatalogueProductsCount}
         materialCounts={catalogueResult.materialCounts}
         sizeCounts={catalogueResult.sizeCounts}
         minCataloguePrice={catalogueResult.minCataloguePrice}

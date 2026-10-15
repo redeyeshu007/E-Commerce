@@ -164,7 +164,7 @@ export function ShopSidebar({
             >
               <span>All Jewellery</span>
               <span className="text-[11px] text-[#888888]">
-                ({totalProductsCount ?? 24})
+                ({totalProductsCount ?? 0})
               </span>
             </button>
 
