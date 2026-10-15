@@ -13,7 +13,7 @@ export async function fetchPublicCategories(): Promise<CategoryItem[]> {
     ? (process.env["INTERNAL_API_URL"] ||
        process.env["NEXT_PUBLIC_BACKEND_URL"] ||
        "http://localhost:4000")
-    : "";
+    : (typeof window !== "undefined" && window.location?.origin ? "" : "http://localhost:4000");
   const url = `${baseUrl}/api/v1/categories`;
   try {
     const res = await fetch(url, {

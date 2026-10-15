@@ -11,8 +11,10 @@ import { ShopPagination } from "./shop-pagination";
 import { ShopEmptyState } from "./shop-empty-state";
 import {
   getShopCatalogue,
+  fetchPublicProducts,
   type ShopFilters,
   type SortOption,
+  type ShopCatalogueResult,
 } from "@/services/product-service";
 import type { CategoryItem } from "@/types/category";
 import {
@@ -23,9 +25,14 @@ import {
 export interface ShopPageContentProps {
   pageSize?: number;
   initialCategories?: CategoryItem[];
+  initialCatalogue?: ShopCatalogueResult;
 }
 
-export function ShopPageContent({ pageSize = 12, initialCategories }: ShopPageContentProps) {
+export function ShopPageContent({
+  pageSize = 12,
+  initialCategories,
+  initialCatalogue,
+}: ShopPageContentProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const productAreaRef = useRef<HTMLDivElement>(null);
@@ -112,10 +119,45 @@ export function ShopPageContent({ pageSize = 12, initialCategories }: ShopPageCo
     }
   }, [initialCategories]);
 
-  // Compute catalogue results via service with dynamic categories
-  const catalogueResult = useMemo(() => {
-    return getShopCatalogue(filters, sort, currentPage, pageSize, categories);
+  const [catalogueData, setCatalogueData] = useState<ShopCatalogueResult | null>(initialCatalogue ?? null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Sync products from database API whenever filters, sort, page, or categories change
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    setLoadError(null);
+
+    fetchPublicProducts(filters, sort, currentPage, pageSize)
+      .then((res) => {
+        if (isMounted) {
+          if (res) {
+            setCatalogueData(res);
+          } else {
+            setCatalogueData(getShopCatalogue(filters, sort, currentPage, pageSize, categories));
+          }
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setLoadError("Failed to load products from database.");
+          setCatalogueData(getShopCatalogue(filters, sort, currentPage, pageSize, categories));
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [filters, sort, currentPage, pageSize, categories]);
+
+  // Compute catalogue results via service with dynamic categories (using live DB data or computed fallback)
+  const catalogueResult = useMemo(() => {
+    return catalogueData ?? getShopCatalogue(filters, sort, currentPage, pageSize, categories);
+  }, [catalogueData, filters, sort, currentPage, pageSize, categories]);
 
   // Resolve human-readable name of selected category for empty state
   const selectedCategoryName = useMemo(() => {

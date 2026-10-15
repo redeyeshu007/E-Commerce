@@ -1,0 +1,44 @@
+import "dotenv/config";
+import { prisma } from "../database/prisma.js";
+import { CategoryService } from "../services/category-service.js";
+import { HeroService } from "../services/hero-service.js";
+import { HeroMediaService } from "../services/hero-media-service.js";
+import { CategoryMediaService } from "../services/category-media-service.js";
+import { logger } from "../utils/logger.js";
+
+async function main() {
+  logger.info("Starting safe idempotent database migration & seed check...");
+
+  // Seed baseline categories and catalogue products if empty
+  await CategoryService.seedInitialData();
+
+  // Sync hero settings and history
+  await HeroService.syncLegacyData();
+
+  // Sync disk media to PostgreSQL bytea storage
+  await HeroMediaService.syncDiskToDatabase();
+  await CategoryMediaService.syncLocalDiskImagesToDb();
+
+  const [categories, products, heroSettings, navbarSettings] = await Promise.all([
+    prisma.category.count(),
+    prisma.product.count(),
+    prisma.heroSetting.count(),
+    prisma.navbarSetting.count(),
+  ]);
+
+  logger.info(
+    { categories, products, heroSettings, navbarSettings },
+    "Database migration & seed check completed successfully"
+  );
+}
+
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+    process.exit(0);
+  })
+  .catch(async (err) => {
+    logger.error({ err }, "Database seed script failed");
+    await prisma.$disconnect();
+    process.exit(1);
+  });

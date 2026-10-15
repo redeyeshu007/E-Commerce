@@ -162,8 +162,22 @@ export function HeroBanners({
   initialSettings,
   className = "",
 }: HeroBannersProps) {
-  const { config: dynamicConfig } = useHeroSettings(initialSettings);
+  const { config: dynamicConfig, isError } = useHeroSettings(initialSettings);
   const activeConfig = propConfig ?? dynamicConfig;
+
+  if (isError && !propConfig && !initialSettings) {
+    return (
+      <section aria-label="Promotional Collections Error" className="w-full py-12 text-center bg-neutral-50 text-neutral-600">
+        <p className="text-sm font-medium">Failed to load promotional hero banners from database.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-3 px-4 py-1.5 text-xs uppercase tracking-wider bg-black text-white hover:bg-neutral-800 transition-colors"
+        >
+          Retry Connection
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section

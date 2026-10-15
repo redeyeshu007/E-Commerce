@@ -4,6 +4,7 @@ import { ShopPageContent } from "@/components/shop/shop-page-content";
 import { brandConfig } from "@/config/brand";
 
 import { fetchPublicCategories } from "@/services/category-public-service";
+import { fetchPublicProducts } from "@/services/product-service";
 
 export const metadata: Metadata = {
   title: `Shop Fine Jewellery | ${brandConfig.name}`,
@@ -41,8 +42,16 @@ function ShopLoadingSkeleton() {
 }
 
 async function DynamicShopPage() {
-  const categories = await fetchPublicCategories();
-  return <ShopPageContent initialCategories={categories} />;
+  const [categories, initialCatalogue] = await Promise.all([
+    fetchPublicCategories(),
+    fetchPublicProducts(),
+  ]);
+  return (
+    <ShopPageContent
+      initialCategories={categories}
+      initialCatalogue={initialCatalogue ?? undefined}
+    />
+  );
 }
 
 export default function ShopPage() {

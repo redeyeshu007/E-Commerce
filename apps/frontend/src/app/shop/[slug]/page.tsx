@@ -2,9 +2,8 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
-  getProductBySlug,
-  getAdjacentProducts,
-  SHOP_PRODUCTS,
+  fetchProductBySlug,
+  fetchAdjacentProducts,
 } from "@/services/product-service";
 import { ProductDetailView } from "@/components/product/product-detail-view";
 import { brandConfig } from "@/config/brand";
@@ -17,7 +16,7 @@ export async function generateMetadata({
   params,
 }: ShopProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await fetchProductBySlug(slug);
 
   if (!product) {
     return {
@@ -63,13 +62,14 @@ async function ShopProductContent({
   paramsPromise: Promise<{ slug: string }>;
 }) {
   const { slug } = await paramsPromise;
-  const product = getProductBySlug(slug);
+  const product = await fetchProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const { prev, next } = getAdjacentProducts(product);
+  const adjacent = await fetchAdjacentProducts(slug);
+  const { prev, next } = adjacent || { prev: null, next: null };
 
   return (
     <ProductDetailView
@@ -88,10 +88,4 @@ export default function ShopProductDetailPage({
       <ShopProductContent paramsPromise={params} />
     </React.Suspense>
   );
-}
-
-export function generateStaticParams() {
-  return SHOP_PRODUCTS.map((prod) => ({
-    slug: prod.slug,
-  }));
 }

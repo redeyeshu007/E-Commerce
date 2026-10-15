@@ -120,7 +120,7 @@ export interface ShopOurCollectionsProps {
  *     touch scrolling on mobile, and full keyboard accessibility.
  */
 export function ShopOurCollections({
-  config = defaultCollectionsConfig,
+  config: propConfig,
   initialCategories,
   className = "",
 }: ShopOurCollectionsProps) {
@@ -203,7 +203,7 @@ export function ShopOurCollections({
     };
   }, []);
 
-  // Resolve active items: dynamic categories > server initialMapped > config.items fallback
+  // Resolve active items: dynamic categories > server initialMapped > propConfig items (for testing)
   const activeItems = useMemo(() => {
     if (dynamicItems && dynamicItems.length > 0) {
       return dynamicItems;
@@ -213,10 +213,16 @@ export function ShopOurCollections({
       return initialMapped;
     }
 
-    return [...(config?.items || defaultCollectionsConfig.items)]
-      .filter((item) => item.isActive)
-      .sort((a, b) => a.order - b.order);
-  }, [dynamicItems, initialMapped, config]);
+    if (propConfig) {
+      return [...propConfig.items]
+        .filter((item) => item.isActive)
+        .sort((a, b) => a.order - b.order);
+    }
+
+    return [];
+  }, [dynamicItems, initialMapped, propConfig]);
+
+  const heading = propConfig?.heading ?? defaultCollectionsConfig.heading;
 
   // Determine whether carousel mode is needed (> 6 items)
   const isCarouselMode = activeItems.length > 6;
@@ -281,7 +287,7 @@ export function ShopOurCollections({
           id="shop-our-collections-heading"
           className="text-center font-normal text-2xl sm:text-3xl lg:text-[32px] tracking-[-0.01em] text-[#111111] leading-tight mb-8 sm:mb-10 lg:mb-12"
         >
-          {config.heading}
+          {heading}
         </h2>
 
         {/* Categories Display */}

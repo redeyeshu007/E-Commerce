@@ -11,30 +11,27 @@ export const NAVBAR_SETTINGS_UPDATED_EVENT = "peralagae:navbar-settings-updated"
  * Fetches the currently published navbar configuration from the public endpoint.
  * Returns default fallback values if the request fails or backend is unreachable.
  */
-export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData> {
+export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData | null> {
   const url = `${API_BASE_URL}/navbar`;
 
-  try {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
 
-    if (!res.ok) {
-      return defaultNavbarSettingsData;
-    }
-
-    const json = await res.json();
-    if (json?.success && json?.data) {
-      return json.data as NavbarSettingsData;
-    }
-  } catch {
-    // Graceful fallback to baseline navigation configuration
+  if (!res.ok) {
+    throw new Error(`Failed to retrieve navbar settings from database API: ${res.status}`);
   }
 
-  return defaultNavbarSettingsData;
+  const json = await res.json();
+  if (json?.success && json?.data) {
+    return json.data as NavbarSettingsData;
+  }
+
+  return null;
 }
 
 /**

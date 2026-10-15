@@ -22,6 +22,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:validate": "prisma validate",
+    "db:seed": "tsx src/scripts/seed.ts",
     "clean": "rimraf dist"
   },
   "dependencies": {

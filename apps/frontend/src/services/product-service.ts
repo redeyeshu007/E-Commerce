@@ -1023,3 +1023,133 @@ export function getAllProducts(): Product[] {
   return SHOP_PRODUCTS.map(enrichProductDetails);
 }
 
+/**
+ * Asynchronously fetches products from the PostgreSQL database via public REST API.
+ * Supports filtering, sorting, pagination, and dynamic category counts.
+ */
+export async function fetchPublicProducts(
+  filters: ShopFilters = {},
+  sort: SortOption = "default",
+  page = 1,
+  pageSize = 12
+): Promise<ShopCatalogueResult | null> {
+  const isServer = typeof window === "undefined";
+  const baseUrl = isServer
+    ? (process.env["INTERNAL_API_URL"] ||
+       process.env["NEXT_PUBLIC_BACKEND_URL"] ||
+       process.env["BACKEND_URL"] ||
+       "http://localhost:4000")
+    : "";
+
+  const queryParams = new URLSearchParams();
+  if (filters.category && filters.category !== "all") queryParams.set("category", filters.category);
+  if (filters.search && filters.search.trim()) queryParams.set("search", filters.search.trim());
+  if (filters.minPrice != null) queryParams.set("minPrice", String(filters.minPrice));
+  if (filters.maxPrice != null) queryParams.set("maxPrice", String(filters.maxPrice));
+  if (filters.materials && filters.materials.length > 0) queryParams.set("materials", filters.materials.join(","));
+  if (filters.sizes && filters.sizes.length > 0) queryParams.set("sizes", filters.sizes.join(","));
+  if (sort && sort !== "default") queryParams.set("sort", sort);
+  if (page > 1) queryParams.set("page", String(page));
+  if (pageSize) queryParams.set("pageSize", String(pageSize));
+
+  const qs = queryParams.toString();
+  const url = `${baseUrl}/api/v1/products${qs ? `?${qs}` : ""}`;
+
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      console.warn(`[fetchPublicProducts] Non-200 response: ${res.status}`);
+      return null;
+    }
+
+    const json = await res.json();
+    if (json?.success && json?.data) {
+      return json.data as ShopCatalogueResult;
+    }
+    return null;
+  } catch (err) {
+    console.warn("[fetchPublicProducts] Error fetching products from database API:", err);
+    return null;
+  }
+}
+
+/**
+ * Asynchronously fetches a single product by slug from the database API.
+ */
+export async function fetchProductBySlug(slug: string): Promise<Product | null> {
+  if (!slug) return null;
+  const isServer = typeof window === "undefined";
+  const baseUrl = isServer
+    ? (process.env["INTERNAL_API_URL"] ||
+       process.env["NEXT_PUBLIC_BACKEND_URL"] ||
+       process.env["BACKEND_URL"] ||
+       "http://localhost:4000")
+    : "";
+
+  const url = `${baseUrl}/api/v1/products/${encodeURIComponent(slug)}`;
+
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const json = await res.json();
+    if (json?.success && json?.data) {
+      return json.data as Product;
+    }
+    return null;
+  } catch (err) {
+    console.warn("[fetchProductBySlug] Error fetching product from database API:", err);
+    return null;
+  }
+}
+
+/**
+ * Asynchronously fetches adjacent (prev and next) products from the database API.
+ */
+export async function fetchAdjacentProducts(slug: string): Promise<{ prev: Product; next: Product } | null> {
+  if (!slug) return null;
+  const isServer = typeof window === "undefined";
+  const baseUrl = isServer
+    ? (process.env["INTERNAL_API_URL"] ||
+       process.env["NEXT_PUBLIC_BACKEND_URL"] ||
+       process.env["BACKEND_URL"] ||
+       "http://localhost:4000")
+    : "";
+
+  const url = `${baseUrl}/api/v1/products/${encodeURIComponent(slug)}/adjacent`;
+
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const json = await res.json();
+    if (json?.success && json?.data) {
+      return json.data as { prev: Product; next: Product };
+    }
+    return null;
+  } catch (err) {
+    console.warn("[fetchAdjacentProducts] Error fetching adjacent products from database API:", err);
+    return null;
+  }
+}
+
+

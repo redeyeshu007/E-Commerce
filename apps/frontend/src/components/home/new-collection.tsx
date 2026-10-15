@@ -9,6 +9,7 @@ import {
   type NewCollectionConfig,
   defaultNewCollectionConfig,
 } from "@/config/new-collection";
+import { fetchPublicProducts } from "@/services/product-service";
 import { useStorefront } from "@/providers/storefront-provider";
 import { scrollToSectionId } from "@/lib/navigation";
 
@@ -93,7 +94,26 @@ export function NewCollectionSection({
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
-  const { products, heading, subtitle, autoRotateIntervalMs = 10000 } = config;
+  const { products: staticProducts, heading, subtitle, autoRotateIntervalMs = 10000 } = config;
+  const [dynamicProducts, setDynamicProducts] = useState<Product[] | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchPublicProducts({}, "newest", 1, 8)
+      .then((res) => {
+        if (isMounted && res && res.products.length > 0) {
+          setDynamicProducts(res.products);
+        }
+      })
+      .catch((err) => {
+        console.warn("[NewCollectionSection] Could not fetch dynamic products from DB:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const products = dynamicProducts ?? staticProducts;
   const headingWords = heading.split(" ");
   const firstHeadingPart = headingWords[0] ?? "New";
   const secondHeadingPart = headingWords.slice(1).join(" ") || "Collection";

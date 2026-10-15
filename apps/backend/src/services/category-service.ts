@@ -197,8 +197,6 @@ export class CategoryService {
    * Retrieves all categories ordered by `order ASC, createdAt ASC`.
    */
   static async getAllCategories(options?: { includeInactive?: boolean }): Promise<CategoryItem[]> {
-    await this.seedInitialData();
-
     const where = options?.includeInactive ? {} : { isActive: true };
 
     const records = await prisma.category.findMany({
@@ -230,8 +228,6 @@ export class CategoryService {
    * Retrieves a category by ID with its authoritative product count.
    */
   static async getCategoryById(id: string): Promise<CategoryItem | null> {
-    await this.seedInitialData();
-
     const r = await prisma.category.findUnique({
       where: { id },
       include: {
@@ -262,8 +258,6 @@ export class CategoryService {
    * Retrieves a category by URL slug.
    */
   static async getCategoryBySlug(slug: string): Promise<CategoryItem | null> {
-    await this.seedInitialData();
-
     const r = await prisma.category.findUnique({
       where: { slug: slug.toLowerCase() },
       include: {
@@ -294,8 +288,6 @@ export class CategoryService {
    * Creates a new category with server-side validation.
    */
   static async createCategory(input: CreateCategoryInput): Promise<CategoryItem> {
-    await this.seedInitialData();
-
     const cleanName = input.name.trim();
     if (!cleanName) {
       throw new Error("Category name is required");
@@ -379,8 +371,6 @@ export class CategoryService {
    * Updates an existing category. Preserves stable category ID and product associations.
    */
   static async updateCategory(id: string, input: UpdateCategoryInput): Promise<CategoryItem> {
-    await this.seedInitialData();
-
     const existing = await prisma.category.findUnique({
       where: { id },
     });
@@ -499,8 +489,6 @@ export class CategoryService {
    * Reorders categories sequentially based on provided array of category IDs.
    */
   static async reorderCategories(orderedIds: string[]): Promise<CategoryItem[]> {
-    await this.seedInitialData();
-
     await prisma.$transaction(
       orderedIds.map((id, index) =>
         prisma.category.update({
@@ -520,8 +508,6 @@ export class CategoryService {
   static async deleteCategory(
     id: string
   ): Promise<{ deletedCategory: CategoryItem; deletedProductCount: number }> {
-    await this.seedInitialData();
-
     const category = await prisma.category.findUnique({
       where: { id },
       include: {

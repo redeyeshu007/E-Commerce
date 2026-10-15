@@ -18,6 +18,7 @@ import { createHeroRouter } from "./routes/hero.js";
 import { HeroMediaService } from "./services/hero-media-service.js";
 import { createCategoryRouter } from "./routes/category.js";
 import { CategoryMediaService } from "./services/category-media-service.js";
+import { createProductRouter } from "./routes/product.js";
 import fs from "node:fs";
 
 /**
@@ -204,6 +205,11 @@ export function createApp(env: EnvConfig): Application {
   const categoryRouter = createCategoryRouter(env);
   app.use("/api/categories", categoryRouter);
   app.use("/api/v1/categories", categoryRouter);
+
+  // Product Catalogue endpoints (storefront public & admin)
+  const productRouter = createProductRouter(env);
+  app.use("/api/products", productRouter);
+  app.use("/api/v1/products", productRouter);
 
   // API v1 namespace
   app.use("/api/v1", v1Router);

@@ -70,35 +70,32 @@ export function transformHeroSettingsToConfig(
  * Works seamlessly both on the server (SSR / Server Component) and in the browser.
  * Returns default fallback values if the request fails or backend is unreachable.
  */
-export async function fetchPublicHeroSettings(): Promise<HeroSettingsData> {
+export async function fetchPublicHeroSettings(): Promise<HeroSettingsData | null> {
   const isServer = typeof window === "undefined";
   const backendBase =
+    process.env["INTERNAL_API_URL"] ||
     process.env["NEXT_PUBLIC_BACKEND_URL"] ||
     process.env["BACKEND_URL"] ||
     "http://localhost:4000";
 
   const url = isServer ? `${backendBase}/api/v1/hero` : `${API_BASE_URL}/hero`;
 
-  try {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    });
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
 
-    if (!res.ok) {
-      return defaultHeroSettingsData;
-    }
-
-    const json = await res.json();
-    if (json?.success && json?.data) {
-      return json.data as HeroSettingsData;
-    }
-  } catch {
-    // Graceful fallback to baseline hero configuration
+  if (!res.ok) {
+    throw new Error(`Failed to retrieve hero banner settings from database API: ${res.status}`);
   }
 
-  return defaultHeroSettingsData;
+  const json = await res.json();
+  if (json?.success && json?.data) {
+    return json.data as HeroSettingsData;
+  }
+
+  return null;
 }

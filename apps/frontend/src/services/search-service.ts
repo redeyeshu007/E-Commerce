@@ -14,7 +14,7 @@
  */
 
 import type { Product } from "@/types/product";
-import { SHOP_PRODUCTS, BLUE_STRIPES_PRODUCT } from "@/services/product-service";
+import { SHOP_PRODUCTS, BLUE_STRIPES_PRODUCT, fetchPublicProducts } from "@/services/product-service";
 
 const ALL_SEARCH_PRODUCTS = [BLUE_STRIPES_PRODUCT, ...SHOP_PRODUCTS];
 
@@ -193,4 +193,32 @@ export function searchCatalogue(
     totalMatches: uniqueProducts.length,
     query: trimmed,
   };
+}
+
+/**
+ * Asynchronously searches products via the PostgreSQL database API.
+ */
+export async function searchProducts(
+  query: string,
+  limit = 6
+): Promise<SearchResult> {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return { products: [], totalMatches: 0, query: "" };
+  }
+
+  try {
+    const res = await fetchPublicProducts({ search: trimmed }, "default", 1, limit);
+    if (res && res.products) {
+      return {
+        products: res.products,
+        totalMatches: res.total,
+        query: trimmed,
+      };
+    }
+  } catch {
+    // fallback
+  }
+
+  return searchCatalogue(query, ALL_SEARCH_PRODUCTS, limit);
 }

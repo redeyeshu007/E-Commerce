@@ -413,11 +413,11 @@ export class HeroService {
         memoryHeroSettings = formatted;
         return formatted;
       }
+      throw new Error("Hero settings record not found in PostgreSQL database");
     } catch (err) {
-      logger.warn({ err }, "Database fetch failed for hero settings; serving in-memory fallback");
+      logger.error({ err }, "Database fetch failed for hero settings");
+      throw err;
     }
-
-    return { ...memoryHeroSettings };
   }
 
   /**

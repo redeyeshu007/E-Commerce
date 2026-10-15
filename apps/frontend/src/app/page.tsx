@@ -20,7 +20,7 @@ import { fetchPublicCategories } from "@/services/category-public-service";
 
 async function DynamicShopOurCollections() {
   const categories = await fetchPublicCategories();
-  return <ShopOurCollections initialCategories={categories} config={defaultCollectionsConfig} />;
+  return <ShopOurCollections initialCategories={categories} />;
 }
 
 /**
@@ -49,7 +49,7 @@ export default function HomePage() {
       <HeroBanners />
 
       {/* Shop Our Collections Category Gallery Section */}
-      <Suspense fallback={<ShopOurCollections config={defaultCollectionsConfig} />}>
+      <Suspense fallback={<div className="h-64 animate-pulse bg-neutral-50" />}>
         <DynamicShopOurCollections />
       </Suspense>
 

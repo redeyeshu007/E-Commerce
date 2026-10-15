@@ -410,15 +410,8 @@ export class NavbarService {
       memorySettings = result;
       return result;
     } catch (err) {
-      logger.warn({ err }, "Database fetch failed for navbar settings; serving in-memory fallback");
-      const topVer = await getLatestTopBarVersion();
-      const secondVer = await getLatestSecondNavbarVersion();
-      return {
-        ...memorySettings,
-        topBarVersion: topVer,
-        secondNavbarVersion: secondVer,
-        version: Math.max(memorySettings.version, topVer, secondVer),
-      };
+      logger.error({ err }, "Database fetch failed for navbar settings");
+      throw err;
     }
   }
 
@@ -703,8 +696,22 @@ export class NavbarService {
     adminEmail = "admin@peralagae.com",
     targetSection?: "top_bar" | "second_navbar" | "full"
   ): Promise<NavbarSettings> {
-    const allHistory = await this.getHistory();
-    const targetRecord = allHistory.find((h) => h.id === historyId);
+    const dbRecord = await prisma.navbarHistory.findUnique({ where: { id: historyId } }).catch(() => null);
+    let targetRecord: NavbarHistoryRecord | undefined;
+    if (dbRecord) {
+      targetRecord = {
+        id: dbRecord.id,
+        section: dbRecord.section.toUpperCase() === "SECOND_NAVBAR" ? "SECOND_NAVBAR" : "TOP_BAR",
+        snapshot: dbRecord.snapshot as unknown as NavbarSettings,
+        description: dbRecord.description || "",
+        version: dbRecord.version,
+        createdAt: dbRecord.createdAt.toISOString(),
+        createdBy: dbRecord.createdBy || "admin",
+      };
+    } else {
+      const allHistory = await this.getHistory();
+      targetRecord = allHistory.find((h) => h.id === historyId);
+    }
 
     if (!targetRecord) {
       throw new Error(`Version history snapshot '${historyId}' not found`);
