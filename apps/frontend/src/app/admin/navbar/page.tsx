@@ -1197,7 +1197,7 @@ export default function AdminNavbarPage() {
                     onChange={(e) =>
                       setTopBarForm((prev) => ({ ...prev, text: e.target.value }))
                     }
-                    placeholder="e.g. SUMMER SALE, Get 40% Off for all products."
+                    placeholder="e.g. Complimentary gift box with all fine jewellery orders."
                     maxLength={250}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
                   />

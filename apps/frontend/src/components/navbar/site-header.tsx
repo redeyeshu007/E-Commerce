@@ -20,11 +20,16 @@ export interface SiteHeaderProps {
    */
   config?: NavigationConfig;
   className?: string;
+  initialSettings?: import("@/types/navbar").NavbarSettingsData | null;
 }
 
-export function SiteHeader({ config = defaultNavigationConfig, className = "" }: SiteHeaderProps) {
+export function SiteHeader({
+  config = defaultNavigationConfig,
+  className = "",
+  initialSettings = null,
+}: SiteHeaderProps) {
   const storefront = useStorefront();
-  const { data: dynamicNavbar, isLoading } = useNavbarSettings();
+  const { data: dynamicNavbar, isLoading } = useNavbarSettings(initialSettings);
 
   let pathname = "/";
   try {
@@ -34,15 +39,18 @@ export function SiteHeader({ config = defaultNavigationConfig, className = "" }:
     pathname = "/";
   }
 
+  const isTopBarLoading = isLoading && !dynamicNavbar;
+
   const announcementConfig = React.useMemo(() => {
-    if (!dynamicNavbar?.topBar) return config.announcement;
+    const topBar = dynamicNavbar?.topBar;
     return {
-      text: dynamicNavbar.topBar.text,
-      backgroundColor: dynamicNavbar.topBar.backgroundColor || config.announcement.backgroundColor,
-      textColor: dynamicNavbar.topBar.textColor || config.announcement.textColor,
-      dismissible: dynamicNavbar.topBar.dismissible,
+      text: topBar?.text ?? "",
+      backgroundColor: topBar?.backgroundColor || config.announcement.backgroundColor,
+      textColor: topBar?.textColor || config.announcement.textColor,
+      dismissible: topBar?.dismissible ?? config.announcement.dismissible,
+      isLoading: isTopBarLoading,
     };
-  }, [dynamicNavbar?.topBar, config.announcement]);
+  }, [dynamicNavbar?.topBar, isTopBarLoading, config.announcement]);
 
   const isPromoLoading = isLoading || !dynamicNavbar?.secondNavbar;
 
@@ -72,7 +80,13 @@ export function SiteHeader({ config = defaultNavigationConfig, className = "" }:
     };
   }, [dynamicNavbar?.secondNavbar, isPromoLoading, config.utility]);
 
-  const showTopBar = dynamicNavbar?.topBar?.visible ?? true;
+  // Show Top Bar logic:
+  // 1. If dynamicNavbar is retrieved from DB: respect its `visible` setting.
+  // 2. If dynamicNavbar is still loading: keep visible to preserve layout height with neutral placeholder.
+  // 3. If request failed: do NOT display any hardcoded or stale top bar!
+  const showTopBar = dynamicNavbar
+    ? (dynamicNavbar.topBar?.visible ?? false)
+    : isTopBarLoading;
 
   if (pathname.startsWith("/admin")) {
     return null;

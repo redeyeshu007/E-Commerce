@@ -10,11 +10,18 @@ import { MobileBottomBar } from "@/components/navbar/mobile-bottom-bar";
 import { defaultNavigationConfig } from "@/config/navigation";
 
 describe("PERALAGAE Premium Navbar Component Suite", () => {
+  const testAnnouncementConfig = {
+    text: "FESTIVE SALE, Get 40% Off for all products.",
+    backgroundColor: "#FBC0CE",
+    textColor: "#222222",
+    dismissible: true,
+  };
+
   describe("Row 1: AnnouncementBar", () => {
     it("renders the exact promotional announcement text with soft pink background", () => {
-      render(<AnnouncementBar config={defaultNavigationConfig.announcement} />);
+      render(<AnnouncementBar config={testAnnouncementConfig} />);
 
-      expect(screen.getByText("SUMMER SALE,")).toBeInTheDocument();
+      expect(screen.getByText("FESTIVE SALE,")).toBeInTheDocument();
       expect(screen.getByText("Get 40% Off for all products.")).toBeInTheDocument();
 
       const aside = screen.getByRole("complementary", {
@@ -26,7 +33,7 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
     it("dismisses the announcement bar when the close button is clicked", async () => {
       const onDismiss = vi.fn();
       render(
-        <AnnouncementBar config={defaultNavigationConfig.announcement} onDismiss={onDismiss} />,
+        <AnnouncementBar config={testAnnouncementConfig} onDismiss={onDismiss} />,
       );
 
       const closeButton = screen.getByRole("button", {
@@ -38,9 +45,42 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
       expect(onDismiss).toHaveBeenCalledTimes(1);
 
       await waitFor(() => {
-        expect(screen.queryByText("SUMMER SALE,")).not.toBeInTheDocument();
+        expect(screen.queryByText("FESTIVE SALE,")).not.toBeInTheDocument();
       });
       expect(screen.queryByText("Get 40% Off for all products.")).not.toBeInTheDocument();
+    });
+
+    it("renders neutral placeholder and no promotional text while loading", () => {
+      render(
+        <AnnouncementBar
+          config={{
+            text: "",
+            backgroundColor: "#FBC0CE",
+            textColor: "#222222",
+            dismissible: true,
+            isLoading: true,
+          }}
+        />,
+      );
+
+      expect(screen.getByTestId("top-bar-placeholder")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Close announcement bar" })).not.toBeInTheDocument();
+    });
+
+    it("returns null when not loading and announcement text is empty", () => {
+      const { container } = render(
+        <AnnouncementBar
+          config={{
+            text: "",
+            backgroundColor: "#FBC0CE",
+            textColor: "#222222",
+            dismissible: true,
+            isLoading: false,
+          }}
+        />,
+      );
+
+      expect(container.firstChild).toBeNull();
     });
   });
 
@@ -253,14 +293,41 @@ describe("PERALAGAE Premium Navbar Component Suite", () => {
 
   describe("Full SiteHeader Integration", () => {
     it("renders complete 3-row header and sticky mobile bottom bar", () => {
-      render(<SiteHeader />);
+      const mockSettings = {
+        id: "current",
+        topBar: {
+          text: "FESTIVE SALE, Get 40% Off for all products.",
+          backgroundColor: "#FBC0CE",
+          textColor: "#222222",
+          visible: true,
+          dismissible: true,
+        },
+        secondNavbar: {
+          phone: "+91 98765 43210",
+          phoneHref: "tel:+919876543210",
+          promoText: "",
+          ctaText: "Shop Now!",
+          ctaHref: "/shop",
+          links: [],
+          showPhone: true,
+          showPromotion: true,
+          showLinks: true,
+        },
+        version: 1,
+        topBarVersion: 1,
+        secondNavbarVersion: 1,
+        updatedAt: new Date().toISOString(),
+        updatedBy: "Admin",
+      };
+
+      render(<SiteHeader initialSettings={mockSettings} />);
 
       const header = screen.getByRole("banner");
       expect(header).toBeInTheDocument();
       expect(header).toHaveClass("bg-white");
 
       // Row 1
-      expect(screen.getByText("SUMMER SALE,")).toBeInTheDocument();
+      expect(screen.getByText("FESTIVE SALE,")).toBeInTheDocument();
       expect(screen.getByText("Get 40% Off for all products.")).toBeInTheDocument();
 
       // Row 2

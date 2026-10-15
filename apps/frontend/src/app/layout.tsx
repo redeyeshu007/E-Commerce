@@ -8,6 +8,7 @@ import { AnimatedTabTitle } from "@/components/shared/animated-tab-title";
 import { SiteHeader } from "@/components/navbar/site-header";
 import { SiteFooter } from "@/components/layout/footer";
 import { brandConfig } from "@/config/brand";
+import { fetchPublicNavbarSettings } from "@/services/navbar-settings-service";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,7 +61,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const initialNavbar = await fetchPublicNavbarSettings();
   return (
     <html
       lang="en"
@@ -100,7 +102,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <AnimatedTabTitle baseTitle={brandConfig.metaTitle} />
           <LuxuryPreloader />
-          <SiteHeader />
+          <SiteHeader initialSettings={initialNavbar} />
           {children}
           <SiteFooter />
         </Providers>

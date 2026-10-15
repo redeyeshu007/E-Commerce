@@ -72,7 +72,7 @@ export interface NavbarHistoryRecord {
 }
 
 export const defaultTopBarSettings: TopBarSettings = {
-  text: "SUMMER SALE, Get 40% Off for all products.",
+  text: "",
   backgroundColor: "#FBC0CE",
   textColor: "#222222",
   visible: true,

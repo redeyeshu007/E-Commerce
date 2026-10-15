@@ -37,6 +37,13 @@ export function AnnouncementBar({ config, onDismiss }: AnnouncementBarProps) {
     return null;
   }
 
+  const hasContent = Boolean(config.text && config.text.trim());
+
+  // If not loading and no content from database, do not render Top Bar
+  if (!config.isLoading && !hasContent) {
+    return null;
+  }
+
   const handleDismiss = () => {
     if (isClosing) return;
     setIsClosing(true);
@@ -44,6 +51,9 @@ export function AnnouncementBar({ config, onDismiss }: AnnouncementBarProps) {
   };
 
   const renderAnnouncementContent = () => {
+    if (!hasContent) {
+      return null;
+    }
     if (config.text.includes(",")) {
       const [firstPart, ...rest] = config.text.split(",");
       return (
@@ -67,16 +77,24 @@ export function AnnouncementBar({ config, onDismiss }: AnnouncementBarProps) {
           aria-label="Promotional Announcement"
           className="relative w-full"
           style={{
-            backgroundColor: config.backgroundColor,
-            color: config.textColor,
+            backgroundColor: config.backgroundColor || "#FBC0CE",
+            color: config.textColor || "#222222",
           }}
         >
           <div className="mx-auto flex min-h-[44px] max-w-7xl items-center justify-center py-2 px-8 sm:px-10 lg:h-11 lg:py-0 lg:px-8">
             <p className="text-center text-xs font-normal leading-snug tracking-wide sm:text-[13px] lg:text-[14px]">
-              {renderAnnouncementContent()}
+              {config.isLoading ? (
+                <span
+                  data-testid="top-bar-placeholder"
+                  className="inline-block h-3.5 w-48 sm:w-64 rounded-full bg-black/5 animate-pulse"
+                  aria-hidden="true"
+                />
+              ) : (
+                renderAnnouncementContent()
+              )}
             </p>
 
-            {config.dismissible && (
+            {config.dismissible && !config.isLoading && hasContent && (
               <button
                 type="button"
                 onClick={handleDismiss}

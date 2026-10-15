@@ -32,7 +32,7 @@ model HealthCheck {
 
 model NavbarSetting {
   id                String   @id @default("current")
-  topBarText        String   @default("SUMMER SALE, Get 40% Off for all products.")
+  topBarText        String   @default("")
   topBarBgColor     String   @default("#FBC0CE")
   topBarTextColor   String   @default("#222222")
   topBarVisible     Boolean  @default(true)

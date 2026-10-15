@@ -8,6 +8,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import * as adminAuthService from "@/services/admin-auth-service";
 import * as navbarAdminService from "@/services/navbar-admin-service";
 import * as heroAdminService from "@/services/hero-admin-service";
+import * as categoryPublicService from "@/services/category-public-service";
 import type { NavbarSettingsData, NavbarHistoryItem } from "@/types/navbar";
 import {
   defaultHeroSettingsData,
@@ -209,6 +210,15 @@ describe("Navbar Management Module (Frontend)", () => {
       email: "admin@peralagae.com",
       role: "admin",
     });
+
+    vi.spyOn(categoryPublicService, "fetchPublicCategories").mockResolvedValue([
+      { id: "cat-necklaces", name: "NECKLACES", slug: "necklaces", isActive: true },
+      { id: "cat-rings", name: "RINGS", slug: "rings", isActive: true },
+      { id: "cat-bracelets", name: "BRACELETS", slug: "bracelets", isActive: true },
+      { id: "cat-earrings", name: "EARRINGS", slug: "earrings", isActive: true },
+      { id: "cat-charms", name: "Charms & Bangles", slug: "charms-bangles", isActive: true },
+      { id: "cat-gift", name: "Gift Ideas", slug: "gift-ideas", isActive: true },
+    ] as any);
 
     vi.spyOn(navbarAdminService, "fetchAdminNavbarSettings").mockResolvedValue(
       mockInitialNavbarSettings
@@ -649,6 +659,43 @@ describe("Navbar Management Module (Frontend)", () => {
           })
         );
         expect(screen.getByText(/Hero Image 1 published successfully \(v2\)/i)).toBeInTheDocument();
+      });
+    });
+
+    it("dynamically populates Category dropdown and saves selected categoryId and categorySlug", async () => {
+      const user = userEvent.setup();
+      renderWithClient(<AdminNavbarPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tab-hero-image-1")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByTestId("tab-hero-image-1"));
+
+      const categorySelect = screen.getByTestId("hero1-category-select") as HTMLSelectElement;
+      expect(categorySelect).toBeInTheDocument();
+
+      // Verify category options populated dynamically without hardcoded counts or slugs
+      expect(screen.getByRole("option", { name: "Necklaces" })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "Rings" })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "Bracelets" })).toBeInTheDocument();
+
+      // Change category to Rings
+      await user.selectOptions(categorySelect, "cat-rings");
+      expect(categorySelect.value).toBe("cat-rings");
+
+      const saveBtn = screen.getByTestId("hero1-save-button");
+      expect(saveBtn).not.toBeDisabled();
+      await user.click(saveBtn);
+
+      await waitFor(() => {
+        expect(heroAdminService.updateAdminHeroSlot).toHaveBeenCalledWith(
+          "heroImage1",
+          expect.objectContaining({
+            categoryId: "cat-rings",
+            categorySlug: "rings",
+          })
+        );
       });
     });
 

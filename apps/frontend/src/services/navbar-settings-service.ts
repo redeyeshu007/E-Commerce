@@ -13,10 +13,12 @@ export const NAVBAR_SETTINGS_UPDATED_EVENT = "peralagae:navbar-settings-updated"
  * to render appropriate loading/fallback states without throwing unhandled console errors.
  */
 export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData | null> {
-  const isServer = typeof window === "undefined";
-  const baseUrl = isServer
-    ? getBackendOrigin()
-    : (typeof window !== "undefined" && window.location?.origin ? "" : getBackendOrigin());
+  const isBrowser =
+    typeof window !== "undefined" &&
+    typeof document !== "undefined" &&
+    typeof process !== "undefined" &&
+    !process.env?.VITEST;
+  const baseUrl = isBrowser ? "" : getBackendOrigin();
   const url = `${baseUrl}/api/v1/navbar`;
 
   try {
@@ -52,16 +54,26 @@ export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData | 
  * Uses initial baseline during prerendering, then asynchronously syncs latest published
  * settings inside useEffect on the client.
  */
-export function useNavbarSettings(initialData?: NavbarSettingsData) {
+export function useNavbarSettings(initialData?: NavbarSettingsData | null) {
   const [data, setData] = useState<NavbarSettingsData | null>(initialData ?? null);
   const [isLoading, setIsLoading] = useState<boolean>(!initialData);
   const [isError, setIsError] = useState<boolean>(false);
 
   useEffect(() => {
+    if (initialData) {
+      setData(initialData);
+      setIsLoading(false);
+      setIsError(false);
+    }
+  }, [initialData]);
+
+  useEffect(() => {
     let isMounted = true;
 
-    async function load() {
-      setIsLoading(true);
+    async function load(isBackground = false) {
+      if (!isBackground && !data) {
+        setIsLoading(true);
+      }
       try {
         const settings = await fetchPublicNavbarSettings();
         if (isMounted) {
@@ -74,7 +86,7 @@ export function useNavbarSettings(initialData?: NavbarSettingsData) {
         }
       } catch (err) {
         if (isMounted) {
-          setIsError(true);
+          if (!data) setIsError(true);
           console.warn("Could not retrieve authoritative navbar settings from database:", err);
         }
       } finally {
@@ -84,10 +96,16 @@ export function useNavbarSettings(initialData?: NavbarSettingsData) {
       }
     }
 
-    load();
+    load(Boolean(initialData));
 
-    const handleSync = () => {
-      load();
+    const handleSync = (e?: Event) => {
+      const customEvent = e as CustomEvent<NavbarSettingsData> | undefined;
+      if (customEvent?.detail) {
+        setData(customEvent.detail);
+        setIsError(false);
+        setIsLoading(false);
+      }
+      load(true);
     };
 
     window.addEventListener("focus", handleSync);
