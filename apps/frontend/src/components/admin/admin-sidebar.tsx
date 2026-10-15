@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, LayoutDashboard, PanelTop } from "lucide-react";
+import { X, LayoutDashboard, PanelTop, Image as ImageIcon } from "lucide-react";
 import { brandConfig } from "@/config/brand";
 
 export interface AdminSidebarProps {
@@ -19,7 +19,7 @@ export interface AdminSidebarProps {
  * - Closes on close button, backdrop click, or Escape key
  * - Prevents background scrolling while open
  * - Displays small drawer heading: PERALAGAE
- * - Contains Dashboard and Navbar items
+ * - Contains Dashboard, Navbar, and Hero Images items
  * - Minimal white-and-neutral visual style with restrained gold accent
  */
 export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
@@ -53,6 +53,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
 
   const isDashboardActive = pathname === "/admin/dashboard" || pathname === "/admin";
   const isNavbarActive = pathname === "/admin/navbar" || pathname.startsWith("/admin/navbar");
+  const isHeroActive = pathname === "/admin/hero" || pathname.startsWith("/admin/hero");
 
   return (
     <>
@@ -131,6 +132,25 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               aria-hidden="true"
             />
             <span>Navbar</span>
+          </Link>
+
+          <Link
+            href="/admin/hero"
+            onClick={onClose}
+            data-testid="admin-sidebar-hero-link"
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isHeroActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <ImageIcon
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isHeroActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>Hero Images</span>
           </Link>
         </nav>
       </aside>

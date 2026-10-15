@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -6,6 +8,8 @@ import {
   type HeroBannersConfig,
   defaultHeroBannersConfig,
 } from "@/config/hero-banners";
+import { useHeroSettings } from "@/services/hero-settings-service";
+import type { HeroSettingsData } from "@/types/hero";
 
 export interface OutlineButtonProps {
   label: string;
@@ -138,9 +142,10 @@ export function BannerCard({ item, isFeatured = false, className = "" }: BannerC
 export interface HeroBannersProps {
   /**
    * Promotional banner configuration.
-   * Defaults to defaultHeroBannersConfig.
+   * If omitted or defaultHeroBannersConfig, dynamically syncs with published hero settings.
    */
   config?: HeroBannersConfig;
+  initialSettings?: HeroSettingsData;
   className?: string;
 }
 
@@ -153,9 +158,14 @@ export interface HeroBannersProps {
  * - Mobile (< lg): Seamless vertical stack preserving visual hierarchy.
  */
 export function HeroBanners({
-  config = defaultHeroBannersConfig,
+  config: propConfig,
+  initialSettings,
   className = "",
 }: HeroBannersProps) {
+  const { config: dynamicConfig } = useHeroSettings(initialSettings);
+  const activeConfig =
+    propConfig && propConfig !== defaultHeroBannersConfig ? propConfig : dynamicConfig;
+
   return (
     <section
       aria-label="Promotional Collections"
@@ -165,16 +175,16 @@ export function HeroBanners({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 items-stretch">
           {/* Left Column: Vertically Oriented Featured Banner */}
           <div className="h-full">
-            <BannerCard item={config.featuredBanner} isFeatured />
+            <BannerCard item={activeConfig.featuredBanner} isFeatured />
           </div>
 
           {/* Right Column: Two Stacked Landscape Banners */}
           <div className="flex flex-col gap-4 sm:gap-5 lg:gap-6 justify-between h-full">
             <div className="flex-1">
-              <BannerCard item={config.secondaryTopBanner} />
+              <BannerCard item={activeConfig.secondaryTopBanner} />
             </div>
             <div className="flex-1">
-              <BannerCard item={config.secondaryBottomBanner} />
+              <BannerCard item={activeConfig.secondaryBottomBanner} />
             </div>
           </div>
         </div>

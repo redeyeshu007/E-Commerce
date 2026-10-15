@@ -62,3 +62,12 @@ test-results/
 # ──────────────────────────────────────────────────
 # Keep prisma/schema.prisma in version control
 # Do not commit migration SQL that contains secrets
+
+# ──────────────────────────────────────────────────
+# Uploaded Assets
+# ──────────────────────────────────────────────────
+apps/backend/uploads/hero/*
+!apps/backend/uploads/hero/.gitkeep
+apps/frontend/public/uploads/hero/*
+!apps/frontend/public/uploads/hero/.gitkeep
+

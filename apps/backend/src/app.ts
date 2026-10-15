@@ -11,8 +11,10 @@ import { healthRouter } from "./routes/health.js";
 import { v1Router } from "./routes/v1/index.js";
 import { createAdminAuthRouter } from "./routes/admin-auth.js";
 import { createNavbarRouter } from "./routes/navbar.js";
+import path from "node:path";
 import { setupSwagger } from "./lib/swagger.js";
 import { logger } from "./utils/logger.js";
+import { createHeroRouter } from "./routes/hero.js";
 
 /**
  * Creates and configures the Express application.
@@ -111,6 +113,22 @@ export function createApp(env: EnvConfig): Application {
   const navbarRouter = createNavbarRouter(env);
   app.use("/api/navbar", navbarRouter);
   app.use("/api/v1/navbar", navbarRouter);
+
+  // Static uploads directory with cross-origin headers for images
+  const uploadsDir = path.resolve(process.cwd(), "uploads");
+  app.use(
+    "/uploads",
+    express.static(uploadsDir, {
+      setHeaders: (res) => {
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      },
+    })
+  );
+
+  // Hero Images Management endpoints (storefront public & admin protected)
+  const heroRouter = createHeroRouter(env);
+  app.use("/api/hero", heroRouter);
+  app.use("/api/v1/hero", heroRouter);
 
   // API v1 namespace
   app.use("/api/v1", v1Router);

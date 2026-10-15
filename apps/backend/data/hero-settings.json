@@ -1,0 +1,31 @@
+{
+  "id": "current",
+  "heroImage1": {
+    "id": "heroImage1",
+    "name": "Hero Image 1",
+    "imageUrl": "/images/hero/banner-necklaces.jpg",
+    "imageAlt": "Necklaces & Body Jewels - PERALAGAE",
+    "normalHeadline": "Necklaces &",
+    "boldHeadline": "Body Jewels",
+    "description": "Look to our new season collection for girls."
+  },
+  "heroImage2": {
+    "id": "heroImage2",
+    "name": "Hero Image 2",
+    "imageUrl": "/images/hero/banner-desk-hals.jpg",
+    "imageAlt": "Just Lunched Desk The Hals - PERALAGAE",
+    "normalHeadline": "Just Lunched",
+    "boldHeadline": "Desk The Hals"
+  },
+  "heroImage3": {
+    "id": "heroImage3",
+    "name": "Hero Image 3",
+    "imageUrl": "/images/hero/banner-charm-bracelets.jpg",
+    "imageAlt": "Jewelry & Charm Bracelet - PERALAGAE",
+    "normalHeadline": "Jewelry &",
+    "boldHeadline": "Charm Bracelet"
+  },
+  "version": 3,
+  "updatedAt": "2026-10-15T04:59:55.118Z",
+  "updatedBy": "javixtech@gmail.com"
+}
