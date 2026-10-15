@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, LayoutDashboard, PanelTop } from "lucide-react";
+import { X, LayoutDashboard, PanelTop, Layers } from "lucide-react";
 import { brandConfig } from "@/config/brand";
 
 export interface AdminSidebarProps {
@@ -53,6 +53,8 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
 
   const isDashboardActive = pathname === "/admin/dashboard" || pathname === "/admin";
   const isNavbarActive = pathname === "/admin/navbar" || pathname.startsWith("/admin/navbar");
+  const isCategoriesActive =
+    pathname === "/admin/categories" || pathname.startsWith("/admin/categories");
 
   return (
     <>
@@ -131,6 +133,24 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               aria-hidden="true"
             />
             <span>Header Management</span>
+          </Link>
+
+          <Link
+            href="/admin/categories"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isCategoriesActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <Layers
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isCategoriesActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>Categories</span>
           </Link>
         </nav>
       </aside>

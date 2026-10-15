@@ -136,5 +136,40 @@ describe("PERALAGAE Shop Our Collections Component Suite", () => {
       const link = screen.getByRole("link", { name: /Shop CHOKERS Collection/i });
       expect(link).toHaveAttribute("href", "/category/chokers");
     });
+
+    it("activates horizontal carousel mode with navigation controls when more than 6 categories exist", () => {
+      const sevenItemsConfig: CollectionsSectionConfig = {
+        heading: "Shop Our Collections",
+        items: [
+          ...defaultCollectionsConfig.items,
+          {
+            id: "cat-anklets",
+            slug: "anklets",
+            title: "ANKLETS",
+            image: { src: "/images/collections/collection-bracelets.jpg", alt: "Anklets Collection" },
+            isImplemented: true,
+            href: "/shop?category=anklets",
+            order: 7,
+            isActive: true,
+          },
+        ],
+      };
+
+      render(<ShopOurCollections config={sevenItemsConfig} />);
+
+      // Carousel region should be rendered
+      const carousel = screen.getByRole("region", { name: /Collections carousel/i });
+      expect(carousel).toBeInTheDocument();
+
+      // Navigation arrows should be present
+      expect(screen.getByRole("button", { name: /Previous categories/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Next categories/i })).toBeInTheDocument();
+
+      // All 7 items rendered
+      const cards = screen.getAllByTestId(/^collection-card-/);
+      expect(cards).toHaveLength(7);
+      expect(screen.getByText("ANKLETS")).toBeInTheDocument();
+    });
   });
 });
+

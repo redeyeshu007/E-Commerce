@@ -114,3 +114,61 @@ model HeroMediaAsset {
   @@map("hero_media_assets")
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// Category and Product Catalogue Models
+// ──────────────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  imageUrl    String
+  imageAlt    String?
+  description String?
+  order       Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id                String    @id @default(cuid())
+  slug              String    @unique
+  name              String
+  categoryId        String?
+  categoryKey       String?   // E.g. "NECKLACES", "RINGS", matching legacy category key
+  category          Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  imageUrl          String
+  imageAlt          String?
+  priceInr          Float     @default(0)
+  compareAtPriceInr Float?
+  isHot             Boolean   @default(false)
+  isNew             Boolean   @default(false)
+  isAvailable       Boolean   @default(true)
+  inStock           Boolean   @default(true)
+  stockCount        Int       @default(10)
+  material          String?
+  materials         Json?     @default("[]")
+  sizes             Json?     @default("[]")
+  images            Json?     @default("[]")
+  description       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("products")
+}
+
+model CategoryMediaAsset {
+  id        String   @id // Unique identifier / filename
+  filename  String   @unique
+  mimeType  String
+  size      Int
+  data      Bytes    // Native PostgreSQL bytea binary storage (NOT base64)
+  createdAt DateTime @default(now())
+
+  @@map("category_media_assets")
+}
+

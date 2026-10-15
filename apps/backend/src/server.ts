@@ -34,6 +34,14 @@ const server: Server = app.listen(PORT, () => {
   import("./services/hero-media-service.js")
     .then(({ HeroMediaService }) => HeroMediaService.syncDiskToDatabase())
     .catch((err) => logger.warn({ err }, "Initial media sync failed"));
+
+  import("./services/category-service.js")
+    .then(({ CategoryService }) => CategoryService.seedInitialData())
+    .catch((err) => logger.warn({ err }, "Initial category seed failed"));
+
+  import("./services/category-media-service.js")
+    .then(({ CategoryMediaService }) => CategoryMediaService.syncLocalDiskImagesToDb())
+    .catch((err) => logger.warn({ err }, "Initial category media sync failed"));
 });
 
 // ── Graceful Process Shutdown ───────────────────────────────────────────────

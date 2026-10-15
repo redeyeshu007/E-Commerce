@@ -16,6 +16,8 @@ import { setupSwagger } from "./lib/swagger.js";
 import { logger } from "./utils/logger.js";
 import { createHeroRouter } from "./routes/hero.js";
 import { HeroMediaService } from "./services/hero-media-service.js";
+import { createCategoryRouter } from "./routes/category.js";
+import { CategoryMediaService } from "./services/category-media-service.js";
 import fs from "node:fs";
 
 /**
@@ -119,6 +121,7 @@ export function createApp(env: EnvConfig): Application {
   // Static uploads directory with cross-origin headers for images
   const uploadsDir = path.resolve(process.cwd(), "uploads");
   const heroUploadsDir = path.join(uploadsDir, "hero");
+  const categoryUploadsDir = path.join(uploadsDir, "categories");
 
   // Durable media serving: fallback to PostgreSQL if local disk cache is missing (e.g. after Render restart)
   app.get("/uploads/hero/:filename", async (req: Request, res: Response, next: NextFunction) => {
@@ -152,6 +155,37 @@ export function createApp(env: EnvConfig): Application {
     next();
   });
 
+  app.get("/uploads/categories/:filename", async (req: Request, res: Response, next: NextFunction) => {
+    const filename = req.params["filename"];
+    if (typeof filename !== "string" || !filename) {
+      return next();
+    }
+    const localPath = path.join(categoryUploadsDir, filename);
+    if (fs.existsSync(localPath)) {
+      return next();
+    }
+    try {
+      const asset = await CategoryMediaService.getAsset(filename);
+      if (asset) {
+        try {
+          if (!fs.existsSync(categoryUploadsDir)) {
+            fs.mkdirSync(categoryUploadsDir, { recursive: true });
+          }
+          fs.writeFileSync(localPath, asset.data);
+        } catch {
+          // Ignore local disk cache write error
+        }
+        res.setHeader("Content-Type", asset.mimeType);
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+        return res.send(asset.data);
+      }
+    } catch (err) {
+      logger.warn({ err, filename }, "Failed to fetch category media asset from PostgreSQL");
+    }
+    next();
+  });
+
   app.use(
     "/uploads",
     express.static(uploadsDir, {
@@ -165,6 +199,11 @@ export function createApp(env: EnvConfig): Application {
   const heroRouter = createHeroRouter(env);
   app.use("/api/hero", heroRouter);
   app.use("/api/v1/hero", heroRouter);
+
+  // Category Management endpoints (storefront public & admin protected)
+  const categoryRouter = createCategoryRouter(env);
+  app.use("/api/categories", categoryRouter);
+  app.use("/api/v1/categories", categoryRouter);
 
   // API v1 namespace
   app.use("/api/v1", v1Router);
