@@ -13,7 +13,7 @@ export async function fetchPublicCategories(): Promise<CategoryItem[]> {
     const res = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
 
     if (!res.ok) {

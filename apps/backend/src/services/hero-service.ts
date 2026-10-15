@@ -182,7 +182,9 @@ function createDefaultHistory(): {
 
 export class HeroService {
   /**
-   * Idempotently seeds PostgreSQL with legacy JSON or default hero settings & history if table is empty.
+   * Safely and idempotently reconciles PostgreSQL with legacy JSON or default hero settings & history.
+   * If legacy JSON has a newer version than current DB record, upgrades DB safely.
+   * Never overwrites newer valid DB data with older defaults.
    */
   static async syncLegacyData(): Promise<void> {
     if (isSeeded) return;
@@ -191,26 +193,29 @@ export class HeroService {
         where: { id: "current" },
       });
 
-      if (!existingSettings) {
-        let initialSettings = defaultHeroSettings;
-        if (fs.existsSync(SETTINGS_FILE_PATH)) {
-          try {
-            const raw = JSON.parse(fs.readFileSync(SETTINGS_FILE_PATH, "utf-8"));
-            if (raw && raw.heroImage1 && raw.heroImage2 && raw.heroImage3) {
-              initialSettings = {
-                ...defaultHeroSettings,
-                ...raw,
-                heroImage1Version: raw.heroImage1Version ?? 1,
-                heroImage2Version: raw.heroImage2Version ?? 1,
-                heroImage3Version: raw.heroImage3Version ?? 1,
-                version: raw.version ?? 1,
-              };
-            }
-          } catch {
-            // Use default if file parse fails
-          }
-        }
+      let initialSettings = defaultHeroSettings;
+      let hasFileSettings = false;
 
+      if (fs.existsSync(SETTINGS_FILE_PATH)) {
+        try {
+          const raw = JSON.parse(fs.readFileSync(SETTINGS_FILE_PATH, "utf-8"));
+          if (raw && raw.heroImage1 && raw.heroImage2 && raw.heroImage3) {
+            initialSettings = {
+              ...defaultHeroSettings,
+              ...raw,
+              heroImage1Version: raw.heroImage1Version ?? 1,
+              heroImage2Version: raw.heroImage2Version ?? 1,
+              heroImage3Version: raw.heroImage3Version ?? 1,
+              version: raw.version ?? 1,
+            };
+            hasFileSettings = true;
+          }
+        } catch {
+          // Use default if file parse fails
+        }
+      }
+
+      if (!existingSettings) {
         await prisma.heroSetting.create({
           data: {
             id: "current",
@@ -225,48 +230,60 @@ export class HeroService {
           },
         });
         logger.info("Hero settings initialized in PostgreSQL");
+      } else if (hasFileSettings && initialSettings.version > existingSettings.version) {
+        // Reconcile: file contains newer valid saved changes than current database record
+        await prisma.heroSetting.update({
+          where: { id: "current" },
+          data: {
+            heroImage1: initialSettings.heroImage1 as unknown as object,
+            heroImage2: initialSettings.heroImage2 as unknown as object,
+            heroImage3: initialSettings.heroImage3 as unknown as object,
+            heroImage1Version: initialSettings.heroImage1Version,
+            heroImage2Version: initialSettings.heroImage2Version,
+            heroImage3Version: initialSettings.heroImage3Version,
+            version: initialSettings.version,
+            updatedBy: initialSettings.updatedBy || "system",
+          },
+        });
+        logger.info(
+          { fileVersion: initialSettings.version, dbVersion: existingSettings.version },
+          "Reconciled hero settings: upgraded database record to newer saved version"
+        );
       }
 
-      const historyCount = await prisma.heroHistory.count();
-      if (historyCount === 0) {
-        let historyToSeed = createDefaultHistory();
-        if (fs.existsSync(HISTORY_FILE_PATH)) {
-          try {
-            const rawHist = JSON.parse(fs.readFileSync(HISTORY_FILE_PATH, "utf-8"));
-            if (rawHist.heroImage1 || rawHist.heroImage2 || rawHist.heroImage3) {
-              historyToSeed = {
-                heroImage1: Array.isArray(rawHist.heroImage1) ? rawHist.heroImage1 : historyToSeed.heroImage1,
-                heroImage2: Array.isArray(rawHist.heroImage2) ? rawHist.heroImage2 : historyToSeed.heroImage2,
-                heroImage3: Array.isArray(rawHist.heroImage3) ? rawHist.heroImage3 : historyToSeed.heroImage3,
-              };
+      // Reconcile history from history JSON file without deleting existing DB records
+      if (fs.existsSync(HISTORY_FILE_PATH)) {
+        try {
+          const rawHist = JSON.parse(fs.readFileSync(HISTORY_FILE_PATH, "utf-8"));
+          const allItems = [
+            ...(Array.isArray(rawHist.heroImage1) ? rawHist.heroImage1 : []),
+            ...(Array.isArray(rawHist.heroImage2) ? rawHist.heroImage2 : []),
+            ...(Array.isArray(rawHist.heroImage3) ? rawHist.heroImage3 : []),
+          ];
+
+          for (const item of allItems) {
+            const id = item.id || `hist_${item.slotId}_${item.version}`;
+            const existing = await prisma.heroHistory.findUnique({ where: { id } });
+            if (!existing) {
+              await prisma.heroHistory.create({
+                data: {
+                  id,
+                  slotId: item.slotId,
+                  version: item.version,
+                  imageUrl: item.imageUrl,
+                  normalHeadline: item.normalHeadline,
+                  boldHeadline: item.boldHeadline,
+                  description: item.description ?? null,
+                  createdAt: new Date(item.createdAt || Date.now()),
+                  createdBy: item.createdBy || "system",
+                },
+              });
             }
-          } catch {
-            // Use default history
           }
+          logger.info("Hero history reconciled in PostgreSQL");
+        } catch (err) {
+          logger.warn({ err }, "Could not sync history file items");
         }
-
-        const allItems = [
-          ...historyToSeed.heroImage1,
-          ...historyToSeed.heroImage2,
-          ...historyToSeed.heroImage3,
-        ];
-
-        for (const item of allItems) {
-          await prisma.heroHistory.create({
-            data: {
-              id: item.id || `hist_${item.slotId}_${Date.now()}_${crypto.randomBytes(3).toString("hex")}`,
-              slotId: item.slotId,
-              version: item.version,
-              imageUrl: item.imageUrl,
-              normalHeadline: item.normalHeadline,
-              boldHeadline: item.boldHeadline,
-              description: item.description ?? null,
-              createdAt: new Date(item.createdAt || Date.now()),
-              createdBy: item.createdBy || "system",
-            },
-          });
-        }
-        logger.info({ count: allItems.length }, "Hero history initialized in PostgreSQL");
       }
 
       isSeeded = true;
@@ -276,7 +293,54 @@ export class HeroService {
   }
 
   /**
-   * Resets settings and history back to baseline defaults (useful in tests).
+   * Synchronizes live hero settings and history to persistent local files as a durable backup.
+   */
+  private static async syncToFileBackup(settings: HeroSettings): Promise<void> {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+      fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(settings, null, 2), "utf-8");
+
+      const h1 = await prisma.heroHistory.findMany({
+        where: { slotId: "heroImage1" },
+        orderBy: { version: "desc" },
+      });
+      const h2 = await prisma.heroHistory.findMany({
+        where: { slotId: "heroImage2" },
+        orderBy: { version: "desc" },
+      });
+      const h3 = await prisma.heroHistory.findMany({
+        where: { slotId: "heroImage3" },
+        orderBy: { version: "desc" },
+      });
+
+      const histData = {
+        heroImage1: h1.map((r) => ({
+          ...r,
+          description: r.description ?? undefined,
+          createdAt: r.createdAt.toISOString(),
+        })),
+        heroImage2: h2.map((r) => ({
+          ...r,
+          description: r.description ?? undefined,
+          createdAt: r.createdAt.toISOString(),
+        })),
+        heroImage3: h3.map((r) => ({
+          ...r,
+          description: r.description ?? undefined,
+          createdAt: r.createdAt.toISOString(),
+        })),
+      };
+      fs.writeFileSync(HISTORY_FILE_PATH, JSON.stringify(histData, null, 2), "utf-8");
+    } catch (err) {
+      logger.warn({ err }, "Could not write hero backup files to disk");
+    }
+  }
+
+  /**
+   * Resets in-memory cache back to baseline defaults for testing.
+   * Does NOT wipe persistent PostgreSQL database records or version history.
    */
   static async resetToDefault(): Promise<void> {
     memoryHeroSettings = {
@@ -289,50 +353,36 @@ export class HeroService {
     memoryHero2History = defHist.heroImage2;
     memoryHero3History = defHist.heroImage3;
 
-    try {
-      await prisma.heroSetting.upsert({
-        where: { id: "current" },
-        create: {
-          id: "current",
-          heroImage1: defaultHeroSettings.heroImage1 as unknown as object,
-          heroImage2: defaultHeroSettings.heroImage2 as unknown as object,
-          heroImage3: defaultHeroSettings.heroImage3 as unknown as object,
-          heroImage1Version: 1,
-          heroImage2Version: 1,
-          heroImage3Version: 1,
-          version: 1,
-          updatedBy: "system",
-        },
-        update: {
-          heroImage1: defaultHeroSettings.heroImage1 as unknown as object,
-          heroImage2: defaultHeroSettings.heroImage2 as unknown as object,
-          heroImage3: defaultHeroSettings.heroImage3 as unknown as object,
-          heroImage1Version: 1,
-          heroImage2Version: 1,
-          heroImage3Version: 1,
-          version: 1,
-          updatedBy: "system",
-        },
-      });
-
-      await prisma.heroHistory.deleteMany({});
-      const allDef = [...defHist.heroImage1, ...defHist.heroImage2, ...defHist.heroImage3];
-      for (const item of allDef) {
-        await prisma.heroHistory.create({
-          data: {
-            id: item.id,
-            slotId: item.slotId,
-            version: item.version,
-            imageUrl: item.imageUrl,
-            normalHeadline: item.normalHeadline,
-            boldHeadline: item.boldHeadline,
-            description: item.description ?? null,
-            createdBy: "system",
+    // Only reset database if explicitly requested in isolated test mode
+    if (process.env["ALLOW_DATABASE_RESET"] === "true") {
+      try {
+        await prisma.heroSetting.upsert({
+          where: { id: "current" },
+          create: {
+            id: "current",
+            heroImage1: defaultHeroSettings.heroImage1 as unknown as object,
+            heroImage2: defaultHeroSettings.heroImage2 as unknown as object,
+            heroImage3: defaultHeroSettings.heroImage3 as unknown as object,
+            heroImage1Version: 1,
+            heroImage2Version: 1,
+            heroImage3Version: 1,
+            version: 1,
+            updatedBy: "system",
+          },
+          update: {
+            heroImage1: defaultHeroSettings.heroImage1 as unknown as object,
+            heroImage2: defaultHeroSettings.heroImage2 as unknown as object,
+            heroImage3: defaultHeroSettings.heroImage3 as unknown as object,
+            heroImage1Version: 1,
+            heroImage2Version: 1,
+            heroImage3Version: 1,
+            version: 1,
+            updatedBy: "system",
           },
         });
+      } catch {
+        // In-memory fallback
       }
-    } catch {
-      // In-memory fallback
     }
   }
 
@@ -586,6 +636,7 @@ export class HeroService {
     };
 
     memoryHeroSettings = result;
+    await this.syncToFileBackup(result);
     logger.info({ slotId, version: result.version, adminUser }, "Hero slot updated and persisted to PostgreSQL");
     return result;
   }
@@ -821,6 +872,7 @@ export class HeroService {
     };
 
     memoryHeroSettings = result;
+    await this.syncToFileBackup(result);
     logger.info({ slotId, targetVersion, restoredToVersion: result.version }, "Hero slot version restored successfully in PostgreSQL");
     return result;
   }

@@ -61,19 +61,19 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.id).toBeDefined();
-      expect(res.body.data.topBarVersion).toBe(1);
-      expect(res.body.data.secondNavbarVersion).toBe(1);
+      expect(typeof res.body.data.topBarVersion).toBe("number");
+      expect(typeof res.body.data.secondNavbarVersion).toBe("number");
     });
   });
 
   describe("3. Independent Version Counters & Publishing Separation", () => {
-    it("1 & 2: Top Bar v1 and Second Navbar v1 coexist, and publishing Top Bar v2 does NOT increment Second Navbar", async () => {
+    it("1 & 2: Top Bar and Second Navbar versions coexist, and publishing Top Bar increments ONLY Top Bar without modifying Second Navbar", async () => {
       const cookie = await getAdminCookie();
 
       // Initial state
       const initial = await request(app).get("/api/v1/navbar");
-      expect(initial.body.data.topBarVersion).toBe(1);
-      expect(initial.body.data.secondNavbarVersion).toBe(1);
+      const initTopVersion = initial.body.data.topBarVersion;
+      const initSecondVersion = initial.body.data.secondNavbarVersion;
 
       // Publish Top Bar
       const putTopRes = await request(app)
@@ -89,9 +89,9 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
 
       expect(putTopRes.status).toBe(200);
       expect(putTopRes.body.success).toBe(true);
-      expect(putTopRes.body.data.topBarVersion).toBe(2);
-      // Crucial: Second Navbar version remains v1!
-      expect(putTopRes.body.data.secondNavbarVersion).toBe(1);
+      expect(putTopRes.body.data.topBarVersion).toBe(initTopVersion + 1);
+      // Crucial: Second Navbar version remains unchanged!
+      expect(putTopRes.body.data.secondNavbarVersion).toBe(initSecondVersion);
     });
 
     it("3 & 8: Publishing Second Navbar updates ONLY promotional message, increments only Second Navbar, and leaves Top Bar untouched", async () => {
@@ -105,6 +105,7 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
 
       const beforeUpdate = await request(app).get("/api/v1/navbar");
       const originalTopVersion = beforeUpdate.body.data.topBarVersion;
+      const originalSecondVersion = beforeUpdate.body.data.secondNavbarVersion;
       const originalPhone = beforeUpdate.body.data.secondNavbar.phone;
       const originalCta = beforeUpdate.body.data.secondNavbar.ctaText;
       const originalLinks = beforeUpdate.body.data.secondNavbar.links;
@@ -128,8 +129,8 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
       expect(putSecondRes.body.data.secondNavbar.ctaText).toBe(originalCta);
       expect(putSecondRes.body.data.secondNavbar.links).toEqual(originalLinks);
 
-      // Second Navbar version incremented to 2, Top Bar version untouched!
-      expect(putSecondRes.body.data.secondNavbarVersion).toBe(2);
+      // Second Navbar version incremented, Top Bar version untouched!
+      expect(putSecondRes.body.data.secondNavbarVersion).toBe(originalSecondVersion + 1);
       expect(putSecondRes.body.data.topBarVersion).toBe(originalTopVersion);
 
       // Verify Top Bar history does NOT contain any Second Navbar entry
@@ -252,17 +253,19 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
     it("6: restoring a Top Bar version does NOT modify Second Navbar", async () => {
       const cookie = await getAdminCookie();
 
-      // Top Bar v1 -> v2
+      // Top Bar update
       await request(app)
         .put("/api/v1/navbar/admin/top-bar")
         .set("Cookie", cookie)
         .send({ text: "Top Bar Version 2" });
 
-      // Second Navbar v1 -> v2
-      await request(app)
+      // Second Navbar update
+      const secondUpdate = await request(app)
         .put("/api/v1/navbar/admin/second-navbar")
         .set("Cookie", cookie)
         .send({ promoText: "Second Navbar Text 2" });
+
+      const expectedSecondVersion = secondUpdate.body.data.secondNavbarVersion;
 
       const topHistoryRes = await request(app)
         .get("/api/v1/navbar/admin/history?section=top_bar")
@@ -281,21 +284,23 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
       expect(restoreRes.body.success).toBe(true);
       expect(restoreRes.body.data.topBar.text).toBe(topV1Record.snapshot.topBar.text);
 
-      // Crucial: Second Navbar remains at "Second Navbar Text 2" and v2!
+      // Crucial: Second Navbar remains at "Second Navbar Text 2" and unchanged version!
       expect(restoreRes.body.data.secondNavbar.promoText).toBe("Second Navbar Text 2");
-      expect(restoreRes.body.data.secondNavbarVersion).toBe(2);
+      expect(restoreRes.body.data.secondNavbarVersion).toBe(expectedSecondVersion);
     });
 
     it("7: restoring a Second Navbar version does NOT modify Top Bar", async () => {
       const cookie = await getAdminCookie();
 
-      // Top Bar v1 -> v2
-      await request(app)
+      // Top Bar update
+      const topUpdate = await request(app)
         .put("/api/v1/navbar/admin/top-bar")
         .set("Cookie", cookie)
         .send({ text: "Top Bar Custom Announcement" });
 
-      // Second Navbar v1 -> v2
+      const expectedTopVersion = topUpdate.body.data.topBarVersion;
+
+      // Second Navbar update
       await request(app)
         .put("/api/v1/navbar/admin/second-navbar")
         .set("Cookie", cookie)
@@ -320,9 +325,9 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
         secondV1Record.snapshot.secondNavbar.promoText
       );
 
-      // Crucial: Top Bar remains at "Top Bar Custom Announcement" and v2!
+      // Crucial: Top Bar remains at "Top Bar Custom Announcement" and unchanged version!
       expect(restoreRes.body.data.topBar.text).toBe("Top Bar Custom Announcement");
-      expect(restoreRes.body.data.topBarVersion).toBe(2);
+      expect(restoreRes.body.data.topBarVersion).toBe(expectedTopVersion);
     });
 
     it("9: history and published content persist after subsequent inspection requests", async () => {

@@ -3,32 +3,32 @@
   "heroImage1": {
     "id": "heroImage1",
     "name": "Hero Image 1",
-    "imageUrl": "/images/hero/banner-necklaces.jpg",
     "imageAlt": "Necklaces & Body Jewels - PERALAGAE",
-    "normalHeadline": "Necklaces &",
+    "imageUrl": "/images/hero/banner-necklaces.jpg",
+    "description": "Look to our new season collection for girls.",
     "boldHeadline": "Body Jewels",
-    "description": "Look to our new season collection for girls."
+    "normalHeadline": "Necklaces &"
   },
   "heroImage2": {
     "id": "heroImage2",
     "name": "Hero Image 2",
-    "imageUrl": "/images/hero/banner-desk-hals.jpg",
     "imageAlt": "Just Lunched Desk The Hals. - PERALAGAE",
-    "normalHeadline": "Just Lunched",
-    "boldHeadline": "Desk The Hals"
+    "imageUrl": "/images/hero/banner-desk-hals.jpg",
+    "boldHeadline": "Diamond Chokers",
+    "normalHeadline": "New Arrival"
   },
   "heroImage3": {
     "id": "heroImage3",
     "name": "Hero Image 3",
-    "imageUrl": "/images/hero/banner-charm-bracelets.jpg",
     "imageAlt": "Jewelry & Charm Bracelets - PERALAGAE",
-    "normalHeadline": "Jewelry &",
-    "boldHeadline": "Charm Bracelets"
+    "imageUrl": "/images/hero/banner-charm-bracelets.jpg",
+    "boldHeadline": "Charm Bracelets",
+    "normalHeadline": "Jewelry &"
   },
-  "version": 6,
-  "heroImage1Version": 4,
-  "heroImage2Version": 5,
+  "version": 26,
+  "heroImage1Version": 24,
+  "heroImage2Version": 9,
   "heroImage3Version": 1,
-  "updatedAt": "2026-10-15T06:05:39.552Z",
-  "updatedBy": "javixtech@gmail.com"
+  "updatedAt": "2026-10-15T08:38:02.742Z",
+  "updatedBy": "admin@peralagae.com"
 }

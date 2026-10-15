@@ -15,6 +15,14 @@ import { NewsletterSignupSection } from "@/components/home/newsletter-section";
 import { defaultNewsletterConfig } from "@/config/newsletter";
 import { HomePageAnchorManager } from "@/components/home/anchor-manager";
 
+import React, { Suspense } from "react";
+import { fetchPublicCategories } from "@/services/category-public-service";
+
+async function DynamicShopOurCollections() {
+  const categories = await fetchPublicCategories();
+  return <ShopOurCollections initialCategories={categories} config={defaultCollectionsConfig} />;
+}
+
 /**
  * PERALAGAE Storefront Homepage
  *
@@ -41,7 +49,9 @@ export default function HomePage() {
       <HeroBanners />
 
       {/* Shop Our Collections Category Gallery Section */}
-      <ShopOurCollections config={defaultCollectionsConfig} />
+      <Suspense fallback={<ShopOurCollections config={defaultCollectionsConfig} />}>
+        <DynamicShopOurCollections />
+      </Suspense>
 
       {/* New Collection Product Carousel Section */}
       <NewCollectionSection config={defaultNewCollectionConfig} />

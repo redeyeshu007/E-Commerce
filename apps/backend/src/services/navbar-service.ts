@@ -258,76 +258,57 @@ export class NavbarService {
       },
     ];
 
-    try {
-      const def = getDefaultNavbarSettings();
-      await prisma.navbarSetting.upsert({
-        where: { id: "current" },
-        create: {
-          id: "current",
-          topBarText: def.topBar.text,
-          topBarBgColor: def.topBar.backgroundColor,
-          topBarTextColor: def.topBar.textColor,
-          topBarVisible: def.topBar.visible,
-          topBarDismissible: def.topBar.dismissible,
-          secondPhone: def.secondNavbar.phone,
-          secondPhoneHref: def.secondNavbar.phoneHref,
-          secondPromoText: def.secondNavbar.promoText,
-          secondCtaText: def.secondNavbar.ctaText,
-          secondCtaHref: def.secondNavbar.ctaHref,
-          secondLinks: def.secondNavbar.links as unknown as object,
-          secondPhoneVisible: def.secondNavbar.showPhone,
-          secondPromoVisible: def.secondNavbar.showPromotion,
-          secondLinksVisible: def.secondNavbar.showLinks,
-          version: 1,
-          topBarVersion: 1,
-          secondNavbarVersion: 1,
-          updatedBy: "system",
-        },
-        update: {
-          topBarText: def.topBar.text,
-          topBarBgColor: def.topBar.backgroundColor,
-          topBarTextColor: def.topBar.textColor,
-          topBarVisible: def.topBar.visible,
-          topBarDismissible: def.topBar.dismissible,
-          secondPhone: def.secondNavbar.phone,
-          secondPhoneHref: def.secondNavbar.phoneHref,
-          secondPromoText: def.secondNavbar.promoText,
-          secondCtaText: def.secondNavbar.ctaText,
-          secondCtaHref: def.secondNavbar.ctaHref,
-          secondLinks: def.secondNavbar.links as unknown as object,
-          secondPhoneVisible: def.secondNavbar.showPhone,
-          secondPromoVisible: def.secondNavbar.showPromotion,
-          secondLinksVisible: def.secondNavbar.showLinks,
-          version: 1,
-          topBarVersion: 1,
-          secondNavbarVersion: 1,
-          updatedBy: "system",
-        },
-      });
-
-      await prisma.navbarHistory.deleteMany({});
-      await prisma.navbarHistory.createMany({
-        data: [
-          {
-            id: "hist_init_top_bar",
-            section: "TOP_BAR",
-            snapshot: def as unknown as object,
-            description: "Initial baseline published Top Bar configuration",
+    // Only reset database if explicitly allowed via ALLOW_DATABASE_RESET environment variable
+    if (process.env["ALLOW_DATABASE_RESET"] === "true") {
+      try {
+        const def = getDefaultNavbarSettings();
+        await prisma.navbarSetting.upsert({
+          where: { id: "current" },
+          create: {
+            id: "current",
+            topBarText: def.topBar.text,
+            topBarBgColor: def.topBar.backgroundColor,
+            topBarTextColor: def.topBar.textColor,
+            topBarVisible: def.topBar.visible,
+            topBarDismissible: def.topBar.dismissible,
+            secondPhone: def.secondNavbar.phone,
+            secondPhoneHref: def.secondNavbar.phoneHref,
+            secondPromoText: def.secondNavbar.promoText,
+            secondCtaText: def.secondNavbar.ctaText,
+            secondCtaHref: def.secondNavbar.ctaHref,
+            secondLinks: def.secondNavbar.links as unknown as object,
+            secondPhoneVisible: def.secondNavbar.showPhone,
+            secondPromoVisible: def.secondNavbar.showPromotion,
+            secondLinksVisible: def.secondNavbar.showLinks,
             version: 1,
-            createdBy: "system",
+            topBarVersion: 1,
+            secondNavbarVersion: 1,
+            updatedBy: "system",
           },
-          {
-            id: "hist_init_second_navbar",
-            section: "SECOND_NAVBAR",
-            snapshot: def as unknown as object,
-            description: "Initial baseline published Second Navbar promotional message",
+          update: {
+            topBarText: def.topBar.text,
+            topBarBgColor: def.topBar.backgroundColor,
+            topBarTextColor: def.topBar.textColor,
+            topBarVisible: def.topBar.visible,
+            topBarDismissible: def.topBar.dismissible,
+            secondPhone: def.secondNavbar.phone,
+            secondPhoneHref: def.secondNavbar.phoneHref,
+            secondPromoText: def.secondNavbar.promoText,
+            secondCtaText: def.secondNavbar.ctaText,
+            secondCtaHref: def.secondNavbar.ctaHref,
+            secondLinks: def.secondNavbar.links as unknown as object,
+            secondPhoneVisible: def.secondNavbar.showPhone,
+            secondPromoVisible: def.secondNavbar.showPromotion,
+            secondLinksVisible: def.secondNavbar.showLinks,
             version: 1,
-            createdBy: "system",
+            topBarVersion: 1,
+            secondNavbarVersion: 1,
+            updatedBy: "system",
           },
-        ],
-      });
-    } catch {
-      // In-memory fallback
+        });
+      } catch {
+        // In-memory fallback
+      }
     }
   }
 

@@ -13,6 +13,7 @@ import {
   fetchPublicCategories,
   CATEGORIES_UPDATED_EVENT,
 } from "@/services/category-public-service";
+import type { CategoryItem } from "@/types/category";
 
 export interface CollectionCardProps {
   item: CollectionItem;
@@ -96,6 +97,7 @@ export interface ShopOurCollectionsProps {
    * Defaults to defaultCollectionsConfig.
    */
   config?: CollectionsSectionConfig;
+  initialCategories?: CategoryItem[];
   className?: string;
 }
 
@@ -119,12 +121,41 @@ export interface ShopOurCollectionsProps {
  */
 export function ShopOurCollections({
   config = defaultCollectionsConfig,
+  initialCategories,
   className = "",
 }: ShopOurCollectionsProps) {
-  const [dynamicItems, setDynamicItems] = useState<CollectionItem[] | null>(null);
+  // Map initial categories if provided by server
+  const initialMapped = useMemo(() => {
+    if (!initialCategories || initialCategories.length === 0) return null;
+    return initialCategories
+      .filter((c) => c.isActive)
+      .sort((a, b) => a.order - b.order)
+      .map((c) => ({
+        id: c.id,
+        slug: c.slug,
+        title: c.name,
+        image: {
+          src: c.imageUrl || `/images/collections/collection-${c.slug}.jpg`,
+          alt: `${c.name} Collection`,
+        },
+        href: `/shop?category=${c.slug}`,
+        isImplemented: true,
+        order: c.order,
+        isActive: c.isActive,
+      }));
+  }, [initialCategories]);
+
+  const [dynamicItems, setDynamicItems] = useState<CollectionItem[] | null>(initialMapped);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Sync initialMapped if changed
+  useEffect(() => {
+    if (initialMapped && initialMapped.length > 0) {
+      setDynamicItems(initialMapped);
+    }
+  }, [initialMapped]);
 
   // Check if custom config was passed (different from default)
   const isCustomConfig = useMemo(() => {
@@ -212,13 +243,16 @@ export function ShopOurCollections({
     if (!isCarouselMode) return;
 
     updateScrollButtons();
+    const timer = setTimeout(updateScrollButtons, 100);
+
     const el = scrollContainerRef.current;
-    if (!el) return;
+    if (!el) return () => clearTimeout(timer);
 
     el.addEventListener("scroll", updateScrollButtons, { passive: true });
     window.addEventListener("resize", updateScrollButtons);
 
     return () => {
+      clearTimeout(timer);
       el.removeEventListener("scroll", updateScrollButtons);
       window.removeEventListener("resize", updateScrollButtons);
     };
@@ -248,7 +282,7 @@ export function ShopOurCollections({
     <section
       id="shop-our-collections"
       aria-labelledby="shop-our-collections-heading"
-      className={`w-full bg-white pt-8 sm:pt-10 lg:pt-14 pb-12 sm:pb-16 lg:pb-20 scroll-mt-28 lg:scroll-mt-32 ${className}`}
+      className={`w-full overflow-hidden bg-white pt-8 sm:pt-10 lg:pt-14 pb-12 sm:pb-16 lg:pb-20 scroll-mt-28 lg:scroll-mt-32 ${className}`}
     >
       <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
         {/* Centred Heading */}
