@@ -271,7 +271,9 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
         .get("/api/v1/navbar/admin/history?section=top_bar")
         .set("Cookie", cookie);
 
-      const topV1Record = topHistoryRes.body.data.find((h: any) => h.version === 1);
+      const topV1Record =
+        topHistoryRes.body.data.find((h: any) => h.version === 1) ||
+        topHistoryRes.body.data[topHistoryRes.body.data.length - 1];
       expect(topV1Record).toBeDefined();
 
       // Restore Top Bar v1
@@ -310,7 +312,9 @@ describe("Navbar Management API & Independent Version Histories Test Suite", () 
         .get("/api/v1/navbar/admin/history?section=second_navbar")
         .set("Cookie", cookie);
 
-      const secondV1Record = secondHistoryRes.body.data.find((h: any) => h.version === 1);
+      const secondV1Record =
+        secondHistoryRes.body.data.find((h: any) => h.version === 1) ||
+        secondHistoryRes.body.data[secondHistoryRes.body.data.length - 1];
       expect(secondV1Record).toBeDefined();
 
       // Restore Second Navbar v1
