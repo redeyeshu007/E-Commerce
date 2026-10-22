@@ -197,12 +197,12 @@ export function NewsletterPopup({
         <Dialog.Overlay
           data-testid="newsletter-popup-backdrop"
           onClick={handleClose}
-          className="newsletter-modal-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-xs cursor-pointer"
+          className="newsletter-modal-backdrop fixed inset-0 z-50 bg-black/50 backdrop-blur-xs cursor-pointer"
         />
 
         {/* Centered Modal Container */}
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-6 overflow-y-auto pointer-events-none"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto pointer-events-none"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               handleClose();
@@ -213,7 +213,7 @@ export function NewsletterPopup({
             data-testid="newsletter-popup-content"
             aria-labelledby="newsletter-popup-title"
             aria-describedby="newsletter-popup-description"
-            className="newsletter-modal-content pointer-events-auto relative w-full max-w-[820px] flex flex-col md:flex-row overflow-hidden rounded-none border border-[#E0E0E0] bg-white shadow-2xl focus:outline-none"
+            className="newsletter-modal-content pointer-events-auto relative w-full max-w-[440px] flex flex-col overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-2xl focus:outline-none"
           >
             {/* Minimalist Close Button in Upper-Right Corner */}
             <button
@@ -222,66 +222,66 @@ export function NewsletterPopup({
               disabled={isSubmitting}
               data-testid="newsletter-popup-close-btn"
               aria-label="Close newsletter popup"
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex h-8 w-8 items-center justify-center text-[#777777] transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute top-3 right-3 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-black/25 hover:bg-black/40 text-white backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-50 cursor-pointer"
             >
-              <X className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
 
-            {/* Left Column — Full-Bleed Jewellery Editorial Photography (~44% width) */}
-            <div className="relative w-full md:w-[44%] min-h-[220px] sm:min-h-[280px] md:min-h-[460px] flex-none overflow-hidden bg-[#F7F5F0]">
+            {/* Top Visual Banner */}
+            <div className="relative w-full h-[150px] sm:h-[160px] flex-none overflow-hidden bg-neutral-100">
               <Image
                 src="/images/editorial/garden-variety.jpg"
                 alt="PERALAGAE Fine Jewellery Collection"
                 fill
                 priority
-                sizes="(max-width: 768px) 100vw, 380px"
-                className="object-cover object-[center_top] select-none"
+                sizes="(max-width: 640px) 100vw, 440px"
+                className="object-cover object-center select-none"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             </div>
 
-            {/* Right Content Panel — Pure White Panel with Balanced Proportions (~56% width) */}
-            <div className="relative w-full md:w-[56%] px-6 py-7 sm:px-8 sm:py-9 md:px-10 md:py-10 flex flex-col justify-center text-center bg-white">
+            {/* Content Panel — Clean & Simple */}
+            <div className="relative px-6 py-6 sm:px-8 sm:py-7 flex flex-col justify-center text-center bg-white">
               {isSuccess ? (
                 /* Success Confirmation State */
-                <div data-testid="newsletter-popup-success" className="py-4 text-center">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#FAF5F0] text-[#111111] mb-4 border border-[#E5E0D8]">
-                    <Check className="h-6 w-6 stroke-[2.2]" aria-hidden="true" />
+                <div data-testid="newsletter-popup-success" className="py-2 text-center">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 mb-3 border border-emerald-100">
+                    <Check className="h-5 w-5 stroke-[2.2]" aria-hidden="true" />
                   </div>
                   <h2
                     id="newsletter-popup-title"
-                    className="text-xl sm:text-2xl md:text-3xl font-normal text-[#111111] leading-tight"
+                    className="text-xl font-semibold text-neutral-900 leading-tight"
                   >
                     You&apos;re on the list.
                   </h2>
                   <p
                     id="newsletter-popup-description"
-                    className="mt-2.5 text-xs sm:text-sm text-[#666666] leading-relaxed max-w-[360px] mx-auto"
+                    className="mt-2 text-xs sm:text-sm text-neutral-500 leading-relaxed max-w-[320px] mx-auto"
                   >
                     Thank you for joining the PERALAGAE Circle. Look forward to curated inspirations and private previews in your inbox.
                   </p>
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="mt-6 inline-flex h-11 sm:h-12 items-center justify-center rounded-none bg-[#111111] px-7 text-xs font-semibold tracking-[0.18em] uppercase text-white transition-colors hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                    className="mt-5 inline-flex h-11 items-center justify-center rounded-lg bg-neutral-900 px-6 text-xs font-semibold tracking-wider uppercase text-white transition-colors hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 cursor-pointer"
                   >
                     Continue Shopping
                   </button>
                 </div>
               ) : (
-                /* Reference Exact Content & Layout */
                 <>
-                  {/* Reference Main Heading: Lightweight rounded sans-serif */}
+                  {/* Clean Title */}
                   <h2
                     id="newsletter-popup-title"
-                    className="text-2xl sm:text-[28px] md:text-[34px] lg:text-[36px] font-normal text-[#111111] leading-[1.16] tracking-tight text-center"
+                    className="text-2xl font-semibold text-neutral-900 tracking-tight text-center"
                   >
                     Join the our family
                   </h2>
 
-                  {/* Reference Description: Centred 2-line grey text */}
+                  {/* Clean Description */}
                   <p
                     id="newsletter-popup-description"
-                    className="mt-2 sm:mt-2.5 md:mt-3 text-xs sm:text-[13px] md:text-[14px] text-[#666666] leading-[1.4] max-w-[360px] mx-auto text-center"
+                    className="mt-1.5 text-xs sm:text-[13px] text-neutral-500 leading-relaxed max-w-[320px] mx-auto text-center"
                   >
                     Sign up to get all the latest fashion news, website updates, offers and promos.
                   </p>
@@ -289,7 +289,7 @@ export function NewsletterPopup({
                   <form
                     onSubmit={handleSubmit}
                     data-testid="newsletter-popup-form"
-                    className="mt-5 sm:mt-6 md:mt-7 space-y-0"
+                    className="mt-5 space-y-3"
                     noValidate
                   >
                     <div>
@@ -306,7 +306,7 @@ export function NewsletterPopup({
                         aria-label="Email address"
                         data-testid="newsletter-popup-email-input"
                         disabled={isSubmitting}
-                        className="h-[46px] sm:h-[50px] md:h-[54px] w-full rounded-none border border-[#D5D5D5] bg-white px-4 text-xs sm:text-sm md:text-[15px] text-[#111111] placeholder:text-[#999999] transition-all focus:border-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] disabled:opacity-60 text-center placeholder:text-center"
+                        className="h-11 w-full rounded-lg border border-neutral-200 bg-neutral-50/60 px-4 text-xs sm:text-sm text-neutral-900 placeholder:text-neutral-400 transition-all focus:border-neutral-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-neutral-900 disabled:opacity-60 text-center"
                         autoComplete="email"
                         spellCheck="false"
                       />
@@ -314,7 +314,7 @@ export function NewsletterPopup({
                         <p
                           role="alert"
                           data-testid="newsletter-popup-error"
-                          className="mt-1.5 text-xs text-[#D9383A] text-center font-medium"
+                          className="mt-1.5 text-xs text-rose-600 text-center font-medium"
                         >
                           {error}
                         </p>
@@ -326,11 +326,11 @@ export function NewsletterPopup({
                       type="submit"
                       disabled={isSubmitting}
                       data-testid="newsletter-popup-submit-btn"
-                      className="mt-3 sm:mt-3.5 md:mt-4 flex h-[46px] sm:h-[50px] md:h-[54px] w-full items-center justify-center rounded-none bg-[#141414] text-xs sm:text-sm md:text-[14px] font-medium tracking-[0.14em] uppercase text-white transition-colors hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black disabled:cursor-not-allowed disabled:opacity-75"
+                      className="flex h-11 w-full items-center justify-center rounded-lg bg-neutral-900 text-xs font-semibold tracking-wider uppercase text-white transition-all hover:bg-black active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 disabled:cursor-not-allowed disabled:opacity-75 shadow-xs cursor-pointer"
                     >
                       {isSubmitting ? (
                         <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin stroke-[2]" aria-hidden="true" />
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                           <span>Subscribing…</span>
                         </span>
                       ) : (
@@ -338,19 +338,19 @@ export function NewsletterPopup({
                       )}
                     </button>
 
-                    {/* Dismissal Checkbox: 'Do not show this window' */}
-                    <div className="mt-4 sm:mt-5 md:mt-6 flex items-center justify-center gap-2.5">
+                    {/* Dismissal Checkbox */}
+                    <div className="pt-1 flex items-center justify-center gap-2">
                       <input
                         id="newsletter-do-not-show"
                         type="checkbox"
                         checked={doNotShowAgain}
                         onChange={(e) => handleToggleDoNotShowAgain(e.target.checked)}
                         data-testid="newsletter-popup-do-not-show-checkbox"
-                        className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-none border-[#C0C0C0] accent-[#111111] cursor-pointer"
+                        className="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 accent-neutral-900 cursor-pointer"
                       />
                       <label
                         htmlFor="newsletter-do-not-show"
-                        className="text-[11px] sm:text-xs md:text-[13px] text-[#666666] cursor-pointer select-none"
+                        className="text-[11px] text-neutral-500 cursor-pointer select-none"
                       >
                         Do not show this window
                       </label>
