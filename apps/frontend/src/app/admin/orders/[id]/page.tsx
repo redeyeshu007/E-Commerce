@@ -540,12 +540,18 @@ function AdminOrderDetailContent({ params }: PageProps = {}) {
 
               <div className="flex justify-between text-[#666666] bg-[#FAF8F5] p-2 rounded border border-[#EAE6DF]">
                 <span>GST ({order.gstRate}%) Snapshot:</span>
-                <span className="font-semibold text-[#111111]">{formatInr(order.taxInr)}</span>
+                <span className="font-semibold text-[#111111]">+{formatInr(order.taxInr)}</span>
               </div>
 
               <div className="flex justify-between text-sm font-bold text-[#111111] pt-2 border-t border-[#EAE6DF]">
                 <span>Total Amount:</span>
-                <span>{formatInr(order.totalInr)}</span>
+                <span>
+                  {formatInr(
+                    (order.totalInr && order.totalInr > order.subtotalInr)
+                      ? order.totalInr
+                      : order.subtotalInr + (order.taxInr || 0) - (order.discountInr || 0) + (order.shippingInr || 0)
+                  )}
+                </span>
               </div>
             </div>
 

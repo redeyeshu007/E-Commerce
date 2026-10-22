@@ -251,10 +251,14 @@ export default function CustomerOrdersPage() {
                   <div>
                     <span className="text-neutral-500">Total: </span>
                     <span className="text-sm font-bold text-neutral-900">
-                      {formatInr(order.totalInr)}
+                      {formatInr(
+                        (order.totalInr && order.totalInr > order.subtotalInr)
+                          ? order.totalInr
+                          : order.subtotalInr + (order.taxInr || 0) - (order.discountInr || 0) + (order.shippingInr || 0)
+                      )}
                     </span>
-                    <span className="text-[11px] text-neutral-400 ml-2">
-                      (GST {order.gstRate}% incl.)
+                    <span className="text-[11px] text-neutral-500 ml-2">
+                      (+GST {order.gstRate || 3}%: {formatInr(order.taxInr || 0)})
                     </span>
                   </div>
 

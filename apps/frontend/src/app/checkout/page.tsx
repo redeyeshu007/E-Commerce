@@ -130,7 +130,7 @@ export default function CheckoutPage() {
     ? Math.round((subtotalInr - subtotalInr / (1 + gstRate / 100)) * 100) / 100
     : Math.round((subtotalInr * (gstRate / 100)) * 100) / 100;
 
-  const totalPayableInr = isGstInclusive ? subtotalInr : subtotalInr + calculatedTaxInr;
+  const totalPayableInr = subtotalInr + calculatedTaxInr;
 
   // Loading customer session check
   if (isCustomerAuthLoading) {
@@ -194,13 +194,17 @@ export default function CheckoutPage() {
             <div className="flex justify-between items-center text-sm pb-2.5 border-b border-[#EAE6DF]">
               <span className="text-[#666666]">Total Amount:</span>
               <span className="font-semibold text-[#111111]">
-                {formatInr(completedOrder.totalInr)}
+                {formatInr(
+                  completedOrder.totalInr && completedOrder.totalInr > completedOrder.subtotalInr
+                    ? completedOrder.totalInr
+                    : completedOrder.subtotalInr + (completedOrder.taxInr || 0)
+                )}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm pb-2.5 border-b border-[#EAE6DF]">
-              <span className="text-[#666666]">GST Breakdown:</span>
+              <span className="text-[#666666]">GST:</span>
               <span className="text-xs text-[#555555]">
-                {completedOrder.gstRate}% included ({formatInr(completedOrder.taxInr)})
+                {completedOrder.gstRate || 3}% (+{formatInr(completedOrder.taxInr)})
               </span>
             </div>
             <div className="flex justify-between items-center text-sm pb-2.5 border-b border-[#EAE6DF]">
@@ -628,8 +632,8 @@ export default function CheckoutPage() {
               </div>
 
               <div className="flex justify-between text-xs text-[#777777] bg-[#FAF8F5] p-2.5 rounded-lg border border-[#EAE6DF]">
-                <span>GST ({gstRate}%) Included:</span>
-                <span className="font-medium text-[#333333]">{formatInr(calculatedTaxInr)}</span>
+                <span>GST ({gstRate}%):</span>
+                <span className="font-medium text-[#333333]">+{formatInr(calculatedTaxInr)}</span>
               </div>
 
               <div className="flex justify-between text-base font-bold text-[#111111] pt-3 border-t border-[#EAE6DF]">
