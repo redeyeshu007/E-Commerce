@@ -1,12 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { formatInr } from "@/lib/utils";
 import { ProductCard } from "@/components/home/product-card";
 import { ProductQuickView } from "@/components/home/product-quick-view";
 import { NewCollectionSection } from "@/components/home/new-collection";
 import { defaultNewCollectionConfig } from "@/config/new-collection";
 import { StorefrontProvider } from "@/providers/storefront-provider";
+
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <StorefrontProvider>{ui}</StorefrontProvider>
+    </QueryClientProvider>
+  );
+}
 
 describe("PERALAGAE New Collection Component Suite", () => {
   describe("Currency Formatter (formatInr)", () => {
@@ -29,11 +45,7 @@ describe("PERALAGAE New Collection Component Suite", () => {
     const mockProduct = defaultNewCollectionConfig.products[0]; // Solitaire Pendant
 
     it("renders product category, title, image, and formatted INR price", () => {
-      render(
-        <StorefrontProvider>
-          <ProductCard product={mockProduct} />
-        </StorefrontProvider>,
-      );
+      renderWithProviders(<ProductCard product={mockProduct} />);
 
       expect(screen.getByText("NECKLACES")).toBeInTheDocument();
       expect(screen.getByText(mockProduct.name)).toBeInTheDocument();
@@ -46,30 +58,24 @@ describe("PERALAGAE New Collection Component Suite", () => {
 
     it("renders HOT badge when isHot is true, and NEW badge when isNew is true", () => {
       const hotProduct = defaultNewCollectionConfig.products[1]; // Sculpted Ring (isHot: true)
-      const { rerender } = render(
-        <StorefrontProvider>
-          <ProductCard product={hotProduct} />
-        </StorefrontProvider>,
-      );
+      const { rerender } = renderWithProviders(<ProductCard product={hotProduct} />);
 
       expect(screen.getByTestId("badge-hot")).toHaveTextContent("HOT");
 
       const newProduct = defaultNewCollectionConfig.products[0]; // isNew: true
       rerender(
-        <StorefrontProvider>
-          <ProductCard product={newProduct} />
-        </StorefrontProvider>,
+        <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+          <StorefrontProvider>
+            <ProductCard product={newProduct} />
+          </StorefrontProvider>
+        </QueryClientProvider>
       );
 
       expect(screen.getByTestId("badge-new")).toHaveTextContent("NEW");
     });
 
     it("toggles wishlist state upon clicking wishlist action button", () => {
-      render(
-        <StorefrontProvider>
-          <ProductCard product={mockProduct} />
-        </StorefrontProvider>,
-      );
+      renderWithProviders(<ProductCard product={mockProduct} />);
 
       const wishlistBtn = screen.getByRole("button", { name: /Add Solitaire Diamond.*wishlist/i });
       expect(wishlistBtn).toHaveAttribute("aria-pressed", "false");
@@ -81,11 +87,7 @@ describe("PERALAGAE New Collection Component Suite", () => {
     });
 
     it("adds item to cart and displays brief added feedback", () => {
-      render(
-        <StorefrontProvider>
-          <ProductCard product={mockProduct} />
-        </StorefrontProvider>,
-      );
+      renderWithProviders(<ProductCard product={mockProduct} />);
 
       const addToCartBtn = screen.getByRole("button", { name: /Add Solitaire Diamond.*to cart/i });
       expect(addToCartBtn).toHaveTextContent(/Add to Cart/i);
@@ -96,11 +98,7 @@ describe("PERALAGAE New Collection Component Suite", () => {
     });
 
     it("renders wishlist button and does not render quick-view eye button", () => {
-      render(
-        <StorefrontProvider>
-          <ProductCard product={mockProduct} />
-        </StorefrontProvider>,
-      );
+      renderWithProviders(<ProductCard product={mockProduct} />);
 
       expect(screen.getByRole("button", { name: /wishlist/i })).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /Quick view/i })).not.toBeInTheDocument();
@@ -112,10 +110,8 @@ describe("PERALAGAE New Collection Component Suite", () => {
 
     it("renders accessible modal with product details, INR price, and action buttons", () => {
       const onClose = vi.fn();
-      render(
-        <StorefrontProvider>
-          <ProductQuickView product={mockProduct} isOpen={true} onClose={onClose} />
-        </StorefrontProvider>,
+      renderWithProviders(
+        <ProductQuickView product={mockProduct} isOpen={true} onClose={onClose} />
       );
 
       const dialog = screen.getByRole("dialog");
@@ -134,10 +130,8 @@ describe("PERALAGAE New Collection Component Suite", () => {
 
     it("closes modal on Escape key press", () => {
       const onClose = vi.fn();
-      render(
-        <StorefrontProvider>
-          <ProductQuickView product={mockProduct} isOpen={true} onClose={onClose} />
-        </StorefrontProvider>,
+      renderWithProviders(
+        <ProductQuickView product={mockProduct} isOpen={true} onClose={onClose} />
       );
 
       fireEvent.keyDown(window, { key: "Escape" });
@@ -156,10 +150,11 @@ describe("PERALAGAE New Collection Component Suite", () => {
     });
 
     it("renders section heading 'New Collection' and subtitle", () => {
-      render(
-        <StorefrontProvider>
-          <NewCollectionSection config={defaultNewCollectionConfig} />
-        </StorefrontProvider>,
+      renderWithProviders(
+        <NewCollectionSection
+          config={defaultNewCollectionConfig}
+          initialProducts={defaultNewCollectionConfig.products}
+        />
       );
 
       const heading = screen.getByRole("heading", { level: 2 });
@@ -168,10 +163,11 @@ describe("PERALAGAE New Collection Component Suite", () => {
     });
 
     it("renders 8 total products across 2 pages and advances pages on arrow navigation", () => {
-      render(
-        <StorefrontProvider>
-          <NewCollectionSection config={defaultNewCollectionConfig} />
-        </StorefrontProvider>,
+      renderWithProviders(
+        <NewCollectionSection
+          config={defaultNewCollectionConfig}
+          initialProducts={defaultNewCollectionConfig.products}
+        />
       );
 
       // Verify all 8 product cards exist in the carousel DOM
@@ -191,10 +187,11 @@ describe("PERALAGAE New Collection Component Suite", () => {
     });
 
     it("automatically advances to next page after 10 seconds", () => {
-      render(
-        <StorefrontProvider>
-          <NewCollectionSection config={defaultNewCollectionConfig} />
-        </StorefrontProvider>,
+      renderWithProviders(
+        <NewCollectionSection
+          config={defaultNewCollectionConfig}
+          initialProducts={defaultNewCollectionConfig.products}
+        />
       );
 
       // Verify page dots
@@ -218,10 +215,11 @@ describe("PERALAGAE New Collection Component Suite", () => {
     });
 
     it("pauses automatic rotation on hover and resumes on unhover", () => {
-      const { container } = render(
-        <StorefrontProvider>
-          <NewCollectionSection config={defaultNewCollectionConfig} />
-        </StorefrontProvider>,
+      const { container } = renderWithProviders(
+        <NewCollectionSection
+          config={defaultNewCollectionConfig}
+          initialProducts={defaultNewCollectionConfig.products}
+        />
       );
 
       const section = container.querySelector("section")!;
@@ -248,6 +246,18 @@ describe("PERALAGAE New Collection Component Suite", () => {
 
       // Now advanced to page 2!
       expect(dots[1]).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("renders clean empty state when zero products are tagged as New Arrival", () => {
+      renderWithProviders(
+        <NewCollectionSection
+          config={defaultNewCollectionConfig}
+          initialProducts={[]}
+        />
+      );
+
+      expect(screen.getByTestId("new-collection-empty")).toBeInTheDocument();
+      expect(screen.getByText("No New Arrivals Currently Available")).toBeInTheDocument();
     });
   });
 });

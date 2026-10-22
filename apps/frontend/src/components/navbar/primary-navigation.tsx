@@ -21,7 +21,7 @@ export interface PrimaryNavigationProps {
 /**
  * Centre Group: Primary desktop navigation menu.
  *
- * Displays exactly:
+ * Displays:
  * 1. Home
  * 2. Shop
  * 3. Contact
@@ -43,30 +43,11 @@ export function PrimaryNavigation({
   onItemClick,
   currentPath,
 }: PrimaryNavigationProps) {
-  let routerPath = "/";
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const hookPath = usePathname();
-    if (hookPath) {
-      routerPath = hookPath;
-    }
-  } catch {
-    // Fallback for non-router environments (e.g. unit tests without router context)
-    routerPath = "/";
-  }
-
-  let router: ReturnType<typeof useRouter> | null = null;
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    router = useRouter();
-  } catch {
-    router = null;
-  }
-
-  // If explicit currentPath override is provided, use it
-  if (currentPath) {
-    routerPath = currentPath.split("?")[0].split("#")[0] || "/";
-  }
+  const pathname = usePathname();
+  const router = useRouter();
+  const routerPath = currentPath
+    ? currentPath.split("?")[0].split("#")[0] || "/"
+    : pathname || "/";
 
   const [activeHash, setActiveHash] = React.useState<string>(() => {
     if (typeof window !== "undefined") {
@@ -102,7 +83,6 @@ export function PrimaryNavigation({
   React.useEffect(() => {
     if (typeof window === "undefined" || routerPath !== "/") return;
 
-    // 1. Intersection observer for New Arrivals section
     const newArrivalsEl = document.getElementById("new-arrivals");
     let observer: IntersectionObserver | null = null;
 
@@ -122,7 +102,6 @@ export function PrimaryNavigation({
       observer.observe(newArrivalsEl);
     }
 
-    // 2. Scroll listener on homepage: if user scrolls back to the very top, revert active item to Home
     const handleScroll = () => {
       if (isProgrammaticScrollActive()) return;
 
@@ -160,36 +139,28 @@ export function PrimaryNavigation({
       const targetId = href.replace("/#", "");
 
       if (routerPath === "/") {
-        // Already on the homepage: smooth scroll directly without full page reload
         e.preventDefault();
         scrollToSectionId(targetId);
         setActiveHash(`#${targetId}`);
       } else {
-        // Navigating to section from another route: navigate to homepage with target hash
         e.preventDefault();
         setActiveHash(`#${targetId}`);
-        if (router) {
-          router.push(href);
-        } else {
-          window.location.href = href;
-        }
+        router.push(href);
       }
     } else if (href === "/" && routerPath === "/" && typeof window !== "undefined") {
-      // If clicking Home while on homepage with an active section hash or scrolled down, scroll to top
       if (window.location.hash || window.scrollY > 50) {
         e.preventDefault();
         scrollToTop();
         setActiveHash("");
       }
     } else if (href.startsWith("/")) {
-      // Navigating to another route: reset active section hash
       setActiveHash("");
     }
 
     onItemClick?.();
   };
 
-  const isItemActive = (href?: string) => {
+  const isItemActive = (href?: string, _itemId?: string) => {
     if (!href) return false;
 
     // 1. Explicit path override passed (unit testing or specific routing harness)
@@ -223,11 +194,15 @@ export function PrimaryNavigation({
     return routerPath === cleanHref || routerPath.startsWith(`${cleanHref}/`);
   };
 
+  const navItems = items.filter(
+    (item) => item.id !== "materials" && item.label.toLowerCase() !== "materials"
+  );
+
   return (
     <nav aria-label="Main Navigation" className={className}>
       <ul className="flex items-center space-x-8 lg:space-x-14" role="list">
-        {items.map((item) => {
-          const isActive = isItemActive(item.href);
+        {navItems.map((item) => {
+          const isActive = isItemActive(item.href, item.id);
 
           return (
             <li key={item.id} className="relative flex items-center">

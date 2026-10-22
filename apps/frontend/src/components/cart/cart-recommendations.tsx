@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import type { CartItem } from "@/providers/storefront-provider";
 import { getRecommendedProducts } from "@/services/recommendation-service";
+import { SHOP_PRODUCTS, fetchPublicProducts } from "@/services/product-service";
+import type { Product } from "@/types/product";
 import { ShopProductCard } from "@/components/shop/shop-product-card";
 
 export interface CartRecommendationsProps {
@@ -21,10 +23,35 @@ export function CartRecommendations({
   cartItems,
   className = "",
 }: CartRecommendationsProps) {
+  const [dbProducts, setDbProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchPublicProducts({}, "default", 1, 50)
+      .then((res) => {
+        if (isMounted && res && res.products) {
+          setDbProducts(res.products);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const fullCatalogue = useMemo(() => {
+    const map = new Map<string, Product>();
+    SHOP_PRODUCTS.forEach((p) => map.set(p.id, p));
+    if (dbProducts && dbProducts.length > 0) {
+      dbProducts.forEach((p) => map.set(p.id, p));
+    }
+    return Array.from(map.values());
+  }, [dbProducts]);
+
   // Compute deterministic recommendations based on current cart
   const recommendations = useMemo(() => {
-    return getRecommendedProducts(cartItems, { limit: 4 });
-  }, [cartItems]);
+    return getRecommendedProducts(cartItems, { limit: 4, catalogue: fullCatalogue });
+  }, [cartItems, fullCatalogue]);
 
   if (recommendations.length === 0) {
     return null;

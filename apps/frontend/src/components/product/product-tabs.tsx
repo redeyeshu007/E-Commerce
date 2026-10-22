@@ -116,17 +116,21 @@ export function ProductTabs({
           aria-labelledby="tab-description"
           className="pt-8 text-left max-w-4xl mx-auto space-y-8 animate-fade-in"
         >
-          {/* Editorial Description Text */}
-          <div className="space-y-4 text-sm sm:text-base text-[#444444] leading-relaxed">
-            <p>
-              {product.longDescription ||
-                product.description ||
-                `Every facet of the ${product.name} reflects PERALAGAE's unwavering dedication to haute joaillerie. Handcrafted by master artisans with decades of goldsmithing heritage, each individual curve has been sculpted to capture and radiate natural light.`}
-            </p>
-            <p className="text-xs sm:text-sm text-[#666666]">
-              Cast in solid {product.material || "18k gold"} with meticulous microscopic pavé hand-setting, this creation exemplifies pure modern heirloom design. Whether worn as an everyday statement or saved for rare milestones, it is engineered to be cherished across generations.
-            </p>
-          </div>
+          {/* Editorial Description Text (Overview & Details) */}
+          {(product.productOverview || product.descriptionParagraph1 || product.longDescription || product.productDetails || product.descriptionParagraph2) && (
+            <div className="space-y-4 text-sm sm:text-base text-[#444444] leading-relaxed">
+              {(product.productOverview || product.descriptionParagraph1 || product.longDescription) && (
+                <p className="text-[#222222] font-normal leading-relaxed">
+                  {product.productOverview || product.descriptionParagraph1 || product.longDescription}
+                </p>
+              )}
+              {(product.productDetails || product.descriptionParagraph2) && (
+                <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
+                  {product.productDetails || product.descriptionParagraph2}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Product Specifications Table */}
           {specs.length > 0 && (
@@ -139,7 +143,7 @@ export function ProductTabs({
                   <tbody>
                     {specs.map((spec, idx) => (
                       <tr
-                        key={spec.label}
+                        key={`${spec.label}-${idx}`}
                         className={`border-b border-[#EEEEEE] last:border-b-0 ${
                           idx % 2 === 0 ? "bg-[#FAFAFA]" : "bg-white"
                         }`}
@@ -157,6 +161,30 @@ export function ProductTabs({
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* Care Instructions */}
+          {(product.careInstructions || specs.find((s) => s.label.toLowerCase().includes("care"))?.value) && (
+            <div className="pt-2">
+              <h3 className="text-sm font-semibold uppercase tracking-widest text-[#111111] mb-3">
+                Jewellery Care Instructions
+              </h3>
+              <div className="p-4 sm:p-5 rounded-[2px] bg-[#FAF9F6] border border-[#EBE7DF] text-xs sm:text-sm text-[#555555] leading-relaxed">
+                {product.careInstructions || specs.find((s) => s.label.toLowerCase().includes("care"))?.value}
+              </div>
+            </div>
+          )}
+
+          {/* Additional Information */}
+          {product.additionalInfo && (
+            <div className="pt-2">
+              <h3 className="text-sm font-semibold uppercase tracking-widest text-[#111111] mb-3">
+                Additional Information
+              </h3>
+              <div className="p-4 sm:p-5 rounded-[2px] bg-white border border-[#E5E5E5] text-xs sm:text-sm text-[#555555] leading-relaxed">
+                {product.additionalInfo}
               </div>
             </div>
           )}

@@ -20,7 +20,7 @@ export interface CategoryItem {
 export interface CreateCategoryInput {
   name: string;
   slug?: string | undefined;
-  imageUrl: string;
+  imageUrl?: string | undefined;
   imageAlt?: string | undefined;
   description?: string | undefined;
   order?: number | undefined;
@@ -116,7 +116,7 @@ let isInitialized = false;
 export class CategoryService {
   /**
    * Idempotent seeder that guarantees the 6 baseline categories and 24 products
-   * exist in PostgreSQL upon startup.
+   * exist in MongoDB upon startup.
    */
   static async seedInitialData(): Promise<void> {
     if (isInitialized) return;
@@ -124,7 +124,7 @@ export class CategoryService {
     try {
       const categoryCount = await prisma.category.count();
       if (categoryCount === 0) {
-        logger.info("Initializing baseline categories in PostgreSQL...");
+        logger.info("Initializing baseline categories in MongoDB...");
         for (const cat of BASELINE_CATEGORIES) {
           await prisma.category.upsert({
             where: { slug: cat.slug },
@@ -146,7 +146,7 @@ export class CategoryService {
 
       const productCount = await prisma.product.count();
       if (productCount === 0) {
-        logger.info("Initializing catalogue products in PostgreSQL...");
+        logger.info("Initializing catalogue products in MongoDB...");
         const seedProductsPath = path.resolve(process.cwd(), "data", "seed-products.json");
         let productsData: any[] = [];
         if (fs.existsSync(seedProductsPath)) {
@@ -184,12 +184,12 @@ export class CategoryService {
             update: {},
           });
         }
-        logger.info({ count: productsData.length }, "Catalogue products initialized in PostgreSQL");
+        logger.info({ count: productsData.length }, "Catalogue products initialized in MongoDB");
       }
 
       isInitialized = true;
     } catch (err) {
-      logger.warn({ err }, "Could not complete category seed to PostgreSQL");
+      logger.warn({ err }, "Could not complete category seed to MongoDB");
     }
   }
 
@@ -201,27 +201,38 @@ export class CategoryService {
 
     const records = await prisma.category.findMany({
       where,
-      include: {
-        _count: {
-          select: { products: true },
-        },
-      },
       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     });
 
-    return records.map((r) => ({
-      id: r.id,
-      name: r.name,
-      slug: r.slug,
-      imageUrl: r.imageUrl,
-      imageAlt: r.imageAlt,
-      description: r.description,
-      order: r.order,
-      isActive: r.isActive,
-      productCount: r._count.products,
-      createdAt: r.createdAt.toISOString(),
-      updatedAt: r.updatedAt.toISOString(),
-    }));
+    const availableProducts = await prisma.product.findMany({
+      where: { isAvailable: true },
+      select: { categoryId: true, categoryKey: true },
+    });
+
+    return records.map((r) => {
+      const rId = r.id.toLowerCase().trim();
+      const rSlug = r.slug.toLowerCase().trim();
+      const rName = r.name.toLowerCase().trim();
+      const count = availableProducts.filter((p) => {
+        const pId = (p.categoryId || "").toLowerCase().trim();
+        const pKey = (p.categoryKey || "").toLowerCase().trim();
+        return pId === rId || pKey === rSlug || pKey === rName;
+      }).length;
+
+      return {
+        id: r.id,
+        name: r.name,
+        slug: r.slug,
+        imageUrl: r.imageUrl,
+        imageAlt: r.imageAlt,
+        description: r.description,
+        order: r.order,
+        isActive: r.isActive,
+        productCount: count,
+        createdAt: r.createdAt.toISOString(),
+        updatedAt: r.updatedAt.toISOString(),
+      };
+    });
   }
 
   /**
@@ -298,9 +309,8 @@ export class CategoryService {
       throw new Error("A valid URL-safe slug is required");
     }
 
-    if (!input.imageUrl?.trim()) {
-      throw new Error("Category image is required");
-    }
+    const defaultImageUrl = "/images/collections/collection-necklaces.jpg";
+    const finalImageUrl = input.imageUrl?.trim() || defaultImageUrl;
 
     // Check duplicate name (case-insensitive)
     const existingName = await prisma.category.findFirst({
@@ -337,7 +347,7 @@ export class CategoryService {
       data: {
         name: cleanName,
         slug: cleanSlug,
-        imageUrl: input.imageUrl.trim(),
+        imageUrl: finalImageUrl,
         imageAlt: input.imageAlt?.trim() ?? null,
         description: input.description?.trim() ?? null,
         order: targetOrder,

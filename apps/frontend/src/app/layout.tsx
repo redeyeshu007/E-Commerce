@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Inter, Jost } from "next/font/google";
@@ -100,7 +101,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <AnimatedTabTitle baseTitle={brandConfig.metaTitle} />
           <LuxuryPreloader />
-          <SiteHeader />
+          <Suspense fallback={<header className="h-[90px] bg-white border-b border-neutral-100" />}>
+            <SiteHeader />
+          </Suspense>
           {children}
           <SiteFooter />
         </Providers>

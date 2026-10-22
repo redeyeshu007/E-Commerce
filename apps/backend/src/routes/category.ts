@@ -93,7 +93,7 @@ function validateImageMagicBytes(filePath: string): boolean {
 const createCategorySchema = z.object({
   name: z.string().trim().min(1, "Category name is required").max(100, "Category name must not exceed 100 characters"),
   slug: z.string().trim().max(100).optional(),
-  imageUrl: z.string().trim().min(1, "Category image is required"),
+  imageUrl: z.string().trim().min(1).optional().default("/images/collections/collection-necklaces.jpg"),
   imageAlt: z.string().trim().max(150).optional(),
   description: z.string().trim().max(500).optional(),
   order: z.number().int().optional(),
@@ -253,12 +253,12 @@ export function createCategoryRouter(env: EnvConfig): Router {
           }
         } catch {}
 
-        // Persist raw binary to PostgreSQL for durable cross-container availability
+        // Persist raw binary to MongoDB for durable cross-container availability
         try {
           const fileBuffer = fs.readFileSync(req.file.path);
           await CategoryMediaService.saveAsset(req.file.filename, req.file.mimetype, fileBuffer);
         } catch (dbErr) {
-          logger.warn({ dbErr }, "Failed to persist category image to PostgreSQL bytea");
+          logger.warn({ dbErr }, "Failed to persist category image to MongoDB");
         }
 
         const relativeUrl = `/uploads/categories/${req.file.filename}`;

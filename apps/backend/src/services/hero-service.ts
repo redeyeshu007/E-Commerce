@@ -196,7 +196,7 @@ function createDefaultHistory(): {
 
 export class HeroService {
   /**
-   * Safely and idempotently reconciles PostgreSQL with legacy JSON or default hero settings & history.
+   * Safely and idempotently reconciles MongoDB with legacy JSON or default hero settings & history.
    * If legacy JSON has a newer version than current DB record, upgrades DB safely.
    * Never overwrites newer valid DB data with older defaults.
    */
@@ -243,7 +243,7 @@ export class HeroService {
             updatedBy: initialSettings.updatedBy || "system",
           },
         });
-        logger.info("Hero settings initialized in PostgreSQL");
+        logger.info("Hero settings initialized in MongoDB");
       } else if (hasFileSettings && initialSettings.version > existingSettings.version) {
         // Reconcile: file contains newer valid saved changes than current database record
         await prisma.heroSetting.update({
@@ -298,11 +298,10 @@ export class HeroService {
             if (toCreate.length > 0) {
               await prisma.heroHistory.createMany({
                 data: toCreate,
-                skipDuplicates: true,
               });
             }
           }
-          logger.info("Hero history reconciled in PostgreSQL");
+          logger.info("Hero history reconciled in MongoDB");
         } catch (err) {
           logger.warn({ err }, "Could not sync history file items");
         }
@@ -310,7 +309,7 @@ export class HeroService {
 
       isSeeded = true;
     } catch (err) {
-      logger.warn({ err }, "Could not sync legacy hero data to PostgreSQL");
+      logger.warn({ err }, "Could not sync legacy hero data to MongoDB");
     }
   }
 
@@ -362,7 +361,7 @@ export class HeroService {
 
   /**
    * Resets in-memory cache back to baseline defaults for testing.
-   * Does NOT wipe persistent PostgreSQL database records or version history.
+   * Does NOT wipe persistent MongoDB database records or version history.
    */
   static async resetToDefault(): Promise<void> {
     memoryHeroSettings = {
@@ -409,7 +408,7 @@ export class HeroService {
   }
 
   /**
-   * Retrieves current published Hero Settings from Supabase PostgreSQL.
+   * Retrieves current published Hero Settings from MongoDB.
    */
   static async getSettings(): Promise<HeroSettings> {
     try {
@@ -435,7 +434,7 @@ export class HeroService {
         memoryHeroSettings = formatted;
         return formatted;
       }
-      throw new Error("Hero settings record not found in PostgreSQL database");
+      throw new Error("Hero settings record not found in MongoDB database");
     } catch (err) {
       logger.error({ err }, "Database fetch failed for hero settings");
       throw err;
@@ -443,7 +442,7 @@ export class HeroService {
   }
 
   /**
-   * Retrieves independent history for a specific slot from Supabase PostgreSQL.
+   * Retrieves independent history for a specific slot from MongoDB.
    */
   static async getHistory(slotId: "heroImage1" | "heroImage2" | "heroImage3"): Promise<HeroHistoryItem[]> {
     const current = await this.getSettings();
@@ -510,7 +509,7 @@ export class HeroService {
   }
 
   /**
-   * Updates an individual slot independently in Supabase PostgreSQL:
+   * Updates an individual slot independently in MongoDB:
    * Increments that slot's version, creates an independent history record,
    * leaves sibling slots untouched, and throws honestly if database fails.
    */
@@ -674,7 +673,7 @@ export class HeroService {
 
     memoryHeroSettings = result;
     await this.syncToFileBackup(result);
-    logger.info({ slotId, version: result.version, adminUser }, "Hero slot updated and persisted to PostgreSQL");
+    logger.info({ slotId, version: result.version, adminUser }, "Hero slot updated and persisted to MongoDB");
     return result;
   }
 
@@ -714,7 +713,7 @@ export class HeroService {
   ): Promise<HeroSettings> {
     await this.syncLegacyData();
 
-    // 1. Locate the target history item in PostgreSQL
+    // 1. Locate the target history item in MongoDB
     const targetRecord = await prisma.heroHistory.findFirst({
       where: { slotId, version: targetVersion },
     });
@@ -934,7 +933,7 @@ export class HeroService {
 
     memoryHeroSettings = result;
     await this.syncToFileBackup(result);
-    logger.info({ slotId, targetVersion, restoredToVersion: result.version }, "Hero slot version restored successfully in PostgreSQL");
+    logger.info({ slotId, targetVersion, restoredToVersion: result.version }, "Hero slot version restored successfully in MongoDB");
     return result;
   }
 }

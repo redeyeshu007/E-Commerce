@@ -238,12 +238,12 @@ export function createHeroRouter(env: EnvConfig): Router {
         const filename = req.file.filename;
         const relativeUrl = `/uploads/hero/${filename}`;
 
-        // Save image binary to PostgreSQL durable object storage
+        // Save image binary to MongoDB durable object storage
         try {
           const buffer = fs.readFileSync(uploadedFilePath);
           await HeroMediaService.saveAsset(filename, req.file.mimetype, buffer);
         } catch (dbErr) {
-          logger.error({ dbErr, filename }, "Failed to persist uploaded image to PostgreSQL");
+          logger.error({ dbErr, filename }, "Failed to persist uploaded image to MongoDB");
           try {
             fs.unlinkSync(uploadedFilePath);
           } catch {}

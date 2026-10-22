@@ -1,26 +1,24 @@
-// Prisma Schema — PERALAGAE Jewellery E-commerce
+// Prisma Schema — PERALAGAE Jewellery E-commerce (MongoDB Architecture)
 //
-// Baseline database schema foundation.
-// In accordance with backend foundation setup requirements:
-// - No business domain models (products, categories, users, orders, cart, etc.) are implemented here.
-// - PostgreSQL datasource configured via DATABASE_URL environment variable.
-// - A minimal technical HealthCheck model is provided so Prisma schema syntax remains valid.
+// Active production database provider: MongoDB (Atlas)
+// Configured exclusively via MONGODB_URI environment variable.
+// Uses MongoDB native collections, unique indexes, and referential actions.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// Baseline technical model (syntactic validity only; no business models)
+// Baseline technical model
 // ──────────────────────────────────────────────────────────────────────────
 
 model HealthCheck {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   createdAt DateTime @default(now())
 
   @@map("health_checks")
@@ -31,7 +29,7 @@ model HealthCheck {
 // ──────────────────────────────────────────────────────────────────────────
 
 model NavbarSetting {
-  id                String   @id @default("current")
+  id                String   @id @map("_id")
   topBarText        String   @default("")
   topBarBgColor     String   @default("#FBC0CE")
   topBarTextColor   String   @default("#222222")
@@ -58,7 +56,7 @@ model NavbarSetting {
 }
 
 model NavbarHistory {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   section     String   // "TOP_BAR" | "SECOND_NAVBAR" | "top_bar" | "second_navbar" | "full"
   snapshot    Json     // Full snapshot of settings at this version
   description String?
@@ -74,7 +72,7 @@ model NavbarHistory {
 // ──────────────────────────────────────────────────────────────────────────
 
 model HeroSetting {
-  id                String   @id @default("current")
+  id                String   @id @map("_id")
   heroImage1        Json     // HeroImageSlot1
   heroImage2        Json     // HeroImageSlot2
   heroImage3        Json     // HeroImageSlot3
@@ -89,7 +87,7 @@ model HeroSetting {
 }
 
 model HeroHistory {
-  id             String   @id @default(cuid())
+  id             String   @id @default(cuid()) @map("_id")
   slotId         String   // "heroImage1" | "heroImage2" | "heroImage3"
   snapshot       Json?    // Optional full slot snapshot
   version        Int
@@ -104,11 +102,11 @@ model HeroHistory {
 }
 
 model HeroMediaAsset {
-  id        String   @id // Unique identifier / filename
+  id        String   @id @map("_id") // Unique identifier / filename
   filename  String   @unique
   mimeType  String
   size      Int
-  data      Bytes    // Native PostgreSQL bytea binary storage (NOT base64)
+  data      Bytes
   createdAt DateTime @default(now())
 
   @@map("hero_media_assets")
@@ -119,7 +117,7 @@ model HeroMediaAsset {
 // ──────────────────────────────────────────────────────────────────────────
 
 model Category {
-  id          String    @id @default(cuid())
+  id          String    @id @default(cuid()) @map("_id")
   name        String    @unique
   slug        String    @unique
   imageUrl    String
@@ -135,40 +133,375 @@ model Category {
 }
 
 model Product {
-  id                String    @id @default(cuid())
-  slug              String    @unique
-  name              String
-  categoryId        String?
-  categoryKey       String?   // E.g. "NECKLACES", "RINGS", matching legacy category key
-  category          Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  imageUrl          String
-  imageAlt          String?
-  priceInr          Float     @default(0)
-  compareAtPriceInr Float?
-  isHot             Boolean   @default(false)
-  isNew             Boolean   @default(false)
-  isAvailable       Boolean   @default(true)
-  inStock           Boolean   @default(true)
-  stockCount        Int       @default(10)
-  material          String?
-  materials         Json?     @default("[]")
-  sizes             Json?     @default("[]")
-  images            Json?     @default("[]")
-  description       String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                    String      @id @default(cuid()) @map("_id")
+  slug                  String      @unique
+  name                  String
+  categoryId            String?
+  categoryKey           String?     // E.g. "NECKLACES", "RINGS", matching legacy category key
+  category              Category?   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  imageUrl              String
+  imageAlt              String?
+  priceInr              Float       @default(0)
+  compareAtPriceInr     Float?
+  isHot                 Boolean     @default(false)
+  isNew                 Boolean     @default(false)
+  isAvailable           Boolean     @default(true)
+  inStock               Boolean     @default(true)
+  stockCount            Int         @default(10)
+  materialId            String?
+  materialRef           Material?   @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  material              String?
+  materials             Json?       @default("[]")
+  sizes                 Json?       @default("[]")
+  images                Json?       @default("[]")
+  description           String?     // 1. Short Description (single concise line)
+  productOverview       String?     // 2. Product Overview (primary description paragraph)
+  productDetails        String?     // 3. Product Details (craftsmanship & design features)
+  descriptionParagraph1 String?     // Legacy compatibility
+  descriptionParagraph2 String?     // Legacy compatibility
+  specs                 Json?       @default("[]") // 4. Product Specifications
+  careInstructions      String?     // 5. Care Instructions
+  additionalInfo        String?     // 6. Additional Information
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  orderItems            OrderItem[]
 
   @@map("products")
 }
 
 model CategoryMediaAsset {
-  id        String   @id // Unique identifier / filename
+  id        String   @id @map("_id") // Unique identifier / filename
   filename  String   @unique
   mimeType  String
   size      Int
-  data      Bytes    // Native PostgreSQL bytea binary storage (NOT base64)
+  data      Bytes
   createdAt DateTime @default(now())
 
   @@map("category_media_assets")
+}
+
+model ProductMediaAsset {
+  id        String   @id @map("_id") // Unique identifier / filename
+  filename  String   @unique
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@map("product_media_assets")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Material and Homepage Materials Collection Models
+// ──────────────────────────────────────────────────────────────────────────
+
+model Material {
+  id            String         @id @default(cuid()) @map("_id")
+  name          String         @unique
+  slug          String         @unique
+  description   String?
+  order         Int            @default(0)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  products      Product[]
+  homepageCards MaterialCard[]
+
+  @@map("materials")
+}
+
+model MaterialSectionSetting {
+  id        String         @id @map("_id")
+  heading   String         @default("Designed in India. Crafted with timeless elegance.")
+  version   Int            @default(1)
+  updatedAt DateTime       @updatedAt
+  updatedBy String?
+  cards     MaterialCard[]
+
+  @@map("material_section_settings")
+}
+
+model MaterialCard {
+  id          String                 @id @default(cuid()) @map("_id")
+  sectionId   String                 @default("current")
+  section     MaterialSectionSetting @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  ctaText     String                 @default("EXPLORE NOW")
+  imageUrl    String
+  imageAlt    String?
+  materialId  String?
+  material    Material?              @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  order       Int                    @default(0)
+  isActive    Boolean                @default(true)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@map("material_cards")
+}
+
+model MaterialSectionHistory {
+  id          String   @id @default(cuid()) @map("_id")
+  version     Int
+  heading     String
+  cards       Json     // Full snapshot of cards (array of card objects)
+  description String?
+  createdAt   DateTime @default(now())
+  createdBy   String?
+
+  @@map("material_section_history")
+}
+
+model MaterialMediaAsset {
+  id        String   @id @map("_id") // Unique identifier / filename
+  filename  String   @unique
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@map("material_media_assets")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Instagram Section & Gallery Models
+// ──────────────────────────────────────────────────────────────────────────
+
+model InstagramSectionSetting {
+  id          String           @id @map("_id")
+  heading     String           @default("Follow Us on Instagram")
+  handle      String           @default("@peralagaeofficial")
+  profileUrl  String?
+  isActive    Boolean          @default(true)
+  version     Int              @default(1)
+  updatedAt   DateTime         @updatedAt
+  updatedBy   String?
+  images      InstagramImage[]
+
+  @@map("instagram_section_settings")
+}
+
+model InstagramImage {
+  id          String                  @id @default(cuid()) @map("_id")
+  sectionId   String                  @default("current")
+  section     InstagramSectionSetting @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  imageUrl    String
+  altText     String?
+  postUrl     String?                 // Optional individual destination URL
+  order       Int                     @default(0)
+  isActive    Boolean                 @default(true)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  @@map("instagram_images")
+}
+
+model InstagramSectionHistory {
+  id          String   @id @default(cuid()) @map("_id")
+  version     Int
+  heading     String
+  handle      String
+  profileUrl  String?
+  isActive    Boolean  @default(true)
+  images      Json     // Snapshot of image records (id, imageUrl, altText, postUrl, order, isActive)
+  description String?
+  createdAt   DateTime @default(now())
+  createdBy   String?
+
+  @@map("instagram_section_history")
+}
+
+model InstagramMediaAsset {
+  id        String   @id @map("_id") // Unique identifier / filename
+  filename  String   @unique
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@map("instagram_media_assets")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Store Details Management Model (Phone Number, Address, Email Address)
+// ──────────────────────────────────────────────────────────────────────────
+
+model StoreDetails {
+  id        String   @id @map("_id")
+  phone     String   @default("123 45678 90")
+  address   String   @default("502 New Design Str, Melbourne, Australia")
+  email     String   @default("contact@peralagae.com")
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@map("store_details")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Customer Authentication & Account Models
+// ──────────────────────────────────────────────────────────────────────────
+
+model Customer {
+  id                   String            @id @default(cuid()) @map("_id")
+  email                String            @unique
+  fullName             String
+  passwordHash         String?           // Nullable for OAuth-only users
+  isEmailVerified      Boolean           @default(false)
+  isProfileComplete    Boolean           @default(false)
+  googleId             String?
+  role                 String            @default("customer") // ALWAYS "customer", NEVER "admin"
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  sessions             CustomerSession[]
+  orders               Order[]
+  profile              CustomerProfile?
+
+  @@map("customers")
+}
+
+model CustomerProfile {
+  id            String   @id @default(cuid()) @map("_id")
+  customerId    String   @unique
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  recipientName String
+  phone         String
+  streetAddress String
+  city          String
+  state         String
+  pinCode       String
+  country       String   @default("India")
+  isComplete    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("customer_profiles")
+}
+
+model CustomerSession {
+  id         String   @id @default(cuid()) @map("_id")
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  token      String   @unique
+  expiresAt  DateTime
+  userAgent  String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("customer_sessions")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Protected Checkout & Order Management Models
+// ──────────────────────────────────────────────────────────────────────────
+
+model Order {
+  id                  String                @id @default(cuid()) @map("_id")
+  orderNumber         String                @unique
+  customerId          String
+  customer            Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  status              String                @default("PLACED") // PLACED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, DELIVERY_ISSUE
+  subtotalInr         Float
+  discountInr         Float                 @default(0)
+  shippingInr         Float                 @default(0)
+  taxInr              Float                 @default(0)
+  totalInr            Float
+  gstRate             Float                 @default(3.0)
+  gstInclusive        Boolean               @default(true)
+  idempotencyKey      String?
+  shippingAddress     Json                  // { fullName, addressLine, city, state, postalCode, phone, country }
+  paymentMethod       String                @default("UPI") // UPI
+  paymentStatus       String                @default("SIMULATED") // SIMULATED, PENDING, PAID, FAILED, REFUNDED
+  carrierName         String?
+  trackingNumber      String?
+  shippingDescription String?
+  dispatchedAt        DateTime?
+  deliveredAt         DateTime?
+  shippingImages      Json?                 @default("[]")
+  statusHistory       Json?                 @default("[]")
+  items               OrderItem[]
+  statusLogs          OrderStatusHistory[]
+  shippingUpdates     OrderShippingUpdate[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([idempotencyKey])
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String   @id @default(cuid()) @map("_id")
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productName     String
+  productSlug     String
+  productImageUrl String
+  unitPriceInr    Float
+  quantity        Int
+  totalPriceInr   Float
+  gstRate         Float    @default(3.0)
+  taxInr          Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id            String   @id @default(cuid()) @map("_id")
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus    String?
+  toStatus      String
+  note          String?
+  updatedBy     String
+  updatedByRole String   // "ADMIN" | "CUSTOMER" | "SYSTEM"
+  createdAt     DateTime @default(now())
+
+  @@index([orderId])
+  @@map("order_status_history")
+}
+
+model OrderShippingUpdate {
+  id             String   @id @default(cuid()) @map("_id")
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrierName    String?
+  trackingNumber String?
+  description    String
+  images         Json     @default("[]")
+  createdAt      DateTime @default(now())
+  createdBy      String?
+
+  @@index([orderId])
+  @@map("order_shipping_updates")
+}
+
+model GstSetting {
+  id          String   @id @map("_id") // "default"
+  percentage  Float    @default(3.0)
+  isInclusive Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  @@map("gst_settings")
+}
+
+model ShippingMediaAsset {
+  id        String   @id @map("_id") // Unique identifier / filename
+  filename  String   @unique
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@map("shipping_media_assets")
 }
 

@@ -6,7 +6,7 @@ import { logger } from "../utils/logger.js";
  *
  * Implements:
  * - Singleton PrismaClient to prevent connection exhaustion in development
- * - Safe connection checking (SELECT 1) without unhandled exceptions
+ * - Safe connection checking (MongoDB ping: 1) without unhandled exceptions
  * - Clean disconnect for graceful process shutdown
  */
 
@@ -41,23 +41,23 @@ export interface DatabaseStatus {
 }
 
 /**
- * Performs an honest, active health check against the configured PostgreSQL database.
+ * Performs an honest, active health check against the configured MongoDB database.
  * Does NOT throw unhandled exceptions if the database is unreachable or unconfigured.
  */
 export async function checkDatabaseConnection(): Promise<DatabaseStatus> {
-  const dbUrl = process.env["DATABASE_URL"];
+  const dbUrl = process.env["MONGODB_URI"] || process.env["DATABASE_URL"];
   if (!dbUrl || dbUrl.trim() === "") {
     return {
       connected: false,
-      error: "DATABASE_URL is not configured",
+      error: "MONGODB_URI is not configured",
     };
   }
 
   const startTime = Date.now();
   try {
-    // Run a lightweight connection verification query with a 10-second timeout
+    // Run a lightweight connection verification command with a 10-second timeout
     await Promise.race([
-      prisma.$queryRawUnsafe("SELECT 1"),
+      prisma.$runCommandRaw({ ping: 1 }),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Database connection timed out after 10000ms")), 10000),
       ),
@@ -71,7 +71,7 @@ export async function checkDatabaseConnection(): Promise<DatabaseStatus> {
   } catch (err) {
     const rawMessage = err instanceof Error ? err.message : "Unknown database connection error";
     // Sanitize any potential connection credentials from error message
-    const sanitized = rawMessage.replace(/:\/\/.*@/, "://***:***@");
+    const sanitized = rawMessage.replace(/:\/\/[^@]*@/, "://***:***@");
     logger.warn({ err: sanitized }, "Database connection check failed");
     return {
       connected: false,

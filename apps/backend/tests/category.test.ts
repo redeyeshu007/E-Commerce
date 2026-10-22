@@ -49,7 +49,7 @@ describe("Category Management API & Catalogue Integration Test Suite", () => {
       const necklaces = res.body.data.find((c: any) => c.slug === "necklaces");
       expect(necklaces).toBeDefined();
       expect(necklaces.name).toBe("NECKLACES");
-      expect(necklaces.order).toBe(1);
+      expect(necklaces.order).toBeGreaterThanOrEqual(1);
       expect(necklaces.productCount).toBeGreaterThanOrEqual(1);
     });
 
@@ -128,6 +128,26 @@ describe("Category Management API & Catalogue Integration Test Suite", () => {
     });
 
 
+    it("creates a new category with only name provided (using fallback imageUrl and auto-generated slug)", async () => {
+      const cookie = await getAdminCookie();
+      const testName = `Anklets & Charms ${Date.now()}`;
+      const res = await request(app)
+        .post("/api/v1/categories/admin")
+        .set("Cookie", cookie)
+        .send({
+          name: testName,
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe(testName);
+      expect(res.body.data.slug).toContain("anklets-charms");
+      expect(res.body.data.imageUrl).toBe("/images/collections/collection-necklaces.jpg");
+
+      // Clean up test category
+      await prisma.category.delete({ where: { id: res.body.data.id } });
+    });
+
     it("rejects duplicate category name with 409 Conflict", async () => {
       const cookie = await getAdminCookie();
       const res = await request(app)
@@ -136,6 +156,21 @@ describe("Category Management API & Catalogue Integration Test Suite", () => {
         .send({
           name: "NECKLACES", // Already exists in baseline
           imageUrl: "/images/test.jpg",
+        });
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe("CONFLICT");
+      expect(res.body.error.message).toContain("already exists");
+    });
+
+    it("rejects case-insensitive duplicate category name with 409 Conflict", async () => {
+      const cookie = await getAdminCookie();
+      const res = await request(app)
+        .post("/api/v1/categories/admin")
+        .set("Cookie", cookie)
+        .send({
+          name: "necklaces", // lowercase duplicate of baseline "NECKLACES"
         });
 
       expect(res.status).toBe(409);

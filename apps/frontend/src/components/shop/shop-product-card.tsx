@@ -31,6 +31,11 @@ export function ShopProductCard({
 
   const isFavorite = isWishlisted(product.id);
 
+  const isOutOfStock =
+    product.inStock === false ||
+    product.isAvailable === false ||
+    (product.stockCount !== undefined && product.stockCount <= 0);
+
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -40,6 +45,7 @@ export function ShopProductCard({
   const handleAddToCartClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) return;
     addToCart(product);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 2000);
@@ -56,22 +62,28 @@ export function ShopProductCard({
       >
         {/* Left: Product Thumbnail Container */}
         <div className="relative aspect-square w-full sm:w-56 md:w-64 flex-none overflow-hidden bg-[#F2F2F2]">
-          {product.isHot && (
+          {isOutOfStock ? (
+            <span
+              data-testid="badge-out-of-stock"
+              className="absolute top-3 left-3 z-10 bg-[#71717A] text-white text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
+            >
+              Out of Stock
+            </span>
+          ) : product.isHot ? (
             <span
               data-testid="badge-hot"
               className="absolute top-3 left-3 z-10 bg-[#D9383A] text-white text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
             >
               HOT
             </span>
-          )}
-          {!product.isHot && product.isNew && (
+          ) : product.isNew ? (
             <span
               data-testid="badge-new"
               className="absolute top-3 left-3 z-10 bg-[#111111] text-white text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
             >
               NEW
             </span>
-          )}
+          ) : null}
 
           <Link
             href={`/product/${product.slug}`}
@@ -145,15 +157,20 @@ export function ShopProductCard({
             <button
               type="button"
               onClick={handleAddToCartClick}
-              aria-label={`Add ${product.name} to cart`}
+              disabled={isOutOfStock}
+              aria-label={isOutOfStock ? `${product.name} is out of stock` : `Add ${product.name} to cart`}
               suppressHydrationWarning
               className={`py-2 sm:py-2.5 px-4 sm:px-6 text-xs font-semibold tracking-wider uppercase transition-colors duration-200 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-                justAdded
+                isOutOfStock
+                  ? "bg-neutral-200 text-neutral-400 cursor-not-allowed border border-neutral-300"
+                  : justAdded
                   ? "bg-[#111111] text-white"
                   : "bg-black text-white hover:bg-neutral-800"
               }`}
             >
-              {justAdded ? (
+              {isOutOfStock ? (
+                <span>Out of Stock</span>
+              ) : justAdded ? (
                 <>
                   <Check className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
                   <span>Added to Bag</span>
@@ -201,22 +218,28 @@ export function ShopProductCard({
       {/* 1. Square Image Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-[#F2F2F2]">
         {/* Product Badge */}
-        {product.isHot && (
+        {isOutOfStock ? (
+          <span
+            data-testid="badge-out-of-stock"
+            className="absolute top-3 left-3 z-10 bg-[#71717A] text-white text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
+          >
+            Out of Stock
+          </span>
+        ) : product.isHot ? (
           <span
             data-testid="badge-hot"
             className="absolute top-3 left-3 z-10 bg-[#D9383A] text-white text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
           >
             HOT
           </span>
-        )}
-        {!product.isHot && product.isNew && (
+        ) : product.isNew ? (
           <span
             data-testid="badge-new"
             className="absolute top-3 left-3 z-10 bg-[#111111] text-white text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
           >
             NEW
           </span>
-        )}
+        ) : null}
 
         {/* Product Image */}
         <Link
@@ -258,15 +281,20 @@ export function ShopProductCard({
           <button
             type="button"
             onClick={handleAddToCartClick}
-            aria-label={`Add ${product.name} to cart`}
+            disabled={isOutOfStock}
+            aria-label={isOutOfStock ? `${product.name} is out of stock` : `Add ${product.name} to cart`}
             suppressHydrationWarning
             className={`w-full py-2 sm:py-2.5 px-3 sm:px-4 text-[11px] sm:text-xs font-semibold tracking-[0.08em] uppercase transition-colors duration-200 flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-              justAdded
+              isOutOfStock
+                ? "bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed border-t border-[#E5E7EB]"
+                : justAdded
                 ? "bg-[#111111] text-white"
                 : "bg-white/95 text-[#111111] hover:bg-[#111111] hover:text-white border-t border-[#E5E7EB]"
             }`}
           >
-            {justAdded ? (
+            {isOutOfStock ? (
+              <span>Out of Stock</span>
+            ) : justAdded ? (
               <>
                 <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
                 <span>Added to Bag</span>
@@ -307,3 +335,56 @@ export function ShopProductCard({
     </article>
   );
 }
+
+/**
+ * ShopProductCardSkeleton Component — PERALAGAE
+ * Renders luxury placeholder skeleton card with shimmering animation during filter fetches.
+ */
+export function ShopProductCardSkeleton({
+  viewMode = "grid",
+  className = "",
+}: {
+  viewMode?: "grid" | "list";
+  className?: string;
+}) {
+  if (viewMode === "list") {
+    return (
+      <div
+        data-testid="product-card-skeleton"
+        className={`w-full flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-5 border border-[#EAE6DF] rounded-xl bg-white animate-pulse ${className}`}
+      >
+        <div className="w-full sm:w-48 aspect-square bg-[#FAF8F5] rounded-lg shrink-0 border border-[#EAE6DF]/60 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-luxury-shimmer" />
+        </div>
+        <div className="flex-1 flex flex-col justify-between py-1 space-y-3">
+          <div className="space-y-2.5">
+            <div className="h-3 w-20 bg-neutral-200 rounded" />
+            <div className="h-4 w-3/4 bg-neutral-200 rounded" />
+            <div className="h-3 w-1/2 bg-neutral-100 rounded" />
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-[#EAE6DF]">
+            <div className="h-4 w-24 bg-neutral-200 rounded" />
+            <div className="h-9 w-28 bg-neutral-200 rounded-lg" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      data-testid="product-card-skeleton"
+      className={`flex flex-col border border-[#EAE6DF] rounded-xl overflow-hidden bg-white p-3 sm:p-3.5 animate-pulse ${className}`}
+    >
+      <div className="w-full aspect-square bg-[#FAF8F5] rounded-lg border border-[#EAE6DF]/60 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-luxury-shimmer" />
+      </div>
+      <div className="flex flex-col pt-3 pb-1 text-center items-center space-y-2">
+        <div className="h-2.5 w-16 bg-neutral-200 rounded" />
+        <div className="h-3.5 w-3/4 bg-neutral-200 rounded" />
+        <div className="h-3 w-20 bg-neutral-200 rounded" />
+      </div>
+    </div>
+  );
+}
+

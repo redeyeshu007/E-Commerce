@@ -28,7 +28,7 @@ export function createAdminAuthRouter(env: EnvConfig): Router {
   // Rate limiter specifically for admin login attempts
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: env.NODE_ENV === "test" ? 100 : 10, // 10 attempts in prod/dev
+    max: env.NODE_ENV === "test" || env.NODE_ENV === "development" ? 200 : 10, // 200 attempts in test/dev, 10 in prod
     standardHeaders: true,
     legacyHeaders: false,
     message: {

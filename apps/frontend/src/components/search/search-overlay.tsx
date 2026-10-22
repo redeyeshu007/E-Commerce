@@ -5,7 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { SearchInput } from "./search-input";
 import { SearchResults } from "./search-results";
 import { SearchEmptyState } from "./search-empty-state";
-import { searchCatalogue, type SearchResult } from "@/services/search-service";
+import { searchCatalogue, searchProducts, type SearchResult } from "@/services/search-service";
 
 export interface SearchOverlayProps {
   isOpen: boolean;
@@ -62,8 +62,23 @@ export function SearchOverlay({
       return;
     }
 
-    const res = searchCatalogue(debouncedQuery);
-    setSearchResult(res);
+    let isMounted = true;
+    const localRes = searchCatalogue(debouncedQuery);
+    setSearchResult(localRes);
+
+    searchProducts(debouncedQuery)
+      .then((dbRes) => {
+        if (isMounted && dbRes && dbRes.products && dbRes.products.length > 0) {
+          setSearchResult(dbRes);
+        }
+      })
+      .catch(() => {
+        // Fall back gracefully to local results
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [debouncedQuery]);
 
   // Lock background body scroll while overlay is active

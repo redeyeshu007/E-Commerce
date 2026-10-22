@@ -97,21 +97,21 @@ describe("Backend Foundation Test Suite", () => {
       ).toThrow("PORT must be an integer between 1 and 65535");
     });
 
-    it("enforces DATABASE_URL requirement in production", () => {
+    it("enforces MONGODB_URI requirement in production", () => {
       expect(() =>
         validateEnv({
           NODE_ENV: "production",
-          DATABASE_URL: "",
+          MONGODB_URI: "",
           CORS_ORIGINS: "https://peralagae.example.com",
         }),
-      ).toThrow("DATABASE_URL is required in production environment");
+      ).toThrow("MONGODB_URI is required in production environment");
     });
 
     it("disallows wildcard CORS origin in production", () => {
       expect(() =>
         validateEnv({
           NODE_ENV: "production",
-          DATABASE_URL: "postgresql://user:pass@localhost:5432/db",
+          MONGODB_URI: "mongodb+srv://user:pass@cluster.mongodb.net/ecom",
           CORS_ORIGINS: "*",
         }),
       ).toThrow("Wildcard CORS origin '*' is not permitted in production");

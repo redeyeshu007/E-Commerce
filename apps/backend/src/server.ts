@@ -26,7 +26,7 @@ const server: Server = app.listen(PORT, () => {
     `PERALAGAE Backend API running on port ${PORT}`,
   );
 
-  // Background sync of legacy settings and media to PostgreSQL
+  // Background sync of legacy settings and media to MongoDB
   import("./services/hero-service.js")
     .then(({ HeroService }) => HeroService.syncLegacyData())
     .catch((err) => logger.warn({ err }, "Initial hero sync failed"));
@@ -38,6 +38,30 @@ const server: Server = app.listen(PORT, () => {
   import("./services/category-media-service.js")
     .then(({ CategoryMediaService }) => CategoryMediaService.syncLocalDiskImagesToDb())
     .catch((err) => logger.warn({ err }, "Initial category media sync failed"));
+
+  import("./services/product-media-service.js")
+    .then(({ ProductMediaService }) => ProductMediaService.syncLocalDiskImagesToDb())
+    .catch((err) => logger.warn({ err }, "Initial product media sync failed"));
+
+  import("./services/material-service.js")
+    .then(({ MaterialService }) => MaterialService.seedInitialData())
+    .catch((err) => logger.warn({ err }, "Initial material seed failed"));
+
+  import("./services/material-media-service.js")
+    .then(({ MaterialMediaService }) => MaterialMediaService.syncDiskToDatabase())
+    .catch((err) => logger.warn({ err }, "Initial material media sync failed"));
+
+  import("./services/instagram-service.js")
+    .then(({ InstagramService }) => InstagramService.seedInitialData())
+    .catch((err) => logger.warn({ err }, "Initial instagram seed failed"));
+
+  import("./services/instagram-media-service.js")
+    .then(({ InstagramMediaService }) => InstagramMediaService.syncDiskToDatabase())
+    .catch((err) => logger.warn({ err }, "Initial instagram media sync failed"));
+
+  import("./services/store-details-service.js")
+    .then(({ StoreDetailsService }) => StoreDetailsService.seedInitialData())
+    .catch((err) => logger.warn({ err }, "Initial store details seed failed"));
 });
 
 // ── Graceful Process Shutdown ───────────────────────────────────────────────

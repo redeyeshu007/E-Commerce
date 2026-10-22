@@ -14,3 +14,7 @@ coverage/
 
 # Logs
 *.log
+
+# Backups
+data/postgres-backup/
+backups/

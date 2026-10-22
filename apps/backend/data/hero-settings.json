@@ -3,13 +3,13 @@
   "heroImage1": {
     "id": "heroImage1",
     "name": "Hero Image 1",
-    "imageAlt": "Necklaces & Body Jewels - PERALAGAE",
+    "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
     "imageUrl": "/images/hero/banner-necklaces.jpg",
     "categoryId": null,
     "description": "Look to our new season collection for girls.",
-    "boldHeadline": "Temporary Jewels",
+    "boldHeadline": "Body Jewels",
     "categorySlug": null,
-    "normalHeadline": "Temporary Text &"
+    "normalHeadline": "Necklaces &"
   },
   "heroImage2": {
     "id": "heroImage2",
@@ -27,10 +27,10 @@
     "boldHeadline": "Charm Bracelets",
     "normalHeadline": "Jewelry &"
   },
-  "version": 81,
-  "heroImage1Version": 79,
-  "heroImage2Version": 18,
+  "version": 184,
+  "heroImage1Version": 181,
+  "heroImage2Version": 38,
   "heroImage3Version": 1,
-  "updatedAt": "2026-10-15T17:42:54.656Z",
-  "updatedBy": "admin@peralagae.com"
+  "updatedAt": "2026-10-21T20:37:53.268Z",
+  "updatedBy": "javixtech@gmail.com"
 }

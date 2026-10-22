@@ -11,7 +11,7 @@ This package provides the modular, production-ready backend foundation for the P
 
 - **Node.js:** LTS `>= 20.0.0` (tested on Node.js 20+)
 - **npm:** `>= 10.0.0`
-- **Database:** PostgreSQL (externally hosted or local container)
+- **Database:** MongoDB Atlas (or local MongoDB replica set)
 - **TypeScript:** `5.7+` with strict type checking enabled
 
 ---
@@ -43,34 +43,33 @@ cp apps/backend/.env.example apps/backend/.env
 
 ### Environment Variables
 
-| Variable       | Description                                                                                  | Default / Example                                   | Required in Production              |
-| -------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------- |
-| `NODE_ENV`     | Runtime environment (`development`, `test`, `production`)                                    | `development`                                       | Yes                                 |
-| `PORT`         | HTTP port for the Express listener                                                           | `4000`                                              | No (defaults to 4000)               |
-| `DATABASE_URL` | PostgreSQL connection string                                                                 | `postgresql://user:pass@host:5432/db?schema=public` | **Yes** (Strictly validated by Zod) |
-| `CORS_ORIGINS` | Allowed frontend origins (comma-separated, no wildcard in prod)                              | `http://localhost:3000`                             | Yes                                 |
-| `LOG_LEVEL`    | Pino structured logging level (`fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent`) | `info`                                              | No                                  |
+| Variable       | Description                                                                                  | Default / Example                                                         | Required in Production              |
+| -------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
+| `NODE_ENV`     | Runtime environment (`development`, `test`, `production`)                                    | `development`                                                             | Yes                                 |
+| `PORT`         | HTTP port for the Express listener                                                           | `4000`                                                                    | No (defaults to 4000)               |
+| `MONGODB_URI`  | MongoDB Atlas connection string                                                              | `mongodb+srv://user:pass@cluster.mongodb.net/ecom?retryWrites=true&w=majority` | **Yes** (Strictly validated by Zod) |
+| `CORS_ORIGINS` | Allowed frontend origins (comma-separated, no wildcard in prod)                              | `http://localhost:3000`                                                   | Yes                                 |
+| `LOG_LEVEL`    | Pino structured logging level (`fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent`) | `info`                                                                    | No                                  |
 
 > [!IMPORTANT]
 > Never commit real credentials, database passwords, or cloud secrets to version control. The `.env` file is excluded in `.gitignore`.
 
 ---
 
-## 4. How to Configure an External PostgreSQL Database
+## 4. How to Configure MongoDB Atlas
 
-The backend is built to connect to an externally hosted PostgreSQL database (such as AWS RDS, Neon, Supabase, Railway, Render, or a custom cluster). It does **not** assume PostgreSQL must run locally.
+The backend connects to MongoDB Atlas using Prisma with the MongoDB provider and the official MongoDB Node.js driver.
 
 ### Connection String Format
 
 ```dotenv
-DATABASE_URL="postgresql://<DB_USER>:<DB_PASSWORD>@<DB_HOST>:<DB_PORT>/<DB_NAME>?schema=public&sslmode=require"
+MONGODB_URI="mongodb+srv://<DB_USER>:<DB_PASSWORD>@<CLUSTER>.mongodb.net/<DB_NAME>?retryWrites=true&w=majority"
 ```
 
-1. Create a PostgreSQL database on your chosen provider.
-2. Ensure network access / firewall rules allow connections from your application environment.
-3. If SSL is required by your provider (standard on AWS RDS / Neon / Supabase), append `&sslmode=require` or your provider's specific SSL parameters to `DATABASE_URL`.
-4. Place the connection URL in `.env` (or in your host environment secrets).
-5. Verify connectivity using the readiness probe:
+1. Create a MongoDB cluster on MongoDB Atlas.
+2. Ensure network access IP whitelist (e.g. `0.0.0.0/0` or application server IP) is configured in Atlas Network Access.
+3. Place the connection URL in `.env` (or in your host environment secrets).
+4. Verify connectivity using the readiness probe:
    ```bash
    curl http://localhost:4000/api/health/ready
    ```
@@ -189,7 +188,7 @@ In strict alignment with the foundation setup scope, the following decisions are
 1. **Authentication & Authorisation:** JWT vs session-based auth, refresh token rotation, OAuth/social login, multi-factor authentication (MFA).
 2. **Customer & Administrator Roles:** RBAC, permission hierarchy, admin access control, and staff activity audits.
 3. **Product & Inventory Data Models:** Precious metals pricing structure, making charges, hallmark tracking, stone weight, diamond grading attributes, stock reservations.
-4. **Cart & Wishlist Persistence:** Redis cache vs PostgreSQL session tables vs client-side sync.
+4. **Cart & Wishlist Persistence:** Redis cache vs MongoDB session/cart collections vs client-side sync.
 5. **Checkout & Payment Gateway Integration:** Razorpay / Stripe / PhonePe integrations, webhook verification, payment idempotency, and currency handling.
 6. **Order Lifecycle & Tracking:** Order state machine, shipment fulfillment, tracking numbers, invoice generation.
 7. **Asset & Image Storage:** S3 / Cloudflare R2 / Cloudinary pipelines, responsive CDN delivery, image compression.

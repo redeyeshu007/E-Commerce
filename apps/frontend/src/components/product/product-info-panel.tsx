@@ -104,6 +104,11 @@ export function ProductInfoPanel({
     router.push("/cart");
   };
 
+  const isOutOfStock =
+    product.inStock === false ||
+    product.isAvailable === false ||
+    (product.stockCount !== undefined && product.stockCount <= 0);
+
   return (
     <div className="flex flex-col text-left w-full pdp-typography font-jost">
       {/* 1. Product Title Matching Exact Reference (Clean, Light Sans-serif) */}
@@ -159,7 +164,13 @@ export function ProductInfoPanel({
       {/* 5. Availability Status */}
       <div className="mt-5 text-[14px] sm:text-[15px]">
         <span className="text-[#262626]">Availability: </span>
-        <span className="text-[#2E7D32] font-normal">In Stock</span>
+        {isOutOfStock ? (
+          <span className="text-[#DC2626] font-normal">Out of Stock</span>
+        ) : (
+          <span className="text-[#2E7D32] font-normal">
+            In Stock {product.stockCount !== undefined ? `(${product.stockCount} available)` : ""}
+          </span>
+        )}
       </div>
 
       {/* 6. Quantity Selector & ADD TO CART Row */}
@@ -169,7 +180,7 @@ export function ProductInfoPanel({
           <button
             type="button"
             onClick={handleQuantityDecrement}
-            disabled={quantity <= 1}
+            disabled={quantity <= 1 || isOutOfStock}
             aria-label="Decrease quantity"
             className="text-xl text-[#555555] hover:text-[#111111] leading-none disabled:opacity-30 transition select-none"
           >
@@ -184,7 +195,7 @@ export function ProductInfoPanel({
           <button
             type="button"
             onClick={handleQuantityIncrement}
-            disabled={quantity >= maxStock}
+            disabled={quantity >= maxStock || isOutOfStock}
             aria-label="Increase quantity"
             className="text-xl text-[#555555] hover:text-[#111111] leading-none disabled:opacity-30 transition select-none"
           >
@@ -196,14 +207,16 @@ export function ProductInfoPanel({
         <button
           type="button"
           onClick={handleAddToCart}
-          disabled={isAdding}
+          disabled={isAdding || isOutOfStock}
           className={`flex-1 flex h-[50px] items-center justify-center px-6 text-xs sm:text-[13.5px] font-semibold tracking-[0.08em] uppercase transition-colors rounded-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black ${
-            addedJustNow
+            isOutOfStock
+              ? "bg-[#CCCCCC] text-[#666666] cursor-not-allowed"
+              : addedJustNow
               ? "bg-emerald-700 text-white"
               : "bg-[#1F1F1F] hover:bg-black text-white"
           }`}
         >
-          {addedJustNow ? "Added to Bag" : "ADD TO CART"}
+          {isOutOfStock ? "OUT OF STOCK" : addedJustNow ? "Added to Bag" : "ADD TO CART"}
         </button>
       </div>
 
@@ -211,7 +224,12 @@ export function ProductInfoPanel({
       <button
         type="button"
         onClick={handleBuyItNow}
-        className="mt-2.5 w-full flex h-[50px] items-center justify-center bg-[#E5E5E5] hover:bg-[#DCDCDC] text-[#1A1A1A] text-xs sm:text-[13.5px] font-semibold tracking-[0.08em] uppercase transition-colors rounded-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+        disabled={isOutOfStock}
+        className={`mt-2.5 w-full flex h-[50px] items-center justify-center text-xs sm:text-[13.5px] font-semibold tracking-[0.08em] uppercase transition-colors rounded-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black ${
+          isOutOfStock
+            ? "bg-[#EEEEEE] text-[#999999] cursor-not-allowed"
+            : "bg-[#E5E5E5] hover:bg-[#DCDCDC] text-[#1A1A1A]"
+        }`}
       >
         BUY IT NOW
       </button>

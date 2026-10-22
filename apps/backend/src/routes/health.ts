@@ -34,7 +34,7 @@ healthRouter.get("/", (_req: Request, res: Response) => {
 
 /**
  * Readiness endpoint.
- * Performs a real check against PostgreSQL via Prisma.
+ * Performs a real check against MongoDB via Prisma.
  * Returns 200 if connected, or 503 if disconnected/unconfigured.
  */
 healthRouter.get("/ready", async (_req: Request, res: Response) => {

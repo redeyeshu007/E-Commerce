@@ -26,7 +26,7 @@ export function NewsletterPopup({
   onSubscribe,
   triggerRef,
 }: NewsletterPopupProps) {
-  const { openNewsletter } = useStorefront();
+  const { openNewsletter, notify } = useStorefront();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -149,6 +149,9 @@ export function NewsletterPopup({
 
       if (result.success) {
         setIsSuccess(true);
+        notify.success("Subscribed successfully!", {
+          description: "Thank you for subscribing to PERALAGAE updates.",
+        });
         try {
           localStorage.setItem("peralagae_newsletter_subscribed", "true");
         } catch {
@@ -156,9 +159,12 @@ export function NewsletterPopup({
         }
       } else {
         setError(result.message);
+        notify.error("Subscription failed", { description: result.message });
       }
     } catch {
-      setError("An unexpected error occurred. Please try again later.");
+      const msg = "An unexpected error occurred. Please try again later.";
+      setError(msg);
+      notify.error("Subscription failed", { description: msg });
     } finally {
       setIsSubmitting(false);
     }

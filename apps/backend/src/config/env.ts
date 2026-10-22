@@ -13,6 +13,8 @@ import { z } from "zod";
 const DEFAULT_DEV_ADMIN_PASSWORD = "PeralagaeAdmin2026!SecureKey";
 const DEFAULT_DEV_JWT_SECRET =
   "peralagae_super_secure_admin_jwt_secret_at_least_32_characters_long";
+const DEFAULT_DEV_CUSTOMER_JWT_SECRET =
+  "peralagae_super_secure_customer_jwt_secret_at_least_32_characters_long";
 
 const baseEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -31,6 +33,7 @@ const baseEnvSchema = z.object({
       return parsed;
     }),
   DATABASE_URL: z.string().optional().default(""),
+  MONGODB_URI: z.string().optional().default(""),
   CORS_ORIGINS: z
     .string()
     .default("http://localhost:3000")
@@ -64,25 +67,45 @@ const baseEnvSchema = z.object({
     .refine((val) => val.length >= 32, {
       message: "ADMIN_JWT_SECRET must be at least 32 characters",
     }),
+
+  // ── Customer Authentication & Google OAuth ──────────────────────────────────
+  CUSTOMER_JWT_SECRET: z
+    .string()
+    .default(DEFAULT_DEV_CUSTOMER_JWT_SECRET)
+    .transform((val) => val.trim().replace(/^["']|["']$/g, ""))
+    .refine((val) => val.length >= 32, {
+      message: "CUSTOMER_JWT_SECRET must be at least 32 characters",
+    }),
+  GOOGLE_CLIENT_ID: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val ? val.trim().replace(/^["']|["']$/g, "") : "")),
+  GOOGLE_CLIENT_SECRET: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val ? val.trim().replace(/^["']|["']$/g, "") : "")),
 });
 
 export const envSchema = baseEnvSchema.superRefine((data, ctx) => {
   if (data.NODE_ENV === "production") {
-    // DATABASE_URL is required in production
-    if (!data.DATABASE_URL || data.DATABASE_URL.trim() === "") {
+    // MONGODB_URI is required in production
+    const mongoUri = data.MONGODB_URI || data.DATABASE_URL;
+    if (!mongoUri || mongoUri.trim() === "") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["DATABASE_URL"],
-        message: "DATABASE_URL is required in production environment",
+        path: ["MONGODB_URI"],
+        message: "MONGODB_URI is required in production environment",
       });
     } else if (
-      !data.DATABASE_URL.startsWith("postgresql://") &&
-      !data.DATABASE_URL.startsWith("postgres://")
+      !mongoUri.startsWith("mongodb://") &&
+      !mongoUri.startsWith("mongodb+srv://")
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["DATABASE_URL"],
-        message: "DATABASE_URL must be a valid PostgreSQL connection string",
+        path: ["MONGODB_URI"],
+        message: "MONGODB_URI must be a valid MongoDB connection string (mongodb:// or mongodb+srv://)",
       });
     }
 
@@ -109,6 +132,14 @@ export const envSchema = baseEnvSchema.superRefine((data, ctx) => {
         code: z.ZodIssueCode.custom,
         path: ["ADMIN_JWT_SECRET"],
         message: "ADMIN_JWT_SECRET must be changed from the development default in production",
+      });
+    }
+
+    if (data.CUSTOMER_JWT_SECRET === DEFAULT_DEV_CUSTOMER_JWT_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["CUSTOMER_JWT_SECRET"],
+        message: "CUSTOMER_JWT_SECRET must be changed from the development default in production",
       });
     }
   }

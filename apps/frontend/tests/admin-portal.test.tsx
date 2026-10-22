@@ -74,13 +74,10 @@ describe("PERALAGAE Admin Authentication, Dashboard & Sidebar Suite", () => {
         ).toBeInTheDocument();
       });
 
-      // Strict navbar and dashboard restrictions: no business modules, menus, or cards
-      expect(screen.queryByText(/products/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/orders/i)).not.toBeInTheDocument();
+      // Strict dashboard content restrictions: no unallowed modules, menus, or cards
       expect(screen.queryByText(/customers/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/analytics/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/revenue/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/settings/i)).not.toBeInTheDocument();
       expect(screen.queryByPlaceholderText(/search/i)).not.toBeInTheDocument();
     });
 
@@ -128,14 +125,16 @@ describe("PERALAGAE Admin Authentication, Dashboard & Sidebar Suite", () => {
       const drawer = screen.getByTestId("admin-sidebar-drawer");
       expect(drawer).toHaveClass("translate-x-0");
 
-      // Drawer contains brand, Dashboard, Header Management, and Categories items
+      // Drawer contains brand, Dashboard, Header Management, Categories, Products, Footer, Orders, and GST Settings
       expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /header management/i })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /categories/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /products/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /footer/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /orders/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /gst settings/i })).toBeInTheDocument();
 
-      // STRICT SCOPE: No Products, Orders, Customers in drawer
-      expect(screen.queryByRole("link", { name: /products/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: /orders/i })).not.toBeInTheDocument();
+      // STRICT SCOPE: No Customers, Analytics in drawer
       expect(screen.queryByRole("link", { name: /customers/i })).not.toBeInTheDocument();
       expect(screen.queryByRole("link", { name: /analytics/i })).not.toBeInTheDocument();
     });

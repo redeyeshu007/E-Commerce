@@ -113,8 +113,40 @@ body {
   animation: authBackdropFadeIn 300ms ease-out forwards;
 }
 
+
 .newsletter-modal-backdrop[data-state="closed"] {
   animation: authBackdropFadeOut 250ms ease-in forwards;
+}
+
+/* PERALAGAE Luxury Popup Notification Animations */
+@keyframes popupSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(20px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes popupSlideOutRight {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+  }
+}
+
+.popup-notification-entering {
+  animation: popupSlideInRight 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.popup-notification-exiting {
+  animation: popupSlideOutRight 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -129,7 +161,9 @@ body {
   .newsletter-modal-content[data-state="open"],
   .newsletter-modal-content[data-state="closed"],
   .newsletter-modal-backdrop[data-state="open"],
-  .newsletter-modal-backdrop[data-state="closed"] {
+  .newsletter-modal-backdrop[data-state="closed"],
+  .popup-notification-entering,
+  .popup-notification-exiting {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
@@ -187,8 +221,25 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .peralagae-nav-link,
-  .peralagae-nav-underline {
+  .peralagae-nav-underline,
+  .animate-luxury-shimmer {
     transition: none !important;
+    animation: none !important;
   }
 }
+
+/* PERALAGAE Luxury Filter Loading Animation */
+@keyframes luxuryShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-luxury-shimmer {
+  animation: luxuryShimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 

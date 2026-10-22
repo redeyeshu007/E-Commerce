@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useStorefront } from "@/providers/storefront-provider";
-import { SHOP_PRODUCTS } from "@/services/product-service";
+import { SHOP_PRODUCTS, fetchPublicProducts } from "@/services/product-service";
 import type { Product } from "@/types/product";
 import { WishlistHero } from "./wishlist-hero";
 import { WishlistTable } from "./wishlist-table";
@@ -23,12 +23,39 @@ export function WishlistPageContent({
 }: WishlistPageContentProps) {
   const { wishlistIds, toggleWishlist, addToCart } = useStorefront();
 
+  const [dbProducts, setDbProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchPublicProducts({}, "default", 1, 100)
+      .then((res) => {
+        if (isMounted && res && res.products) {
+          setDbProducts(res.products);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const mergedCatalogue = useMemo(() => {
+    const map = new Map<string, Product>();
+    if (catalogue) {
+      catalogue.forEach((p) => map.set(p.id, p));
+    }
+    if (dbProducts && dbProducts.length > 0) {
+      dbProducts.forEach((p) => map.set(p.id, p));
+    }
+    return Array.from(map.values());
+  }, [catalogue, dbProducts]);
+
   // Resolve full Product entities from stored wishlist IDs
   const wishlistProducts = useMemo(() => {
     return wishlistIds
-      .map((id) => catalogue.find((p) => p.id === id))
+      .map((id) => mergedCatalogue.find((p) => p.id === id))
       .filter((p): p is Product => p !== undefined);
-  }, [wishlistIds, catalogue]);
+  }, [wishlistIds, mergedCatalogue]);
 
   const hasItems = wishlistProducts.length > 0;
 

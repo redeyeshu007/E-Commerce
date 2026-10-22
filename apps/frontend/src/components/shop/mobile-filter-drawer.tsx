@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { X, SlidersHorizontal } from "lucide-react";
+import { X, SlidersHorizontal, Loader2 } from "lucide-react";
 import { ShopSidebar, type ShopSidebarProps } from "./shop-sidebar";
 
 export interface MobileFilterDrawerProps extends ShopSidebarProps {
@@ -92,6 +92,12 @@ export function MobileFilterDrawer({
             <h2 className="text-sm font-semibold tracking-wider uppercase text-[#111111]">
               Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
             </h2>
+            {sidebarProps.isLoading && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EAE6DF] text-[10px] text-[#C5A572] font-medium">
+                <Loader2 className="h-2.5 w-2.5 animate-spin text-[#C5A572]" />
+                <span>updating</span>
+              </span>
+            )}
           </div>
           <button
             ref={closeButtonRef}
@@ -116,9 +122,16 @@ export function MobileFilterDrawer({
             type="button"
             onClick={onClose}
             suppressHydrationWarning
-            className="w-full py-3 bg-[#111111] hover:bg-black text-white text-xs font-semibold tracking-widest uppercase transition-colors"
+            className="w-full py-3 bg-[#111111] hover:bg-black text-white text-xs font-semibold tracking-widest uppercase transition-colors flex items-center justify-center gap-2"
           >
-            Show Results
+            {sidebarProps.isLoading ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#C5A572]" />
+                <span>Updating Results...</span>
+              </>
+            ) : (
+              <span>Show Results</span>
+            )}
           </button>
         </div>
       </div>

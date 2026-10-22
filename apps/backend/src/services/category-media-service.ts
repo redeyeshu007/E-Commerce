@@ -7,7 +7,7 @@ const UPLOADS_DIR = path.resolve(process.cwd(), "uploads", "categories");
 
 export class CategoryMediaService {
   /**
-   * Saves or updates a category media asset in PostgreSQL.
+   * Saves or updates a category media asset in MongoDB.
    */
   static async saveAsset(filename: string, mimeType: string, buffer: Buffer): Promise<void> {
     await prisma.categoryMediaAsset.upsert({
@@ -25,11 +25,11 @@ export class CategoryMediaService {
         data: buffer as any,
       },
     });
-    logger.info({ filename, size: buffer.length, mimeType }, "Category media asset saved to PostgreSQL");
+    logger.info({ filename, size: buffer.length, mimeType }, "Category media asset saved to MongoDB");
   }
 
   /**
-   * Retrieves a category media asset binary and MIME type from PostgreSQL.
+   * Retrieves a category media asset binary and MIME type from MongoDB.
    */
   static async getAsset(filename: string): Promise<{ data: Buffer; mimeType: string } | null> {
     const record = await prisma.categoryMediaAsset.findUnique({
@@ -45,7 +45,7 @@ export class CategoryMediaService {
   }
 
   /**
-   * Seeds existing disk images from uploads/categories into PostgreSQL if not present.
+   * Seeds existing disk images from uploads/categories into MongoDB if not present.
    */
   static async syncLocalDiskImagesToDb(): Promise<void> {
     try {
@@ -67,11 +67,11 @@ export class CategoryMediaService {
           const ext = path.extname(file).toLowerCase();
           const mimeType = ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg";
           await this.saveAsset(file, mimeType, buffer);
-          logger.info({ file }, "Synced local disk category image to PostgreSQL");
+          logger.info({ file }, "Synced local disk category image to MongoDB");
         }
       }
     } catch (err) {
-      logger.warn({ err }, "Could not sync local disk category images to PostgreSQL");
+      logger.warn({ err }, "Could not sync local disk category images to MongoDB");
     }
   }
 }

@@ -15,7 +15,7 @@ export interface CategoryItem {
 export interface CreateCategoryPayload {
   name: string;
   slug?: string;
-  imageUrl: string;
+  imageUrl?: string;
   imageAlt?: string;
   description?: string;
   order?: number;

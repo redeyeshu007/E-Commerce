@@ -70,8 +70,22 @@ export interface Product {
   stockCount?: number;
   /** Detailed description for quick-view and product detail displays */
   description?: string;
+  productOverview?: string;
+  productDetails?: string;
+  careInstructions?: string;
+  additionalInfo?: string;
+  descriptionParagraph1?: string;
+  descriptionParagraph2?: string;
   /** Editorial in-depth story / description for the Description tab */
   longDescription?: string;
+  /** Primary database-backed material ID */
+  materialId?: string | null;
+  /** Material reference entity */
+  materialRef?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
   /** Precious metal / gemstone material specification */
   material?: string;
   /** Categorized material tags (e.g. ["Gold", "Diamond", "Platinum", "Silver", "Rose Gold"]) */
@@ -90,4 +104,6 @@ export interface Product {
   reviews?: ProductReview[];
   /** Creation ISO date for 'Newest First' sorting */
   createdAt?: string;
+  /** Last updated ISO date */
+  updatedAt?: string;
 }

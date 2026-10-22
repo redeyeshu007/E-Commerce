@@ -4,9 +4,10 @@ import React, { useEffect, useCallback, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { X, ChevronDown, Check } from "lucide-react";
+import { X, ChevronDown, Check, User, LogOut, Package } from "lucide-react";
 import type { NavigationConfig } from "@/config/navigation";
 import { scrollToSectionId, scrollToTop } from "@/lib/navigation";
+import { useStorefront } from "@/providers/storefront-provider";
 
 export interface MobileNavigationProps {
   isOpen: boolean;
@@ -42,22 +43,10 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
   const langRef = useRef<HTMLDivElement>(null);
   const currencyRef = useRef<HTMLDivElement>(null);
 
-  let currentPathname = "/";
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const hookPath = usePathname();
-    if (hookPath) currentPathname = hookPath;
-  } catch {
-    currentPathname = "/";
-  }
-
-  let router: ReturnType<typeof useRouter> | null = null;
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    router = useRouter();
-  } catch {
-    router = null;
-  }
+  const pathname = usePathname();
+  const currentPathname = pathname || "/";
+  const router = useRouter();
+  const { customer, isAuthenticated, logoutCustomer, openAuthModal } = useStorefront();
 
   const [activeHash, setActiveHash] = useState<string>(() => {
     if (typeof window !== "undefined") {
@@ -105,11 +94,7 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
       } else {
         e.preventDefault();
         setActiveHash(`#${targetId}`);
-        if (router) {
-          router.push(href);
-        } else {
-          window.location.href = href;
-        }
+        router.push(href);
       }
     } else if (href === "/" && currentPathname === "/" && typeof window !== "undefined") {
       if (window.location.hash || window.scrollY > 50) {
@@ -177,8 +162,8 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
   }, [isVisible]);
 
   // Handle escape key to dismiss smoothly
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isVisible) {
         if (isLangOpen) {
           setIsLangOpen(false);
@@ -190,14 +175,11 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
         }
         handleClose();
       }
-    },
-    [isVisible, isLangOpen, isCurrencyOpen, handleClose],
-  );
+    };
 
-  useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
+  }, [isVisible, isLangOpen, isCurrencyOpen, handleClose]);
 
   // Click outside listener for dropdown popups
   useEffect(() => {
@@ -322,42 +304,99 @@ export function MobileNavigation({ isOpen, onClose, config }: MobileNavigationPr
           {activeTab === "menu" ? (
             <nav aria-label="Mobile Menu Navigation">
               <ul className="space-y-1" role="list">
-                {config.primaryNav.map((item) => {
-                  const isActive = isItemActive(item.href);
+                {config.primaryNav
+                  .filter(
+                    (item) => item.id !== "materials" && item.label.toLowerCase() !== "materials"
+                  )
+                  .map((item) => {
+                    const isActive = isItemActive(item.href);
 
-                  return (
-                    <li key={item.id}>
+                    return (
+                      <li key={item.id}>
+                        <Link
+                          href={item.href || "#"}
+                          onClick={(e) => handleLinkClick(e, item.href)}
+                          aria-current={isActive ? "page" : undefined}
+                          className={`group relative flex items-center justify-between py-2.5 text-[15px] font-medium tracking-wide transition-colors duration-250 ${
+                            isActive
+                              ? "text-[#C5A572] font-semibold"
+                              : "text-[#111111] hover:text-[#C5A572]"
+                          }`}
+                        >
+                          <span className="relative inline-block">
+                            {item.label}
+                            <span
+                              className={`absolute -bottom-1 left-0 h-[1.5px] w-full bg-[#C5A572] origin-left transition-all duration-300 ease-out motion-reduce:transition-none pointer-events-none ${
+                                isActive
+                                  ? "scale-x-100 opacity-100"
+                                  : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
+                              }`}
+                              aria-hidden="true"
+                            />
+                          </span>
+                          {isActive && (
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-[#C5A572]"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+
+                {/* Account & Profile Options */}
+                <li className="pt-4 mt-4 border-t border-[#EAE6DF]">
+                  {isAuthenticated && customer ? (
+                    <div className="space-y-1">
+                      <div className="pb-2">
+                        <p className="text-[11px] font-semibold text-[#C5A572] uppercase tracking-wider">
+                          Signed in as
+                        </p>
+                        <p className="text-sm font-medium text-[#111111] truncate">{customer.fullName}</p>
+                      </div>
                       <Link
-                        href={item.href || "#"}
-                        onClick={(e) => handleLinkClick(e, item.href)}
-                        aria-current={isActive ? "page" : undefined}
-                        className={`group relative flex items-center justify-between py-2.5 text-[15px] font-medium tracking-wide transition-colors duration-250 ${
-                          isActive
-                            ? "text-[#C5A572] font-semibold"
-                            : "text-[#111111] hover:text-[#C5A572]"
-                        }`}
+                        href="/profile"
+                        onClick={handleClose}
+                        className="flex items-center gap-2.5 py-2 text-sm font-medium text-[#222222] hover:text-[#C5A572] transition-colors"
                       >
-                        <span className="relative inline-block">
-                          {item.label}
-                          <span
-                            className={`absolute -bottom-1 left-0 h-[1.5px] w-full bg-[#C5A572] origin-left transition-all duration-300 ease-out motion-reduce:transition-none pointer-events-none ${
-                              isActive
-                                ? "scale-x-100 opacity-100"
-                                : "scale-x-0 opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
-                            }`}
-                            aria-hidden="true"
-                          />
-                        </span>
-                        {isActive && (
-                          <span
-                            className="h-1.5 w-1.5 rounded-full bg-[#C5A572]"
-                            aria-hidden="true"
-                          />
-                        )}
+                        <User className="h-4 w-4 text-[#666666]" />
+                        <span>My Profile</span>
                       </Link>
-                    </li>
-                  );
-                })}
+                      <Link
+                        href="/orders"
+                        onClick={handleClose}
+                        className="flex items-center gap-2.5 py-2 text-sm font-medium text-[#222222] hover:text-[#C5A572] transition-colors"
+                      >
+                        <Package className="h-4 w-4 text-[#666666]" />
+                        <span>My Orders</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          handleClose();
+                          await logoutCustomer();
+                        }}
+                        className="w-full flex items-center gap-2.5 py-2 text-sm font-medium text-[#DC2626] hover:text-[#B91C1C] text-left cursor-pointer transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleClose();
+                        openAuthModal("login");
+                      }}
+                      className="w-full flex items-center gap-2.5 py-2 text-sm font-medium text-[#222222] hover:text-black cursor-pointer text-left transition-colors"
+                    >
+                      <User className="h-4 w-4 text-[#666666]" />
+                      <span>Sign In / Register</span>
+                    </button>
+                  )}
+                </li>
               </ul>
             </nav>
           ) : (

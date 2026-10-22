@@ -14,9 +14,13 @@ export interface ShopFilters {
   category?: string | null;
   minPrice?: number | null;
   maxPrice?: number | null;
+  material?: string | null;
   materials?: string[];
   sizes?: string[];
   search?: string;
+  isNew?: boolean;
+  isHot?: boolean;
+  isAvailable?: boolean;
 }
 
 export type SortOption =
@@ -41,6 +45,8 @@ export interface ShopCatalogueResult {
   categoryCounts: Record<string, number>;
   materialCounts: Record<string, number>;
   sizeCounts: Record<string, number>;
+  availableMaterials?: string[];
+  availableSizes?: string[];
 }
 
 export const JEWELLERY_CATEGORIES = [
@@ -1027,7 +1033,7 @@ export function getAllProducts(): Product[] {
 }
 
 /**
- * Asynchronously fetches products from the PostgreSQL database via public REST API.
+ * Asynchronously fetches products from the MongoDB database via public REST API.
  * Supports filtering, sorting, pagination, and dynamic category counts.
  */
 export async function fetchPublicProducts(
@@ -1036,18 +1042,22 @@ export async function fetchPublicProducts(
   page = 1,
   pageSize = 12
 ): Promise<ShopCatalogueResult | null> {
-  const isServer = typeof window === "undefined";
-  const baseUrl = isServer
-    ? getBackendOrigin()
-    : (typeof window !== "undefined" && window.location?.origin ? "" : getBackendOrigin());
+  const baseUrl =
+    typeof window !== "undefined" && window.location?.origin && !process.env["VITEST"]
+      ? ""
+      : getBackendOrigin();
 
   const queryParams = new URLSearchParams();
   if (filters.category && filters.category !== "all") queryParams.set("category", filters.category);
+  if (filters.material && filters.material !== "all") queryParams.set("material", filters.material);
   if (filters.search && filters.search.trim()) queryParams.set("search", filters.search.trim());
   if (filters.minPrice != null) queryParams.set("minPrice", String(filters.minPrice));
   if (filters.maxPrice != null) queryParams.set("maxPrice", String(filters.maxPrice));
   if (filters.materials && filters.materials.length > 0) queryParams.set("materials", filters.materials.join(","));
   if (filters.sizes && filters.sizes.length > 0) queryParams.set("sizes", filters.sizes.join(","));
+  if (filters.isNew !== undefined) queryParams.set("isNew", String(filters.isNew));
+  if (filters.isHot !== undefined) queryParams.set("isHot", String(filters.isHot));
+  if (filters.isAvailable !== undefined) queryParams.set("isAvailable", String(filters.isAvailable));
   if (sort && sort !== "default") queryParams.set("sort", sort);
   if (page > 1) queryParams.set("page", String(page));
   if (pageSize) queryParams.set("pageSize", String(pageSize));
@@ -1076,6 +1086,60 @@ export async function fetchPublicProducts(
     console.warn("[fetchPublicProducts] Error fetching products from database API:", err);
     return null;
   }
+}
+
+/**
+ * Fetches collection products (e.g. New Arrivals or Hot/Trending) directly from the database API.
+ * Throws on network/server errors so caller can render an honest error state instead of falling back to static data.
+ */
+export async function fetchCollectionProducts(params: {
+  isNew?: boolean;
+  isHot?: boolean;
+  limit?: number;
+}): Promise<Product[]> {
+  const isServer = typeof window === "undefined";
+  const baseUrl = isServer
+    ? getBackendOrigin()
+    : (typeof window !== "undefined" && window.location?.origin ? "" : getBackendOrigin());
+
+  const queryParams = new URLSearchParams();
+  if (params.isNew !== undefined) queryParams.set("isNew", String(params.isNew));
+  if (params.isHot !== undefined) queryParams.set("isHot", String(params.isHot));
+  queryParams.set("pageSize", String(params.limit || 100));
+
+  const qs = queryParams.toString();
+  const url = `${baseUrl}/api/v1/products${qs ? `?${qs}` : ""}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch collection products from database (HTTP ${res.status})`);
+  }
+
+  const json = await res.json();
+  if (!json?.success || !json?.data?.products) {
+    throw new Error(json?.error?.message || "Invalid collection products response from database");
+  }
+
+  return json.data.products as Product[];
+}
+
+/**
+ * Fetches New Arrival products (isNew = true) directly from MongoDB via backend API.
+ */
+export async function fetchNewArrivalsProducts(limit = 100): Promise<Product[]> {
+  return fetchCollectionProducts({ isNew: true, limit });
+}
+
+/**
+ * Fetches Hot / Trending products (isHot = true) directly from MongoDB via backend API.
+ */
+export async function fetchHotTrendingProducts(limit = 100): Promise<Product[]> {
+  return fetchCollectionProducts({ isHot: true, limit });
 }
 
 /**

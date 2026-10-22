@@ -35,6 +35,7 @@ import {
   CATEGORIES_UPDATED_EVENT,
 } from "@/services/category-public-service";
 import type { CategoryItem } from "@/types/category";
+import { useNotification } from "@/providers/storefront-provider";
 
 export function slugify(text: string): string {
   return text
@@ -48,6 +49,7 @@ export function slugify(text: string): string {
 export default function AdminCategoriesPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const notify = useNotification();
 
   // Authentication & Layout state
   const [isVerifying, setIsVerifying] = useState(true);
@@ -90,6 +92,21 @@ export default function AdminCategoriesPage() {
   // Deletion State
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const loadCategories = async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchAdminCategories();
+      setCategories(data);
+    } catch (err: unknown) {
+      setStatusMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Failed to load categories",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Verify Admin Session on mount
   useEffect(() => {
     let isMounted = true;
@@ -111,21 +128,6 @@ export default function AdminCategoriesPage() {
       isMounted = false;
     };
   }, [router]);
-
-  const loadCategories = async () => {
-    setIsLoading(true);
-    try {
-      const data = await fetchAdminCategories();
-      setCategories(data);
-    } catch (err: unknown) {
-      setStatusMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Failed to load categories",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -213,20 +215,24 @@ export default function AdminCategoriesPage() {
 
       setCategories((prev) => [...prev, created].sort((a, b) => a.order - b.order));
       setIsAddModalOpen(false);
+      const successText = `Category "${created.name}" created successfully with slug /${created.slug}.`;
       setStatusMessage({
         type: "success",
-        text: `Category "${created.name}" created successfully with slug /${created.slug}.`,
+        text: successText,
       });
+      notify.success("Category created", { description: `"${created.name}" created.` });
 
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent(CATEGORIES_UPDATED_EVENT));
       }
     } catch (err: unknown) {
+      const errText = err instanceof Error ? err.message : "Failed to create category.";
       setStatusMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "Failed to create category.",
+        text: errText,
       });
+      notify.error("Creation failed", { description: errText });
     } finally {
       setIsSubmittingAdd(false);
     }
@@ -297,21 +303,24 @@ export default function AdminCategoriesPage() {
           .sort((a, b) => a.order - b.order)
       );
       setEditingCategory(null);
+      const updateSuccessText = `Category "${updated.name}" updated successfully. Associated products preserved.`;
       setStatusMessage({
         type: "success",
-        text: `Category "${updated.name}" updated successfully. Associated products preserved.`,
+        text: updateSuccessText,
       });
-
+      notify.success("Category updated", { description: `"${updated.name}" updated.` });
 
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent(CATEGORIES_UPDATED_EVENT));
       }
     } catch (err: unknown) {
+      const updateErrText = err instanceof Error ? err.message : "Failed to update category.";
       setStatusMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "Failed to update category.",
+        text: updateErrText,
       });
+      notify.error("Update failed", { description: updateErrText });
     } finally {
       setIsSubmittingEdit(false);
     }
@@ -376,20 +385,24 @@ export default function AdminCategoriesPage() {
       const res = await deleteAdminCategory(deletingCategory.id);
       setCategories((prev) => prev.filter((c) => c.id !== deletingCategory.id));
       setDeletingCategory(null);
+      const deleteSuccessText = `Category "${res.deletedCategory.name}" and all ${res.deletedProductCount} associated products permanently deleted.`;
       setStatusMessage({
         type: "success",
-        text: `Category "${res.deletedCategory.name}" and all ${res.deletedProductCount} associated products permanently deleted.`,
+        text: deleteSuccessText,
       });
+      notify.success("Category deleted", { description: `"${res.deletedCategory.name}" removed.` });
 
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent(CATEGORIES_UPDATED_EVENT));
       }
     } catch (err: unknown) {
+      const delErrText = err instanceof Error ? err.message : "Failed to delete category.";
       setStatusMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "Failed to delete category.",
+        text: delErrText,
       });
+      notify.error("Delete failed", { description: delErrText });
     } finally {
       setIsDeleting(false);
     }
@@ -444,7 +457,7 @@ export default function AdminCategoriesPage() {
           <button
             type="button"
             onClick={handleOpenAddModal}
-            className="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium uppercase tracking-wider bg-[#C5A572] hover:bg-[#B39360] text-white rounded transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+            className="self-stretch sm:self-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-medium uppercase tracking-wider bg-[#C5A572] hover:bg-[#B39360] text-white rounded transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black min-h-[40px]"
           >
             <Plus className="w-4 h-4" />
             <span>Add Category</span>
@@ -483,21 +496,21 @@ export default function AdminCategoriesPage() {
 
         {/* Search & Filter Bar */}
         <div className="bg-white border border-[#E5E7EB] rounded-lg p-3 sm:p-4 mb-6 shadow-sm flex items-center justify-between gap-3">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 w-full max-w-md">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search categories by name, slug, or description..."
-              className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-[#C5A572] focus:outline-none transition-colors"
+              className="w-full pl-9 pr-4 py-2.5 sm:py-2 text-base sm:text-sm bg-gray-50 border border-gray-200 rounded text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-[#C5A572] focus:outline-none transition-colors"
             />
           </div>
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery("")}
-              className="text-xs text-gray-500 hover:text-black transition-colors"
+              className="text-xs text-gray-500 hover:text-black transition-colors p-1"
             >
               Clear
             </button>
@@ -506,8 +519,13 @@ export default function AdminCategoriesPage() {
 
         {/* Category Table */}
         <div className="bg-white border border-[#E5E7EB] rounded-lg shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm text-gray-600 border-collapse">
+          {/* Mobile Table Swipe Indicator */}
+          <div className="sm:hidden px-3.5 py-2 bg-[#FAFAFA] border-b border-[#E5E7EB] text-[11px] text-[#777777] flex items-center justify-between">
+            <span className="font-medium">Scroll table horizontally to view actions</span>
+            <span className="font-semibold text-[#C5A572] text-xs">⟷</span>
+          </div>
+          <div className="overflow-x-auto overscroll-x-contain">
+            <table className="w-full text-left text-xs sm:text-sm text-gray-600 border-collapse min-w-[640px]">
               <thead className="bg-[#FAFAFA] text-gray-500 uppercase font-semibold text-[11px] tracking-wider border-b border-[#E5E7EB]">
                 <tr>
                   <th scope="col" className="px-4 py-3 w-16 text-center">

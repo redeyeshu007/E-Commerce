@@ -6,9 +6,10 @@ import { ShopHero } from "./shop-hero";
 import { ShopSidebar } from "./shop-sidebar";
 import { MobileFilterDrawer } from "./mobile-filter-drawer";
 import { ProductToolbar, type ViewMode } from "./product-toolbar";
-import { ShopProductCard } from "./shop-product-card";
+import { ShopProductCard, ShopProductCardSkeleton } from "./shop-product-card";
 import { ShopPagination } from "./shop-pagination";
 import { ShopEmptyState } from "./shop-empty-state";
+import { Loader2 } from "lucide-react";
 import {
   getShopCatalogue,
   fetchPublicProducts,
@@ -21,6 +22,7 @@ import {
   fetchPublicCategories,
   CATEGORIES_UPDATED_EVENT,
 } from "@/services/category-public-service";
+import { MATERIALS_UPDATED_EVENT } from "@/services/material-service";
 
 export interface ShopPageContentProps {
   pageSize?: number;
@@ -39,15 +41,17 @@ export function ShopPageContent({
 
   // Initialize state from URL Search Params if available
   const initialCategory = searchParams.get("category") || null;
+  const initialMaterial = searchParams.get("material") || null;
   const initialSort = (searchParams.get("sort") as SortOption) || "default";
   const initialView = (searchParams.get("view") as ViewMode) || "grid-4";
   const initialPage = Number(searchParams.get("page")) || 1;
 
   const [filters, setFilters] = useState<ShopFilters>({
     category: initialCategory,
+    material: initialMaterial,
     minPrice: null,
     maxPrice: null,
-    materials: [],
+    materials: initialMaterial ? [initialMaterial] : [],
     sizes: [],
   });
 
@@ -56,22 +60,37 @@ export function ShopPageContent({
   const [currentPage, setCurrentPage] = useState<number>(initialPage);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  // Sync category filter when URL search parameters change externally
+  // Sync category & material filter when URL search parameters change externally
   const categoryParam = searchParams.get("category") || null;
+  const materialParam = searchParams.get("material") || null;
+
   useEffect(() => {
     setFilters((prev) => {
+      let changed = false;
+      const next = { ...prev };
       if (prev.category !== categoryParam) {
-        return { ...prev, category: categoryParam };
+        next.category = categoryParam;
+        changed = true;
       }
-      return prev;
+      if (prev.material !== materialParam) {
+        next.material = materialParam;
+        if (materialParam && !next.materials?.includes(materialParam)) {
+          next.materials = [materialParam];
+        } else if (!materialParam && prev.material) {
+          next.materials = [];
+        }
+        changed = true;
+      }
+      return changed ? next : prev;
     });
     setCurrentPage(1);
-  }, [categoryParam]);
+  }, [categoryParam, materialParam]);
 
   // Sync state to URL search parameters for shareable/bookmarkable URLs
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.category) params.set("category", filters.category);
+    if (filters.material) params.set("material", filters.material);
     if (sort !== "default") params.set("sort", sort);
     if (viewMode !== "grid-4") params.set("view", viewMode);
     if (currentPage > 1) params.set("page", String(currentPage));
@@ -82,6 +101,11 @@ export function ShopPageContent({
   }, [filters, sort, viewMode, currentPage, pathname]);
 
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories || []);
+  const [catalogueData, setCatalogueData] = useState<ShopCatalogueResult | null>(
+    initialCatalogue ?? (process.env["VITEST"] ? getShopCatalogue(filters, sort, currentPage, pageSize) : null)
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Fetch or sync categories on mount and when categories are updated in admin
   useEffect(() => {
@@ -101,16 +125,31 @@ export function ShopPageContent({
       loadCategories();
     }
 
-    const handleUpdated = () => {
+    const handleCategoryUpdate = () => {
       loadCategories();
     };
+    const handleProductsUpdate = () => {
+      loadCategories();
+      fetchPublicProducts(filters, sort, currentPage, pageSize).then((res) => {
+        if (res) setCatalogueData(res);
+      });
+    };
+    const handleMaterialsUpdate = () => {
+      fetchPublicProducts(filters, sort, currentPage, pageSize).then((res) => {
+        if (res) setCatalogueData(res);
+      });
+    };
 
-    window.addEventListener(CATEGORIES_UPDATED_EVENT, handleUpdated);
+    window.addEventListener(CATEGORIES_UPDATED_EVENT, handleCategoryUpdate);
+    window.addEventListener("peralagae:products_updated", handleProductsUpdate);
+    window.addEventListener(MATERIALS_UPDATED_EVENT, handleMaterialsUpdate);
     return () => {
       isMounted = false;
-      window.removeEventListener(CATEGORIES_UPDATED_EVENT, handleUpdated);
+      window.removeEventListener(CATEGORIES_UPDATED_EVENT, handleCategoryUpdate);
+      window.removeEventListener("peralagae:products_updated", handleProductsUpdate);
+      window.removeEventListener(MATERIALS_UPDATED_EVENT, handleMaterialsUpdate);
     };
-  }, [initialCategories]);
+  }, [initialCategories, filters, sort, currentPage, pageSize]);
 
   // Sync initialCategories if passed externally
   useEffect(() => {
@@ -118,10 +157,6 @@ export function ShopPageContent({
       setCategories(initialCategories);
     }
   }, [initialCategories]);
-
-  const [catalogueData, setCatalogueData] = useState<ShopCatalogueResult | null>(initialCatalogue ?? null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Sync products from database API whenever filters, sort, page, or categories change
   useEffect(() => {
@@ -134,15 +169,15 @@ export function ShopPageContent({
         if (isMounted) {
           if (res) {
             setCatalogueData(res);
+            setLoadError(null);
           } else {
-            setCatalogueData(getShopCatalogue(filters, sort, currentPage, pageSize, categories));
+            setLoadError("Failed to load products from database.");
           }
         }
       })
       .catch(() => {
         if (isMounted) {
           setLoadError("Failed to load products from database.");
-          setCatalogueData(getShopCatalogue(filters, sort, currentPage, pageSize, categories));
         }
       })
       .finally(() => {
@@ -152,23 +187,53 @@ export function ShopPageContent({
     return () => {
       isMounted = false;
     };
-  }, [filters, sort, currentPage, pageSize, categories]);
+  }, [filters, sort, currentPage, pageSize]);
 
-  // Compute catalogue results via service with dynamic categories (using live DB data or computed fallback)
+  // Default empty catalogue result when initial loading is pending
+  const defaultEmptyResult: ShopCatalogueResult = useMemo(
+    () => ({
+      products: [],
+      total: 0,
+      totalCatalogueCount: 0,
+      page: 1,
+      pageSize: 12,
+      totalPages: 1,
+      fromIndex: 0,
+      toIndex: 0,
+      minCataloguePrice: 0,
+      maxCataloguePrice: 0,
+      categoryCounts: {},
+      materialCounts: {},
+      sizeCounts: {},
+      availableMaterials: [],
+      availableSizes: [],
+    }),
+    []
+  );
+
+  // Authoritative catalogue results from MongoDB API
   const catalogueResult = useMemo(() => {
-    return catalogueData ?? getShopCatalogue(filters, sort, currentPage, pageSize, categories);
-  }, [catalogueData, filters, sort, currentPage, pageSize, categories]);
+    return catalogueData ?? defaultEmptyResult;
+  }, [catalogueData, defaultEmptyResult]);
 
-  // Resolve human-readable name of selected category for empty state
-  const selectedCategoryName = useMemo(() => {
-    if (!filters.category) return null;
-    const found = categories.find(
-      (c) =>
-        c.slug.toLowerCase() === filters.category?.toLowerCase() ||
-        c.id.toLowerCase() === filters.category?.toLowerCase()
-    );
-    return found ? found.name : filters.category;
-  }, [filters.category, categories]);
+  // Resolve human-readable name of selected collection (category or material) for empty state
+  const selectedCollectionName = useMemo(() => {
+    if (filters.category) {
+      const found = categories.find(
+        (c) =>
+          c.slug.toLowerCase() === filters.category?.toLowerCase() ||
+          c.id.toLowerCase() === filters.category?.toLowerCase()
+      );
+      return found ? found.name : filters.category;
+    }
+    if (filters.material) {
+      return filters.material
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+    }
+    return null;
+  }, [filters.category, filters.material, categories]);
 
   // Authoritative total catalogue count from database
   const totalCatalogueProductsCount = useMemo(() => {
@@ -189,13 +254,14 @@ export function ShopPageContent({
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.category) count += 1;
+    if (filters.material) count += 1;
     if (
       (filters.minPrice != null && filters.minPrice > catalogueResult.minCataloguePrice) ||
       (filters.maxPrice != null && filters.maxPrice < catalogueResult.maxCataloguePrice)
     ) {
       count += 1;
     }
-    if (filters.materials && filters.materials.length > 0) {
+    if (filters.materials && filters.materials.length > 0 && !filters.material) {
       count += filters.materials.length;
     }
     if (filters.sizes && filters.sizes.length > 0) {
@@ -204,16 +270,19 @@ export function ShopPageContent({
     return count;
   }, [filters, catalogueResult.minCataloguePrice, catalogueResult.maxCataloguePrice]);
 
-  // Filter change resets current page to 1
+  // Filter change resets current page to 1 and immediately initiates loading
   const handleFilterChange = useCallback((newFilters: ShopFilters) => {
+    setIsLoading(true);
     setFilters(newFilters);
     setCurrentPage(1);
   }, []);
 
-  // Clear all filters resets to initial defaults
+  // Clear all filters resets to initial defaults and triggers loading
   const handleClearAll = useCallback(() => {
+    setIsLoading(true);
     setFilters({
       category: null,
+      material: null,
       minPrice: null,
       maxPrice: null,
       materials: [],
@@ -224,12 +293,14 @@ export function ShopPageContent({
 
   // Sort change handler
   const handleSortChange = useCallback((newSort: SortOption) => {
+    setIsLoading(true);
     setSort(newSort);
     setCurrentPage(1);
   }, []);
 
   // Page change with smooth scroll to top of product grid
   const handlePageChange = useCallback((newPage: number) => {
+    setIsLoading(true);
     setCurrentPage(newPage);
     if (productAreaRef.current) {
       productAreaRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -273,10 +344,13 @@ export function ShopPageContent({
                 categories={categories}
                 categoryCounts={catalogueResult.categoryCounts}
                 totalProductsCount={totalCatalogueProductsCount}
+                availableMaterials={catalogueResult.availableMaterials}
                 materialCounts={catalogueResult.materialCounts}
+                availableSizes={catalogueResult.availableSizes}
                 sizeCounts={catalogueResult.sizeCounts}
                 minCataloguePrice={catalogueResult.minCataloguePrice}
                 maxCataloguePrice={catalogueResult.maxCataloguePrice}
+                isLoading={isLoading}
               />
             </div>
           </div>
@@ -297,32 +371,126 @@ export function ShopPageContent({
               onViewModeChange={setViewMode}
               onOpenMobileFilters={() => setMobileDrawerOpen(true)}
               activeFilterCount={activeFilterCount}
+              isLoading={isLoading}
             />
 
+            {/* Glowing Luxury Loading Progress / Shimmer Bar */}
+            <div
+              className={`w-full transition-opacity duration-300 mt-2 ${
+                isLoading ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}
+            >
+              <div
+                role="progressbar"
+                aria-label="Updating jewellery catalogue"
+                className="w-full h-1 bg-[#FAF8F5] overflow-hidden rounded-full relative border border-[#EAE6DF]/60"
+              >
+                <div className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-[#C5A572] to-transparent animate-luxury-shimmer" />
+              </div>
+            </div>
+
             {/* Product Listing Area */}
-            <div className="mt-6 sm:mt-8 min-h-[400px]">
-              {catalogueResult.total === 0 ? (
-                <ShopEmptyState onClearAll={handleClearAll} categoryName={selectedCategoryName} />
-              ) : (
-                <div className={gridContainerClass}>
-                  {catalogueResult.products.map((product) => (
-                    <ShopProductCard
-                      key={product.id}
-                      product={product}
+            <div className="relative mt-4 sm:mt-6 min-h-[400px]">
+              {/* Luxury Floating Loading Overlay when fetching products */}
+              {isLoading && catalogueResult.products.length > 0 && (
+                <div
+                  data-testid="filter-loading-overlay"
+                  aria-live="polite"
+                  className="absolute inset-0 z-20 flex items-start justify-center pt-24 sm:pt-32 pointer-events-none"
+                >
+                  <div className="sticky top-40 flex items-center gap-3 px-6 py-3 bg-white/95 backdrop-blur-md border border-[#EAE6DF] shadow-xl rounded-full text-xs font-medium tracking-widest text-[#111111] uppercase transition-all duration-300">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C5A572] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#C5A572]"></span>
+                    </span>
+                    <Loader2 className="h-4 w-4 animate-spin text-[#C5A572]" />
+                    <span className="tracking-widest">Refining Jewels...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Error state if database fetch failed and no products available */}
+              {loadError && !catalogueData ? (
+                <div
+                  role="alert"
+                  className="w-full flex flex-col items-center justify-center py-16 sm:py-24 px-4 text-center border border-[#FCA5A5] bg-[#FEF2F2] rounded"
+                >
+                  <p className="text-sm text-[#991B1B] font-medium">{loadError}</p>
+                  <p className="text-xs text-[#7F1D1D] mt-1 max-w-sm">
+                    Unable to retrieve catalogue filters and products from the database service.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLoading(true);
+                      setLoadError(null);
+                      fetchPublicProducts(filters, sort, currentPage, pageSize)
+                        .then((res) => {
+                          if (res) setCatalogueData(res);
+                          else setLoadError("Failed to load products from database.");
+                        })
+                        .catch(() => setLoadError("Failed to load products from database."))
+                        .finally(() => setIsLoading(false));
+                    }}
+                    className="mt-4 px-5 py-2.5 bg-black hover:bg-neutral-800 text-white text-xs font-semibold uppercase tracking-wider rounded transition-colors cursor-pointer"
+                  >
+                    Retry Connection
+                  </button>
+                </div>
+              ) : isLoading && catalogueResult.products.length === 0 ? (
+                /* When loading and no products present, show luxury skeleton cards */
+                <div className={gridContainerClass} data-testid="filter-skeleton-grid">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <ShopProductCardSkeleton
+                      key={i}
                       viewMode={viewMode === "list" ? "list" : "grid"}
                     />
                   ))}
+                </div>
+              ) : (
+                <div
+                  className={`transition-opacity duration-300 ${
+                    isLoading ? "opacity-35 pointer-events-none select-none" : "opacity-100"
+                  }`}
+                >
+                  {catalogueResult.total === 0 ? (
+                    <ShopEmptyState
+                      onClearAll={handleClearAll}
+                      categoryName={selectedCollectionName}
+                      isCategoryOnly={Boolean(
+                        filters.category &&
+                          !filters.materials?.length &&
+                          !filters.sizes?.length &&
+                          filters.minPrice == null &&
+                          filters.maxPrice == null &&
+                          !filters.search
+                      )}
+                      isCatalogueEmpty={totalCatalogueProductsCount === 0}
+                    />
+                  ) : (
+                    <div className={gridContainerClass}>
+                      {catalogueResult.products.map((product) => (
+                        <ShopProductCard
+                          key={product.id}
+                          product={product}
+                          viewMode={viewMode === "list" ? "list" : "grid"}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Pagination Controls */}
             {catalogueResult.totalPages > 1 && (
-              <ShopPagination
-                currentPage={catalogueResult.page}
-                totalPages={catalogueResult.totalPages}
-                onPageChange={handlePageChange}
-              />
+              <div className={isLoading ? "opacity-40 pointer-events-none" : ""}>
+                <ShopPagination
+                  currentPage={catalogueResult.page}
+                  totalPages={catalogueResult.totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
             )}
           </section>
         </div>
@@ -338,11 +506,14 @@ export function ShopPageContent({
         categories={categories}
         categoryCounts={catalogueResult.categoryCounts}
         totalProductsCount={totalCatalogueProductsCount}
+        availableMaterials={catalogueResult.availableMaterials}
         materialCounts={catalogueResult.materialCounts}
+        availableSizes={catalogueResult.availableSizes}
         sizeCounts={catalogueResult.sizeCounts}
         minCataloguePrice={catalogueResult.minCataloguePrice}
         maxCataloguePrice={catalogueResult.maxCataloguePrice}
         activeFilterCount={activeFilterCount}
+        isLoading={isLoading}
       />
     </div>
   );

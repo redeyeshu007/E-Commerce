@@ -1,16 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { ChevronDown, RotateCcw, Check } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { ChevronDown, RotateCcw, Check, Loader2 } from "lucide-react";
 import { formatInr } from "@/lib/utils";
 import { DualRangeSlider } from "./dual-range-slider";
-import {
-  JEWELLERY_CATEGORIES,
-  JEWELLERY_MATERIALS,
-  JEWELLERY_SIZES,
-  type ShopFilters,
-} from "@/services/product-service";
-
+import type { ShopFilters } from "@/services/product-service";
 import type { CategoryItem } from "@/types/category";
 
 export interface ShopSidebarProps {
@@ -20,10 +14,13 @@ export interface ShopSidebarProps {
   categories?: CategoryItem[];
   categoryCounts: Record<string, number>;
   totalProductsCount?: number;
+  availableMaterials?: string[];
   materialCounts: Record<string, number>;
+  availableSizes?: string[];
   sizeCounts: Record<string, number>;
   minCataloguePrice: number;
   maxCataloguePrice: number;
+  isLoading?: boolean;
   className?: string;
 }
 
@@ -34,10 +31,13 @@ export function ShopSidebar({
   categories,
   categoryCounts,
   totalProductsCount,
+  availableMaterials,
   materialCounts,
+  availableSizes,
   sizeCounts,
   minCataloguePrice,
   maxCataloguePrice,
+  isLoading = false,
   className = "",
 }: ShopSidebarProps) {
   // Collapsible section open/closed state
@@ -52,6 +52,43 @@ export function ShopSidebar({
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
+  // Dynamic materials derived exclusively from database product data
+  const effectiveMaterials = useMemo(() => {
+    if (availableMaterials && availableMaterials.length > 0) {
+      return availableMaterials;
+    }
+    return Object.keys(materialCounts || {}).filter((m) => (materialCounts[m] ?? 0) > 0);
+  }, [availableMaterials, materialCounts]);
+
+  // Dynamic sizes derived exclusively from database product data
+  const effectiveSizes = useMemo(() => {
+    if (availableSizes && availableSizes.length > 0) {
+      return availableSizes;
+    }
+    return Object.keys(sizeCounts || {}).filter((s) => (sizeCounts[s] ?? 0) > 0);
+  }, [availableSizes, sizeCounts]);
+
+  // Dynamic categories: use prop if available, or derive from categoryCounts if provided
+  const effectiveCategories: CategoryItem[] = useMemo(() => {
+    if (categories && categories.length > 0) {
+      return categories;
+    }
+    if (categoryCounts && Object.keys(categoryCounts).length > 0) {
+      return Object.keys(categoryCounts).map((slug, idx) => ({
+        id: slug,
+        name: slug.charAt(0).toUpperCase() + slug.slice(1),
+        slug: slug.toLowerCase(),
+        imageUrl: "",
+        order: idx,
+        isActive: true,
+        productCount: categoryCounts[slug] ?? 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
+    }
+    return [];
+  }, [categories, categoryCounts]);
+
   // Check if any filter is currently applied
   const isAnyFilterActive = Boolean(
     filters.category ||
@@ -63,7 +100,7 @@ export function ShopSidebar({
 
   // Category selection handler
   const handleCategoryClick = (categoryId: string) => {
-    if (filters.category === categoryId) {
+    if (filters.category?.toLowerCase() === categoryId.toLowerCase()) {
       // Toggle off / clear category
       onFilterChange({ ...filters, category: null });
     } else {
@@ -95,16 +132,20 @@ export function ShopSidebar({
   // Material selection handler
   const handleMaterialToggle = (material: string) => {
     const current = filters.materials ?? [];
-    const exists = current.includes(material);
-    const updated = exists ? current.filter((m) => m !== material) : [...current, material];
+    const exists = current.some((m) => m.toLowerCase() === material.toLowerCase());
+    const updated = exists
+      ? current.filter((m) => m.toLowerCase() !== material.toLowerCase())
+      : [...current, material];
     onFilterChange({ ...filters, materials: updated });
   };
 
   // Size selection handler
   const handleSizeToggle = (size: string) => {
     const current = filters.sizes ?? [];
-    const exists = current.includes(size);
-    const updated = exists ? current.filter((s) => s !== size) : [...current, size];
+    const exists = current.some((s) => s.toLowerCase() === size.toLowerCase());
+    const updated = exists
+      ? current.filter((s) => s.toLowerCase() !== size.toLowerCase())
+      : [...current, size];
     onFilterChange({ ...filters, sizes: updated });
   };
 
@@ -115,18 +156,32 @@ export function ShopSidebar({
     >
       {/* Sidebar Header & Clear All Action */}
       <div className="flex items-center justify-between pb-3 border-b border-[#E5E5E5]">
-        <h2 className="text-base font-semibold tracking-wider uppercase text-[#111111]">
-          Filters
-        </h2>
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-base font-semibold tracking-wider uppercase text-[#111111]">
+            Filters
+          </h2>
+          {isLoading && (
+            <span
+              data-testid="sidebar-loading-badge"
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EAE6DF] text-[10px] text-[#C5A572] font-medium tracking-wider lowercase animate-pulse"
+            >
+              <Loader2 className="h-2.5 w-2.5 animate-spin text-[#C5A572]" />
+              <span>updating</span>
+            </span>
+          )}
+        </div>
         {isAnyFilterActive && (
           <button
             type="button"
             onClick={onClearAll}
             suppressHydrationWarning
-            className="flex items-center gap-1.5 text-xs font-medium text-[#D9383A] hover:text-red-700 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+            disabled={isLoading}
+            className={`flex items-center gap-1.5 text-xs font-medium text-[#D9383A] hover:text-red-700 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black ${
+              isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            }`}
           >
-            <RotateCcw className="h-3 w-3 stroke-[2]" />
-            <span>Clear All</span>
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span className="uppercase tracking-wider">Clear all</span>
           </button>
         )}
       </div>
@@ -150,7 +205,7 @@ export function ShopSidebar({
         </button>
 
         {openSections.categories && (
-          <div id="filter-section-categories" className="mt-3.5 flex flex-col gap-2">
+          <div id="filter-section-categories" className="mt-3.5 flex flex-col gap-1.5">
             {/* All Categories Option */}
             <button
               type="button"
@@ -168,69 +223,55 @@ export function ShopSidebar({
               </span>
             </button>
 
-            {/* Individual Jewellery Categories (Dynamic & Authoritative) */}
-            {(categories && categories.length > 0
-              ? categories
-                  .filter((c) => c.isActive)
-                  .sort((a, b) => a.order - b.order)
-                  .map((c) => {
-                    const known: Record<string, string> = {
-                      necklaces: "Necklaces",
-                      rings: "Rings",
-                      bracelets: "Bracelets",
-                      earrings: "Earrings",
-                      "charms-bangles": "Charms & Bangles",
-                      "gift-ideas": "Gift Ideas",
-                    };
-                    const label = known[c.slug.toLowerCase()] || c.name;
-                    return {
-                      id: c.slug,
-                      slug: c.slug,
-                      label,
-                      productCount: c.productCount,
-                    };
-                  })
-              : JEWELLERY_CATEGORIES.map((c) => ({
-                  id: c.id,
-                  slug: c.id,
-                  label: c.label,
-                  productCount: categoryCounts[c.id] ?? 0,
-                }))
-            ).map((cat) => {
-              const isActive =
-                filters.category?.toLowerCase() === cat.slug.toLowerCase() ||
-                filters.category?.toLowerCase() === cat.id.toLowerCase();
-              const count =
-                categoryCounts[cat.slug] ??
-                categoryCounts[cat.id] ??
-                cat.productCount ??
-                0;
-              return (
-                <button
-                  key={cat.slug}
-                  type="button"
-                  onClick={() => handleCategoryClick(cat.slug)}
-                  suppressHydrationWarning
-                  aria-pressed={isActive}
-                  className={`flex items-center justify-between text-xs sm:text-[13px] py-1 transition-colors text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black ${
-                    isActive
-                      ? "font-semibold text-black"
-                      : "text-[#555555] hover:text-black"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                        isActive ? "bg-black" : "bg-transparent"
+            {/* Individual Jewellery Categories from MongoDB */}
+            {effectiveCategories && effectiveCategories.length > 0 ? (
+              effectiveCategories
+                .filter((c) => c.isActive !== false)
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                .map((cat) => {
+                  const isActive =
+                    filters.category?.toLowerCase() === cat.slug.toLowerCase() ||
+                    filters.category?.toLowerCase() === cat.id.toLowerCase() ||
+                    filters.category?.toLowerCase() === cat.name.toLowerCase();
+                  const count =
+                    categoryCounts[cat.slug] ??
+                    categoryCounts[cat.id] ??
+                    categoryCounts[cat.name] ??
+                    cat.productCount ??
+                    0;
+                  return (
+                    <button
+                      key={cat.id || cat.slug}
+                      type="button"
+                      onClick={() => handleCategoryClick(cat.slug)}
+                      suppressHydrationWarning
+                      aria-pressed={isActive}
+                      className={`flex items-center justify-between text-xs sm:text-[13px] py-1 transition-colors text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black ${
+                        isActive
+                          ? "font-semibold text-black"
+                          : "text-[#555555] hover:text-black"
                       }`}
-                      aria-hidden="true"
-                    />
-                    <span>{cat.label}</span>
-                  </span>
-                  <span className="text-[11px] text-[#888888]">({count})</span>
-                </button>
-              );
-            })}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                            isActive ? "bg-black" : "bg-transparent"
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <span>{cat.name}</span>
+                      </span>
+                      <span className="text-[11px] text-[#888888]">({count})</span>
+                    </button>
+                  );
+                })
+            ) : isLoading ? (
+              <div className="space-y-2 py-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-4 bg-[#F0EFEA] rounded animate-pulse w-3/4" />
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
       </div>
@@ -255,43 +296,51 @@ export function ShopSidebar({
 
         {openSections.price && (
           <div id="filter-section-price" className="mt-4 flex flex-col gap-2.5">
-            {/* Minimum & Maximum Selected Prices Aligned Left and Right */}
-            <div className="flex items-center justify-between text-xs text-[#555555]">
-              <span className="font-medium text-[#111111]">
-                Min: <span className="font-normal text-[#555555]">{formatInr(currentMinPrice)}</span>
-              </span>
-              <span className="font-medium text-[#111111]">
-                Max: <span className="font-normal text-[#555555]">{formatInr(currentMaxPrice)}</span>
-              </span>
-            </div>
+            {minCataloguePrice === 0 && maxCataloguePrice === 0 ? (
+              <div className="text-xs text-[#888888] italic py-2">
+                No price limits available
+              </div>
+            ) : (
+              <>
+                {/* Minimum & Maximum Selected Prices Aligned Left and Right */}
+                <div className="flex items-center justify-between text-xs text-[#555555]">
+                  <span className="font-medium text-[#111111]">
+                    Min: <span className="font-normal text-[#555555]">{formatInr(currentMinPrice)}</span>
+                  </span>
+                  <span className="font-medium text-[#111111]">
+                    Max: <span className="font-normal text-[#555555]">{formatInr(currentMaxPrice)}</span>
+                  </span>
+                </div>
 
-            {/* Exactly One Single-Track Dual-Thumb Range Slider */}
-            <DualRangeSlider
-              min={minCataloguePrice}
-              max={maxCataloguePrice}
-              step={500}
-              value={[currentMinPrice, currentMaxPrice]}
-              onChange={([newMin, newMax]) => handlePriceRangeChange(newMin, newMax)}
-              minLabel="Minimum price"
-              maxLabel="Maximum price"
-            />
+                {/* Exactly One Single-Track Dual-Thumb Range Slider */}
+                <DualRangeSlider
+                  min={minCataloguePrice}
+                  max={maxCataloguePrice}
+                  step={maxCataloguePrice - minCataloguePrice > 5000 ? 500 : 100}
+                  value={[currentMinPrice, currentMaxPrice]}
+                  onChange={([newMin, newMax]) => handlePriceRangeChange(newMin, newMax)}
+                  minLabel="Minimum price"
+                  maxLabel="Maximum price"
+                />
 
-            {/* Selected Price Range Display Underneath & Reset Action */}
-            <div className="flex items-center justify-between pt-0.5">
-              <span className="text-xs font-semibold text-[#111111]">
-                {formatInr(currentMinPrice)} – {formatInr(currentMaxPrice)}
-              </span>
-              {isPriceFiltered && (
-                <button
-                  type="button"
-                  onClick={handlePriceReset}
-                  suppressHydrationWarning
-                  className="text-[11px] font-medium text-[#666666] hover:text-black underline transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
-                >
-                  Reset Price
-                </button>
-              )}
-            </div>
+                {/* Selected Price Range Display Underneath & Reset Action */}
+                <div className="flex items-center justify-between pt-0.5">
+                  <span className="text-xs font-semibold text-[#111111]">
+                    {formatInr(currentMinPrice)} – {formatInr(currentMaxPrice)}
+                  </span>
+                  {isPriceFiltered && (
+                    <button
+                      type="button"
+                      onClick={handlePriceReset}
+                      suppressHydrationWarning
+                      className="text-[11px] font-medium text-[#666666] hover:text-black underline transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+                    >
+                      Reset Price
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -316,40 +365,50 @@ export function ShopSidebar({
 
         {openSections.materials && (
           <div id="filter-section-materials" className="mt-3.5 flex flex-col gap-2">
-            {JEWELLERY_MATERIALS.map((mat) => {
-              const isChecked = filters.materials?.includes(mat) ?? false;
-              const count = materialCounts[mat] ?? 0;
-              return (
-                <label
-                  key={mat}
-                  className="flex items-center justify-between text-xs sm:text-[13px] text-[#555555] hover:text-black cursor-pointer py-1 select-none"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className={`flex h-4 w-4 items-center justify-center border transition-colors ${
-                        isChecked
-                          ? "bg-black border-black text-white"
-                          : "border-[#CCCCCC] bg-white hover:border-black"
-                      }`}
-                    >
-                      {isChecked && <Check className="h-3 w-3 stroke-[2.5]" />}
+            {effectiveMaterials.length > 0 ? (
+              effectiveMaterials.map((mat) => {
+                const isChecked = filters.materials?.some((m) => m.toLowerCase() === mat.toLowerCase()) ?? false;
+                const count = materialCounts[mat] ?? 0;
+                return (
+                  <label
+                    key={mat}
+                    className="flex items-center justify-between text-xs sm:text-[13px] text-[#555555] hover:text-black cursor-pointer py-1 select-none"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`flex h-4 w-4 items-center justify-center border transition-colors ${
+                          isChecked
+                            ? "bg-black border-black text-white"
+                            : "border-[#CCCCCC] bg-white hover:border-black"
+                        }`}
+                      >
+                        {isChecked && <Check className="h-3 w-3 stroke-[2.5]" />}
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleMaterialToggle(mat)}
+                        className="sr-only"
+                        aria-label={`Filter by ${mat}`}
+                        suppressHydrationWarning
+                      />
+                      <span className={isChecked ? "font-semibold text-black" : ""}>
+                        {mat}
+                      </span>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => handleMaterialToggle(mat)}
-                      className="sr-only"
-                      aria-label={`Filter by ${mat}`}
-                      suppressHydrationWarning
-                    />
-                    <span className={isChecked ? "font-semibold text-black" : ""}>
-                      {mat}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-[#888888]">({count})</span>
-                </label>
-              );
-            })}
+                    <span className="text-[11px] text-[#888888]">({count})</span>
+                  </label>
+                );
+              })
+            ) : isLoading ? (
+              <div className="space-y-2 py-1">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-4 bg-[#F0EFEA] rounded animate-pulse w-2/3" />
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-[#888888] italic py-1">No materials available</div>
+            )}
           </div>
         )}
       </div>
@@ -374,40 +433,51 @@ export function ShopSidebar({
 
         {openSections.sizes && (
           <div id="filter-section-sizes" className="mt-3.5 flex flex-col gap-2">
-            {JEWELLERY_SIZES.map((sz) => {
-              const isChecked = filters.sizes?.includes(sz) ?? false;
-              const count = sizeCounts[sz] ?? 0;
-              return (
-                <label
-                  key={sz}
-                  className="flex items-center justify-between text-xs sm:text-[13px] text-[#555555] hover:text-black cursor-pointer py-1 select-none"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className={`flex h-4 w-4 items-center justify-center border transition-colors ${
-                        isChecked
-                          ? "bg-black border-black text-white"
-                          : "border-[#CCCCCC] bg-white hover:border-black"
-                      }`}
-                    >
-                      {isChecked && <Check className="h-3 w-3 stroke-[2.5]" />}
+            {effectiveSizes.length > 0 ? (
+              effectiveSizes.map((sz) => {
+                const isChecked = filters.sizes?.some((s) => s.toLowerCase() === sz.toLowerCase()) ?? false;
+                const count = sizeCounts[sz] ?? 0;
+                const displayLabel = sz.includes('"') || isNaN(Number(sz)) ? sz : `Size ${sz}`;
+                return (
+                  <label
+                    key={sz}
+                    className="flex items-center justify-between text-xs sm:text-[13px] text-[#555555] hover:text-black cursor-pointer py-1 select-none"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`flex h-4 w-4 items-center justify-center border transition-colors ${
+                          isChecked
+                            ? "bg-black border-black text-white"
+                            : "border-[#CCCCCC] bg-white hover:border-black"
+                        }`}
+                      >
+                        {isChecked && <Check className="h-3 w-3 stroke-[2.5]" />}
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleSizeToggle(sz)}
+                        className="sr-only"
+                        aria-label={`Filter by size ${sz}`}
+                        suppressHydrationWarning
+                      />
+                      <span className={isChecked ? "font-semibold text-black" : ""}>
+                        {displayLabel}
+                      </span>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => handleSizeToggle(sz)}
-                      className="sr-only"
-                      aria-label={`Filter by size ${sz}`}
-                      suppressHydrationWarning
-                    />
-                    <span className={isChecked ? "font-semibold text-black" : ""}>
-                      Size {sz}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-[#888888]">({count})</span>
-                </label>
-              );
-            })}
+                    <span className="text-[11px] text-[#888888]">({count})</span>
+                  </label>
+                );
+              })
+            ) : isLoading ? (
+              <div className="space-y-2 py-1">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-4 bg-[#F0EFEA] rounded animate-pulse w-2/3" />
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-[#888888] italic py-1">No sizes available</div>
+            )}
           </div>
         )}
       </div>

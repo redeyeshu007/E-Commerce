@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { SlidersHorizontal, ChevronDown } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, Loader2 } from "lucide-react";
 import type { SortOption } from "@/services/product-service";
 
 export type ViewMode = "list" | "grid-2" | "grid-3" | "grid-4";
@@ -16,6 +16,7 @@ export interface ProductToolbarProps {
   onViewModeChange: (mode: ViewMode) => void;
   onOpenMobileFilters: () => void;
   activeFilterCount: number;
+  isLoading?: boolean;
   className?: string;
 }
 
@@ -38,6 +39,7 @@ export function ProductToolbar({
   onViewModeChange,
   onOpenMobileFilters,
   activeFilterCount,
+  isLoading = false,
   className = "",
 }: ProductToolbarProps) {
   return (
@@ -65,11 +67,11 @@ export function ProductToolbar({
           )}
         </button>
 
-        {/* Product Count Announcement */}
+        {/* Product Count Announcement & Loading State */}
         <div
           role="status"
           aria-live="polite"
-          className="text-xs sm:text-[13px] text-[#666666] tracking-wide"
+          className="text-xs sm:text-[13px] text-[#666666] tracking-wide flex items-center gap-2"
         >
           {total === 0 ? (
             <span>0 products</span>
@@ -77,6 +79,15 @@ export function ProductToolbar({
             <span>
               Showing <strong className="font-semibold text-[#111111]">{fromIndex}–{toIndex}</strong> of{" "}
               <strong className="font-semibold text-[#111111]">{total}</strong> products
+            </span>
+          )}
+          {isLoading && (
+            <span
+              data-testid="toolbar-loading"
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EAE6DF] text-xs text-[#C5A572] font-medium animate-pulse"
+            >
+              <Loader2 className="h-3 w-3 animate-spin text-[#C5A572]" />
+              <span>Updating...</span>
             </span>
           )}
         </div>

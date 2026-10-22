@@ -20,7 +20,7 @@ export function getBackendOrigin(): string {
 export const BACKEND_ORIGIN = getBackendOrigin();
 
 export const API_BASE_URL =
-  typeof window !== "undefined" && window.location?.origin
+  typeof window !== "undefined" && window.location?.origin && !process.env["VITEST"]
     ? "/api/v1"
     : `${BACKEND_ORIGIN}/api/v1`;
 

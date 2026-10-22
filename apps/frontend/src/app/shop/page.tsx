@@ -41,11 +41,37 @@ function ShopLoadingSkeleton() {
   );
 }
 
-async function DynamicShopPage() {
+interface ShopPageProps {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+async function DynamicShopPage({ searchParams }: ShopPageProps) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const category = typeof resolvedParams.category === "string" ? resolvedParams.category : null;
+  const material = typeof resolvedParams.material === "string" ? resolvedParams.material : null;
+  const materials = typeof resolvedParams.materials === "string" ? resolvedParams.materials.split(",") : material ? [material] : [];
+  const sizes = typeof resolvedParams.sizes === "string" ? resolvedParams.sizes.split(",") : [];
+  const minPrice = typeof resolvedParams.minPrice === "string" ? Number(resolvedParams.minPrice) : null;
+  const maxPrice = typeof resolvedParams.maxPrice === "string" ? Number(resolvedParams.maxPrice) : null;
+  const search = typeof resolvedParams.search === "string" ? resolvedParams.search : undefined;
+  const sort = typeof resolvedParams.sort === "string" ? (resolvedParams.sort as any) : "default";
+  const page = typeof resolvedParams.page === "string" ? Number(resolvedParams.page) : 1;
+
+  const initialFilters = {
+    category,
+    material,
+    materials,
+    sizes,
+    minPrice,
+    maxPrice,
+    search,
+  };
+
   const [categories, initialCatalogue] = await Promise.all([
     fetchPublicCategories(),
-    fetchPublicProducts(),
+    fetchPublicProducts(initialFilters, sort, page),
   ]);
+
   return (
     <ShopPageContent
       initialCategories={categories}
@@ -54,10 +80,11 @@ async function DynamicShopPage() {
   );
 }
 
-export default function ShopPage() {
+export default async function ShopPage(props: ShopPageProps) {
   return (
     <Suspense fallback={<ShopLoadingSkeleton />}>
-      <DynamicShopPage />
+      <DynamicShopPage searchParams={props.searchParams} />
     </Suspense>
   );
 }
+

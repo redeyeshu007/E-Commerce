@@ -21,28 +21,41 @@ export function GoogleSignInButton({
     setIsLoading(true);
 
     try {
-      const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      const redirectUri = `${window.location.origin}/api/auth/callback/google`;
 
-      if (!googleClientId) {
-        // As per prompt requirements: If Google OAuth is not configured, report setup requirement accurately
-        setSetupNotice(
-          "Google Sign-In is pending environment configuration (NEXT_PUBLIC_GOOGLE_CLIENT_ID). Please use your email and password to sign in."
-        );
-        setIsLoading(false);
+      // 1. Check backend configuration first
+      const res = await fetch(
+        `/api/auth/google/url?redirectUri=${encodeURIComponent(redirectUri)}`
+      ).catch(() => null);
+
+      if (res && res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data?.data?.configured && data?.data?.authUrl) {
+          window.location.href = data.data.authUrl;
+          return;
+        }
+      }
+
+      // 2. Fallback to client-side public Google Client ID if available
+      const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (googleClientId) {
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+          googleClientId
+        )}&redirect_uri=${encodeURIComponent(
+          redirectUri
+        )}&response_type=code&scope=openid%20email%20profile&prompt=select_account`;
+
+        window.location.href = authUrl;
         return;
       }
 
-      // If configured, initialize official Google OAuth redirect / popup flow
-      const redirectUri = `${window.location.origin}/api/auth/callback/google`;
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-        googleClientId
-      )}&redirect_uri=${encodeURIComponent(
-        redirectUri
-      )}&response_type=code&scope=openid%20email%20profile`;
-
-      window.location.href = authUrl;
+      // 3. Accurately report configuration requirement if neither server nor client has client ID
+      setSetupNotice(
+        "Google Sign-In is pending environment configuration (NEXT_PUBLIC_GOOGLE_CLIENT_ID / GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET). Please use your email and password to sign in."
+      );
     } catch {
       setSetupNotice("Unable to initiate Google Sign-In. Please use your email and password.");
+    } finally {
       setIsLoading(false);
     }
   };

@@ -2,8 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import { Search, User, Heart, ShoppingCart } from "lucide-react";
+import { Search, User, Heart, ShoppingCart, LogOut, Package } from "lucide-react";
 import type { ActionItem } from "@/config/navigation";
+import { useStorefront } from "@/providers/storefront-provider";
 
 export interface NavbarActionsProps {
   actions?: ActionItem[];
@@ -46,27 +47,103 @@ export function AccountButton({
   isImplemented?: boolean;
   onClick?: () => void;
 }) {
-  if (isImplemented && href) {
+  const { customer, isAuthenticated, logoutCustomer } = useStorefront();
+  const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  if (!mounted || !isAuthenticated) {
     return (
-      <Link
-        href={href}
+      <button
+        type="button"
+        onClick={onClick}
         aria-label="Account"
-        className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-all duration-200 hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+        data-testid="account-action-button"
+        className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-all duration-200 hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer"
       >
         <User className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
-      </Link>
+      </button>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="Account"
-      className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-all duration-200 hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
-    >
-      <User className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
-    </button>
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-label={`Account (${customer?.fullName})`}
+        aria-expanded={isOpen}
+        data-testid="account-action-button-authenticated"
+        className="group relative flex h-10 w-10 lg:h-11 lg:w-11 items-center justify-center rounded-full text-[#222222] transition-all duration-200 hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer"
+      >
+        <User className={ICON_CLASS_NAME} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
+        <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#C5A572] ring-2 ring-white" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-64 rounded-xl bg-white p-4 shadow-xl border border-[#EAE6DF] z-50 animate-in fade-in zoom-in-95 duration-150">
+          <div className="border-b border-[#EAE6DF] pb-3 mb-3">
+            <p className="text-xs uppercase tracking-wider text-[#C5A572] font-semibold">
+              Customer Account
+            </p>
+            <p className="text-sm font-medium text-[#111111] truncate mt-0.5">
+              {customer?.fullName}
+            </p>
+            <p className="text-xs text-[#777777] truncate">{customer?.email}</p>
+          </div>
+
+          <div className="space-y-1">
+            <Link
+              href="/profile"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#222222] hover:bg-[#FAF8F5] rounded-lg transition-colors"
+            >
+              <User className="h-4 w-4 text-[#666666]" />
+              <span>My Profile</span>
+            </Link>
+
+            <Link
+              href="/orders"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#222222] hover:bg-[#FAF8F5] rounded-lg transition-colors"
+            >
+              <Package className="h-4 w-4 text-[#666666]" />
+              <span>My Orders</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={async () => {
+                setIsOpen(false);
+                await logoutCustomer();
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#DC2626] hover:bg-[#FEF2F2] rounded-lg transition-colors cursor-pointer text-left"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

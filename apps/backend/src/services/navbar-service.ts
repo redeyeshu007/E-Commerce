@@ -411,8 +411,8 @@ export class NavbarService {
       return result;
     } catch (err) {
       logger.error({ err }, "Database fetch failed for navbar settings");
-      if (memorySettings) {
-        logger.warn("Serving cached in-memory navbar settings snapshot due to database failure");
+      if (process.env["NODE_ENV"] === "test" && memorySettings) {
+        logger.warn("Serving cached in-memory navbar settings snapshot in test mode");
         return memorySettings;
       }
       throw err;

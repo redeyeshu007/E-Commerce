@@ -7,7 +7,7 @@ const UPLOADS_DIR = path.resolve(process.cwd(), "uploads", "hero");
 
 export class HeroMediaService {
   /**
-   * Saves or updates a media asset in PostgreSQL.
+   * Saves or updates a media asset in MongoDB.
    */
   static async saveAsset(filename: string, mimeType: string, buffer: Buffer): Promise<void> {
     await prisma.heroMediaAsset.upsert({
@@ -25,11 +25,11 @@ export class HeroMediaService {
         data: buffer as any,
       },
     });
-    logger.info({ filename, size: buffer.length, mimeType }, "Media asset saved to PostgreSQL");
+    logger.info({ filename, size: buffer.length, mimeType }, "Media asset saved to MongoDB");
   }
 
   /**
-   * Retrieves a media asset binary and MIME type from PostgreSQL.
+   * Retrieves a media asset binary and MIME type from MongoDB.
    */
   static async getAsset(filename: string): Promise<{ data: Buffer; mimeType: string } | null> {
     const record = await prisma.heroMediaAsset.findUnique({
@@ -45,7 +45,7 @@ export class HeroMediaService {
   }
 
   /**
-   * Synchronizes any existing files on disk into PostgreSQL if they are missing from the DB.
+   * Synchronizes any existing files on disk into MongoDB if they are missing from the DB.
    */
   static async syncDiskToDatabase(): Promise<void> {
     try {
@@ -83,11 +83,11 @@ export class HeroMediaService {
               data: buffer,
             },
           });
-          logger.info({ file }, "Synced local disk media asset to PostgreSQL");
+          logger.info({ file }, "Synced local disk media asset to MongoDB");
         }
       }
     } catch (err) {
-      logger.warn({ err }, "Could not sync local disk media assets to PostgreSQL");
+      logger.warn({ err }, "Could not sync local disk media assets to MongoDB");
     }
   }
 }

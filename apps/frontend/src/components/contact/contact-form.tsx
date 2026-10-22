@@ -10,8 +10,10 @@ import {
 } from "@/services/contact-service";
 import { brandConfig } from "@/config/brand";
 import { defaultNavigationConfig } from "@/config/navigation";
+import { useNotification } from "@/providers/storefront-provider";
 
 export function ContactForm() {
+  const notify = useNotification();
   const [formData, setFormData] = useState<ContactEnquiryData>({
     fullName: "",
     email: "",
@@ -50,6 +52,9 @@ export function ContactForm() {
     const validationErrors = validateContactForm(formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      notify.warning("Please check required fields", {
+        description: "Please complete all required fields correctly before submitting.",
+      });
       // Focus first error field for accessibility
       const firstErrorKey = Object.keys(validationErrors)[0];
       const element = document.getElementById(`contact-${firstErrorKey}`);
@@ -72,6 +77,9 @@ export function ContactForm() {
           type: "success",
           message: result.message,
         });
+        notify.success("Message sent successfully!", {
+          description: "Our concierge team has received your message.",
+        });
         // Reset form on success
         setFormData({
           fullName: "",
@@ -84,19 +92,29 @@ export function ContactForm() {
           type: "unconfigured",
           message: result.message,
         });
+        notify.info("Service notice", {
+          description: result.message,
+        });
       } else {
         setSubmissionFeedback({
           type: "error",
           message: result.message,
         });
+        notify.error("Message could not be sent", {
+          description: result.message,
+        });
       }
     } catch (err) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred. Please try reaching us directly.";
       setSubmissionFeedback({
         type: "error",
-        message:
-          err instanceof Error
-            ? err.message
-            : "An unexpected error occurred. Please try reaching us directly.",
+        message: msg,
+      });
+      notify.error("Message could not be sent", {
+        description: msg,
       });
     } finally {
       setIsSubmitting(false);

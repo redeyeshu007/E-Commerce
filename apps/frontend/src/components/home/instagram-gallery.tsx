@@ -1,19 +1,82 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import type {
-  InstagramGalleryConfig,
-  InstagramGalleryItem,
-} from "@/config/instagram";
+import { RotateCcw } from "lucide-react";
+import {
+  fetchPublicInstagramSection,
+  INSTAGRAM_SECTION_UPDATED_EVENT,
+} from "@/services/instagram-service";
+import type { InstagramSectionConfig, InstagramImageItem } from "@/types/instagram";
 import { defaultInstagramConfig } from "@/config/instagram";
+
+/* -------------------------------------------------------------------------
+ * URL Validation Helper
+ * ------------------------------------------------------------------------- */
+function sanitizeDestinationUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  // Prevent dangerous protocols
+  if (
+    trimmed.toLowerCase().startsWith("javascript:") ||
+    trimmed.toLowerCase().startsWith("data:") ||
+    trimmed.toLowerCase().startsWith("vbscript:")
+  ) {
+    return null;
+  }
+
+  // Allow relative links (e.g. /shop, /collections)
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return trimmed;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+/* -------------------------------------------------------------------------
+ * Component: InstagramGallerySkeleton
+ * ------------------------------------------------------------------------- */
+export function InstagramGallerySkeleton() {
+  return (
+    <section
+      aria-label="Loading Instagram gallery"
+      className="w-full bg-white pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-10 lg:pb-12"
+      data-testid="instagram-gallery-skeleton"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center mb-10 sm:mb-12 lg:mb-14">
+          <div className="h-8 sm:h-9 w-64 bg-neutral-200 animate-pulse rounded mb-2.5" />
+          <div className="h-4 w-40 bg-neutral-100 animate-pulse rounded" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="aspect-square w-full bg-neutral-200 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 /* -------------------------------------------------------------------------
  * Component: InstagramGalleryItemCard
  * ------------------------------------------------------------------------- */
-
 export interface InstagramGalleryItemCardProps {
-  item: InstagramGalleryItem;
+  item: InstagramImageItem;
   profileUrl?: string | null;
   className?: string;
 }
@@ -23,7 +86,10 @@ export function InstagramGalleryItemCard({
   profileUrl,
   className = "",
 }: InstagramGalleryItemCardProps) {
-  const destinationUrl = item.postUrl || profileUrl;
+  // Check individual post destination first, then fall back to configured profile URL
+  const postDestination = sanitizeDestinationUrl(item.postUrl);
+  const profileDestination = sanitizeDestinationUrl(profileUrl);
+  const destinationUrl = postDestination || profileDestination;
 
   const content = (
     <div
@@ -31,14 +97,14 @@ export function InstagramGalleryItemCard({
       className={`group relative aspect-square w-full overflow-hidden bg-[#F5F5F5] select-none ${className}`}
     >
       <Image
-        src={item.image.src}
-        alt={item.image.alt}
+        src={item.imageUrl}
+        alt={item.altText || "PERALAGAE Fine Jewellery on Instagram"}
         fill
         sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 16vw"
         className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
       />
 
-      {/* Subtle luxury Instagram icon overlay on hover */}
+      {/* Luxury Instagram icon overlay on hover */}
       <div
         className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none"
         aria-hidden="true"
@@ -57,12 +123,13 @@ export function InstagramGalleryItemCard({
   );
 
   if (destinationUrl) {
+    const isExternal = destinationUrl.startsWith("http://") || destinationUrl.startsWith("https://");
     return (
       <a
         href={destinationUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`View Instagram post: ${item.image.alt}`}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        aria-label={`View Instagram post: ${item.altText || "PERALAGAE piece"}`}
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
       >
         {content}
@@ -76,9 +143,8 @@ export function InstagramGalleryItemCard({
 /* -------------------------------------------------------------------------
  * Component: InstagramGalleryGrid
  * ------------------------------------------------------------------------- */
-
 export interface InstagramGalleryGridProps {
-  items: InstagramGalleryItem[];
+  items: InstagramImageItem[];
   profileUrl?: string | null;
   className?: string;
 }
@@ -107,36 +173,94 @@ export function InstagramGalleryGrid({
 /* -------------------------------------------------------------------------
  * Component: InstagramGallerySection
  * ------------------------------------------------------------------------- */
-
 export interface InstagramGallerySectionProps {
-  config?: InstagramGalleryConfig;
+  initialConfig?: InstagramSectionConfig | null;
   className?: string;
 }
 
 /**
  * InstagramGallerySection Component — PERALAGAE
  *
- * Implements:
- * 1. Centred exact heading: "Follow Us on Instagram"
+ * Implements Strict Database-Only Rendering:
+ * 1. Centred exact heading dynamically retrieved from MongoDB
  * 2. Muted grey configurable handle beneath heading (e.g. "@peralagaeofficial")
- * 3. Exactly six separate jewellery images in a single row on desktop (lg:grid-cols-6)
- * 4. Responsive arrangement (2 columns on mobile, 3 on tablet, 6 on desktop)
- * 5. Clean editorial photography without captions, prices, or card borders
+ * 3. Responsive arrangement (2 columns on mobile, 3 on tablet, 6 on desktop)
+ * 4. Honest loading skeleton while fetching
+ * 5. Honest error / retry state if API fails
+ * 6. Live synchronization on INSTAGRAM_SECTION_UPDATED_EVENT
  */
 export function InstagramGallerySection({
-  config = defaultInstagramConfig,
+  initialConfig = null,
   className = "",
 }: InstagramGallerySectionProps) {
-  const {
-    heading = "Follow Us on Instagram",
-    handle = "@peralagaeofficial",
-    profileUrl,
-    items = [],
-  } = config;
+  const [section, setSection] = useState<InstagramSectionConfig | null>(initialConfig);
+  const [isLoading, setIsLoading] = useState(!initialConfig);
+  const [hasError, setHasError] = useState(false);
 
-  if (!items || items.length === 0) {
+  const loadSection = useCallback(async () => {
+    try {
+      setHasError(false);
+      const data = await fetchPublicInstagramSection();
+      setSection(data);
+    } catch {
+      setHasError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSection();
+
+    const handleUpdate = () => {
+      loadSection();
+    };
+
+    window.addEventListener(INSTAGRAM_SECTION_UPDATED_EVENT, handleUpdate);
+    return () => {
+      window.removeEventListener(INSTAGRAM_SECTION_UPDATED_EVENT, handleUpdate);
+    };
+  }, [loadSection]);
+
+  // Loading State: Render Skeleton
+  if (isLoading && !section) {
+    return <InstagramGallerySkeleton />;
+  }
+
+  // Error State: Honest Error Recovery
+  if (hasError && !section) {
+    return (
+      <section
+        data-testid="instagram-gallery-error"
+        aria-label="Instagram gallery connection status"
+        className="w-full bg-white py-12 px-4 text-center border-y border-neutral-100"
+      >
+        <div className="max-w-md mx-auto flex flex-col items-center">
+          <p className="text-sm text-neutral-500 mb-4 font-normal">
+            Unable to load Instagram gallery from database.
+          </p>
+          <button
+            onClick={() => {
+              setIsLoading(true);
+              loadSection();
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-black text-xs uppercase tracking-widest text-black hover:bg-black hover:text-white transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Retry Connection
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  // Section Deactivated or No Active Content
+  if (!section || !section.isActive || !section.images || section.images.length === 0) {
     return null;
   }
+
+  const { heading, handle, profileUrl, images } = section;
+  const sanitizedProfileUrl = sanitizeDestinationUrl(profileUrl);
 
   return (
     <section
@@ -145,7 +269,7 @@ export function InstagramGallerySection({
       className={`w-full bg-white pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-10 lg:pb-12 ${className}`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Exact Section Heading: Follow Us on Instagram */}
+        {/* Exact Section Heading */}
         <h2
           id="instagram-gallery-heading"
           data-testid="instagram-gallery-heading"
@@ -155,9 +279,9 @@ export function InstagramGallerySection({
         </h2>
 
         {/* Configurable Instagram Handle */}
-        {profileUrl ? (
+        {sanitizedProfileUrl ? (
           <a
-            href={profileUrl}
+            href={sanitizedProfileUrl}
             target="_blank"
             rel="noopener noreferrer"
             data-testid="instagram-handle-link"
@@ -174,8 +298,8 @@ export function InstagramGallerySection({
           </p>
         )}
 
-        {/* Six-Image Gallery Grid */}
-        <InstagramGalleryGrid items={items} profileUrl={profileUrl} />
+        {/* Dynamic Image Gallery Grid */}
+        <InstagramGalleryGrid items={images} profileUrl={sanitizedProfileUrl} />
       </div>
     </section>
   );

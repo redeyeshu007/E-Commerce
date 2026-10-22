@@ -31,6 +31,11 @@ export function ProductCard({ product, className = "", dataTestId }: ProductCard
 
   const isFavorite = isWishlisted(product.id);
 
+  const isOutOfStock =
+    product.inStock === false ||
+    product.isAvailable === false ||
+    (product.stockCount !== undefined && product.stockCount <= 0);
+
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -40,6 +45,7 @@ export function ProductCard({ product, className = "", dataTestId }: ProductCard
   const handleAddToCartClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) return;
     addToCart(product);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 2000);
@@ -52,23 +58,29 @@ export function ProductCard({ product, className = "", dataTestId }: ProductCard
     >
       {/* 1. Square Image Container */}
       <div className="relative aspect-square w-full overflow-hidden bg-[#F2F2F2] border border-[#E5E5E5]">
-        {/* Product Badge (HOT or NEW) */}
-        {product.isHot && (
+        {/* Product Badge */}
+        {isOutOfStock ? (
+          <span
+            data-testid="badge-out-of-stock"
+            className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 bg-[#71717A] text-white text-[9.5px] sm:text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
+          >
+            Out of Stock
+          </span>
+        ) : product.isHot ? (
           <span
             data-testid="badge-hot"
             className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 bg-[#D9383A] text-white text-[9.5px] sm:text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
           >
             HOT
           </span>
-        )}
-        {!product.isHot && product.isNew && (
+        ) : product.isNew ? (
           <span
             data-testid="badge-new"
             className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 bg-[#111111] text-white text-[9.5px] sm:text-[10px] font-bold tracking-widest px-2 py-0.5 uppercase shadow-sm select-none"
           >
             NEW
           </span>
-        )}
+        ) : null}
 
         {/* Product Image */}
         <Link
@@ -111,15 +123,20 @@ export function ProductCard({ product, className = "", dataTestId }: ProductCard
           <button
             type="button"
             onClick={handleAddToCartClick}
-            aria-label={`Add ${product.name} to cart`}
+            disabled={isOutOfStock}
+            aria-label={isOutOfStock ? `${product.name} is out of stock` : `Add ${product.name} to cart`}
             suppressHydrationWarning
             className={`w-full py-2 sm:py-2.5 px-3 sm:px-4 text-[11px] sm:text-xs font-semibold tracking-[0.08em] uppercase transition-colors duration-200 flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-              justAdded
+              isOutOfStock
+                ? "bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed border-t border-[#E5E7EB]"
+                : justAdded
                 ? "bg-[#111111] text-white"
                 : "bg-white/95 text-[#111111] hover:bg-[#111111] hover:text-white border-t border-[#E5E7EB]"
             }`}
           >
-            {justAdded ? (
+            {isOutOfStock ? (
+              <span>Out of Stock</span>
+            ) : justAdded ? (
               <>
                 <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden="true" />
                 <span>Added to Bag</span>

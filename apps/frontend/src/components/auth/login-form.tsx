@@ -11,6 +11,7 @@ import { GoogleSignInButton } from "./google-sign-in-button";
 
 import { loginAdmin } from "@/services/admin-auth-service";
 import { useRouter } from "next/navigation";
+import { useStorefront } from "@/providers/storefront-provider";
 
 export interface LoginFormProps {
   initialEmail?: string;
@@ -30,12 +31,8 @@ export function LoginForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  let router: ReturnType<typeof useRouter> | null = null;
-  try {
-    router = useRouter();
-  } catch {
-    router = null;
-  }
+  const router = useRouter();
+  const { loginCustomer, authReturnUrl, setAuthReturnUrl } = useStorefront();
 
   const {
     register,
@@ -54,20 +51,63 @@ export function LoginForm({
     setIsSubmitting(true);
 
     try {
-      const authResult = await loginAdmin({
-        email: data.email.trim(),
-        password: data.password,
-      });
+      // 1. If StorefrontProvider is mounted with customer auth, attempt customer login
+      let isUnmounted = false;
+      try {
+        const loggedInCustomer = await loginCustomer({
+          email: data.email.trim(),
+          password: data.password,
+        });
 
-      if (authResult?.admin?.role === "admin") {
         onSuccess?.();
-        if (router?.push) {
-          router.push("/admin/dashboard");
-        } else if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-          window.location.href = "/admin/dashboard";
+
+        if (!loggedInCustomer?.isProfileComplete) {
+          const returnTarget = authReturnUrl ? `?returnUrl=${encodeURIComponent(authReturnUrl)}` : "";
+          setAuthReturnUrl(null);
+          router.push(`/profile/setup${returnTarget}`);
+        } else if (authReturnUrl) {
+          const dest = authReturnUrl;
+          setAuthReturnUrl(null);
+          router.push(dest);
         }
-      } else {
-        onSuccess?.();
+        return;
+      } catch (custErr: unknown) {
+        const cErr = custErr as Error;
+        if (cErr?.message === "StorefrontProvider not mounted") {
+          isUnmounted = true;
+        } else {
+          // If customer login fails, check if admin credentials are provided
+          try {
+            const adminResult = await loginAdmin({
+              email: data.email.trim(),
+              password: data.password,
+            });
+
+            if (adminResult?.admin?.role === "admin") {
+              onSuccess?.();
+              router.push("/admin/dashboard");
+              return;
+            }
+          } catch {
+            // Keep original customer error
+          }
+          throw cErr;
+        }
+      }
+
+      // 2. Fallback to loginAdmin (when unmounted in isolated tests or admin portal)
+      if (isUnmounted) {
+        const authResult = await loginAdmin({
+          email: data.email.trim(),
+          password: data.password,
+        });
+
+        if (authResult?.admin?.role === "admin") {
+          onSuccess?.();
+          router.push("/admin/dashboard");
+        } else {
+          onSuccess?.();
+        }
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

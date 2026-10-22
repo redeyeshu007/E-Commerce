@@ -370,12 +370,12 @@ export default function AdminNavbarPage() {
       topBarForm.visible !== s.visible ||
       topBarForm.dismissible !== s.dismissible
     );
-  }, [serverSettings?.topBar, topBarForm]);
+  }, [serverSettings, topBarForm]);
 
   const hasSecondNavbarChanges = useMemo(() => {
     if (!serverSettings?.secondNavbar) return false;
     return secondNavbarPromo !== serverSettings.secondNavbar.promoText;
-  }, [serverSettings?.secondNavbar, secondNavbarPromo]);
+  }, [serverSettings, secondNavbarPromo]);
 
   const hasHero1Changes = useMemo(() => {
     if (heroPendingFiles.heroImage1) return true;
@@ -1035,7 +1035,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 data-testid="tab-top-bar"
                 onClick={() => setActiveTab("top_bar")}
-                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                className={`px-3.5 sm:px-4 py-2 min-h-[38px] text-xs font-medium rounded-md transition-all flex items-center justify-center gap-2 ${
                   activeTab === "top_bar"
                     ? "bg-[#111111] text-white shadow-sm font-semibold"
                     : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
@@ -1051,7 +1051,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 data-testid="tab-second-navbar"
                 onClick={() => setActiveTab("second_navbar")}
-                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                className={`px-3.5 sm:px-4 py-2 min-h-[38px] text-xs font-medium rounded-md transition-all flex items-center justify-center gap-2 ${
                   activeTab === "second_navbar"
                     ? "bg-[#111111] text-white shadow-sm font-semibold"
                     : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
@@ -1079,7 +1079,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 data-testid="tab-hero-image-1"
                 onClick={() => setActiveTab("hero_image_1")}
-                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                className={`px-3.5 sm:px-4 py-2 min-h-[38px] text-xs font-medium rounded-md transition-all flex items-center justify-center gap-2 ${
                   activeTab === "hero_image_1"
                     ? "bg-[#111111] text-white shadow-sm font-semibold"
                     : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
@@ -1095,7 +1095,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 data-testid="tab-hero-image-2"
                 onClick={() => setActiveTab("hero_image_2")}
-                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                className={`px-3.5 sm:px-4 py-2 min-h-[38px] text-xs font-medium rounded-md transition-all flex items-center justify-center gap-2 ${
                   activeTab === "hero_image_2"
                     ? "bg-[#111111] text-white shadow-sm font-semibold"
                     : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
@@ -1111,7 +1111,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 data-testid="tab-hero-image-3"
                 onClick={() => setActiveTab("hero_image_3")}
-                className={`px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-2 ${
+                className={`px-3.5 sm:px-4 py-2 min-h-[38px] text-xs font-medium rounded-md transition-all flex items-center justify-center gap-2 ${
                   activeTab === "hero_image_3"
                     ? "bg-[#111111] text-white shadow-sm font-semibold"
                     : "bg-[#F5F5F5] text-[#555555] hover:bg-[#EBEBEB] hover:text-[#111111]"
@@ -1152,7 +1152,7 @@ export default function AdminNavbarPage() {
               </div>
 
               {/* Preview Rendering Container */}
-              <div className="w-full mx-auto transition-all duration-300 rounded overflow-hidden border border-gray-200 shadow-inner">
+              <div className="w-full mx-auto transition-all duration-300 rounded overflow-x-auto overscroll-x-contain border border-gray-200 shadow-inner">
                 {topBarForm.visible ? (
                   <div
                     className="w-full py-2 sm:py-2.5 px-3 sm:px-4 text-center text-xs sm:text-sm font-medium tracking-wide flex items-center justify-center transition-colors duration-200 relative break-words"
@@ -1199,7 +1199,7 @@ export default function AdminNavbarPage() {
                     }
                     placeholder="e.g. Complimentary gift box with all fine jewellery orders."
                     maxLength={250}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
+                    className="w-full px-3 py-2 text-base sm:text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
                   />
                   <div className="flex justify-between items-center mt-1 text-[11px] text-gray-400">
                     <span>Promotional message shown at the top of every storefront page</span>
@@ -1231,7 +1231,7 @@ export default function AdminNavbarPage() {
                         onChange={(e) =>
                           setTopBarForm((prev) => ({ ...prev, backgroundColor: e.target.value }))
                         }
-                        className="w-full px-2.5 py-1.5 text-xs font-mono uppercase border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
+                        className="w-full px-2.5 py-1.5 text-base sm:text-xs font-mono uppercase border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
                         maxLength={7}
                       />
                     </div>
@@ -1260,14 +1260,14 @@ export default function AdminNavbarPage() {
                         onChange={(e) =>
                           setTopBarForm((prev) => ({ ...prev, textColor: e.target.value }))
                         }
-                        className="w-full px-2.5 py-1.5 text-xs font-mono uppercase border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
+                        className="w-full px-2.5 py-1.5 text-base sm:text-xs font-mono uppercase border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
                         maxLength={7}
                       />
                     </div>
                   </div>
 
                   <div className="flex flex-col justify-end pt-1 sm:pt-0">
-                    <label className="flex items-center cursor-pointer gap-2.5 py-1">
+                    <label className="flex items-center cursor-pointer gap-2.5 py-2 sm:py-1">
                       <input
                         type="checkbox"
                         checked={topBarForm.visible}
@@ -1282,7 +1282,7 @@ export default function AdminNavbarPage() {
                   </div>
 
                   <div className="flex flex-col justify-end pt-1 sm:pt-0">
-                    <label className="flex items-center cursor-pointer gap-2.5 py-1">
+                    <label className="flex items-center cursor-pointer gap-2.5 py-2 sm:py-1">
                       <input
                         type="checkbox"
                         checked={topBarForm.dismissible}
@@ -1299,20 +1299,20 @@ export default function AdminNavbarPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-6 pt-4 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span className="text-xs text-gray-500 order-2 sm:order-1">
+              <div className="mt-6 pt-4 border-t border-[#F0F0F0] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <span className="text-xs text-gray-500 order-2 sm:order-1 text-center sm:text-left">
                   {hasTopBarChanges ? (
                     <span className="text-amber-700 font-medium">You have unsaved changes</span>
                   ) : (
                     <span>Current settings published live (v{serverSettings?.topBarVersion ?? 1})</span>
                   )}
                 </span>
-                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end order-1 sm:order-2">
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto justify-end order-1 sm:order-2">
                   <button
                     type="button"
                     onClick={handleCancelTopBar}
                     disabled={!hasTopBarChanges || isSaving}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Cancel Changes</span>
@@ -1321,7 +1321,7 @@ export default function AdminNavbarPage() {
                     type="button"
                     onClick={handleSaveTopBar}
                     disabled={!hasTopBarChanges || isSaving}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
                   >
                     {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                     <span>Save & Publish Changes</span>
@@ -1346,8 +1346,13 @@ export default function AdminNavbarPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              {/* Mobile Table Scroll Indicator */}
+              <div className="sm:hidden flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50/80 px-2.5 py-1 rounded border border-amber-200/60 mb-2">
+                <span>Swipe horizontally to view full history &amp; actions &rarr;</span>
+              </div>
+
+              <div className="overflow-x-auto overscroll-x-contain -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full min-w-[560px] text-left text-xs">
                   <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
                     <tr>
                       <th className="py-2.5 px-3 font-semibold">Version</th>
@@ -1388,7 +1393,7 @@ export default function AdminNavbarPage() {
                               <button
                                 type="button"
                                 onClick={() => setRestoreConfirmTarget({ item, section: "top_bar" })}
-                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                                className="px-3 py-1.5 min-h-[32px] text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
                               >
                                 Restore
                               </button>
@@ -1430,8 +1435,8 @@ export default function AdminNavbarPage() {
               </div>
 
               {/* Preview Rendering Container: Shows full storefront second navbar with live promoText */}
-              <div className="w-full mx-auto transition-all duration-300 rounded overflow-hidden border border-gray-200 shadow-inner bg-white">
-                <div className="w-full border-b border-[#E5E5E5] bg-white text-xs lg:text-[13px] text-black">
+              <div className="w-full mx-auto transition-all duration-300 rounded overflow-x-auto overscroll-x-contain border border-gray-200 shadow-inner bg-white">
+                <div className="w-full min-w-[500px] border-b border-[#E5E5E5] bg-white text-xs lg:text-[13px] text-black">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-x-4 gap-y-2 px-3 sm:px-4 py-2 sm:py-2.5">
                     {/* Left Group */}
                     <div className="flex flex-wrap items-center gap-x-2.5 sm:gap-x-5 gap-y-1.5 min-w-0">
@@ -1501,7 +1506,7 @@ export default function AdminNavbarPage() {
                   onChange={(e) => setSecondNavbarPromo(e.target.value)}
                   placeholder="e.g. Summer Sale 15% off!"
                   maxLength={120}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
+                  className="w-full px-3 py-2 text-base sm:text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black focus:border-black outline-none"
                 />
                 <div className="flex justify-between items-center text-[11px] text-gray-400">
                   <span>Displayed centrally in the Second Navbar strip</span>
@@ -1509,20 +1514,20 @@ export default function AdminNavbarPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-6 pt-4 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span className="text-xs text-gray-500 order-2 sm:order-1">
+              <div className="mt-6 pt-4 border-t border-[#F0F0F0] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <span className="text-xs text-gray-500 order-2 sm:order-1 text-center sm:text-left">
                   {hasSecondNavbarChanges ? (
                     <span className="text-amber-700 font-medium">You have unsaved changes</span>
                   ) : (
                     <span>Current settings published live (v{serverSettings?.secondNavbarVersion ?? 1})</span>
                   )}
                 </span>
-                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end order-1 sm:order-2">
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto justify-end order-1 sm:order-2">
                   <button
                     type="button"
                     onClick={handleCancelSecondNavbar}
                     disabled={!hasSecondNavbarChanges || isSaving}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Cancel Changes</span>
@@ -1531,7 +1536,7 @@ export default function AdminNavbarPage() {
                     type="button"
                     onClick={handleSaveSecondNavbar}
                     disabled={!hasSecondNavbarChanges || isSaving}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
                   >
                     {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                     <span>Save & Publish Changes</span>
@@ -1556,8 +1561,13 @@ export default function AdminNavbarPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              {/* Mobile Table Scroll Indicator */}
+              <div className="sm:hidden flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50/80 px-2.5 py-1 rounded border border-amber-200/60 mb-2">
+                <span>Swipe horizontally to view full history &amp; actions &rarr;</span>
+              </div>
+
+              <div className="overflow-x-auto overscroll-x-contain -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full min-w-[560px] text-left text-xs">
                   <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
                     <tr>
                       <th className="py-2.5 px-3 font-semibold">Version</th>
@@ -1598,7 +1608,7 @@ export default function AdminNavbarPage() {
                               <button
                                 type="button"
                                 onClick={() => setRestoreConfirmTarget({ item, section: "second_navbar" })}
-                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                                className="px-3 py-1.5 min-h-[32px] text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
                               >
                                 Restore
                               </button>
@@ -1621,7 +1631,7 @@ export default function AdminNavbarPage() {
               data-testid="hero-card-1"
               className="bg-white border border-[#E5E7EB] rounded-lg shadow-sm overflow-hidden"
             >
-              <div className="px-6 py-4 border-b border-[#F0F0F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="px-4 sm:px-6 py-4 border-b border-[#F0F0F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
                     Hero Image 1 — Large Left Column Banner
@@ -1636,7 +1646,7 @@ export default function AdminNavbarPage() {
                 </div>
               </div>
 
-              <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* Thumbnail & File Upload */}
                 <div className="lg:col-span-5 space-y-3">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[#333333]">
@@ -1669,7 +1679,7 @@ export default function AdminNavbarPage() {
                     />
                     <label
                       htmlFor="hero-image-1-upload"
-                      className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium uppercase tracking-wider text-[#111111] bg-white border border-[#D1D5DB] rounded hover:bg-[#F9F9F9] cursor-pointer transition-colors"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 sm:py-2 min-h-[38px] text-xs font-medium uppercase tracking-wider text-[#111111] bg-white border border-[#D1D5DB] rounded hover:bg-[#F9F9F9] cursor-pointer transition-colors"
                     >
                       <Upload className="w-3.5 h-3.5 text-[#C5A572]" />
                       <span>Replace Image</span>
@@ -1704,7 +1714,7 @@ export default function AdminNavbarPage() {
                         setHero1Form((prev) => ({ ...prev, normalHeadline: e.target.value }))
                       }
                       placeholder="e.g. Necklaces &"
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
                     />
                   </div>
 
@@ -1724,7 +1734,7 @@ export default function AdminNavbarPage() {
                         setHero1Form((prev) => ({ ...prev, boldHeadline: e.target.value }))
                       }
                       placeholder="e.g. Body Jewels"
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
                     />
                   </div>
 
@@ -1744,7 +1754,7 @@ export default function AdminNavbarPage() {
                         setHero1Form((prev) => ({ ...prev, description: e.target.value }))
                       }
                       placeholder="e.g. Look to our new season collection for girls."
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors resize-none"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors resize-none"
                     />
                   </div>
 
@@ -1762,7 +1772,7 @@ export default function AdminNavbarPage() {
                       onChange={(e) =>
                         setHero1Form((prev) => ({ ...prev, categoryId: e.target.value || null }))
                       }
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] bg-white border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors cursor-pointer"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] bg-white border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors cursor-pointer"
                     >
                       <option value="">Select a category</option>
                       {categories.map((c) => (
@@ -1779,21 +1789,21 @@ export default function AdminNavbarPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span className="text-xs text-gray-500">
+              <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-[#F0F0F0] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <span className="text-xs text-gray-500 text-center sm:text-left">
                   {hasHero1Changes ? (
                     <span className="text-amber-700 font-medium">Unsaved changes on Hero Image 1</span>
                   ) : (
                     <span>Published live as v{serverHeroSettings.heroImage1Version ?? 1}</span>
                   )}
                 </span>
-                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto justify-end">
                   <button
                     type="button"
                     onClick={() => handleCancelHeroSlot("heroImage1")}
                     disabled={!hasHero1Changes || isSaving}
                     data-testid="hero1-cancel-button"
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Cancel Changes</span>
@@ -1803,7 +1813,7 @@ export default function AdminNavbarPage() {
                     onClick={() => handleSaveHeroSlot("heroImage1")}
                     disabled={!hasHero1Changes || isSaving}
                     data-testid="hero1-save-button"
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
                   >
                     {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                     <span>Save & Publish Changes</span>
@@ -1821,8 +1831,13 @@ export default function AdminNavbarPage() {
                 </h3>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              {/* Mobile Table Scroll Indicator */}
+              <div className="sm:hidden flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50/80 px-2.5 py-1 rounded border border-amber-200/60 mb-2">
+                <span>Swipe horizontally to view full history &amp; actions &rarr;</span>
+              </div>
+
+              <div className="overflow-x-auto overscroll-x-contain -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full min-w-[640px] text-left text-xs">
                   <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
                     <tr>
                       <th className="py-2.5 px-3 font-semibold">Version</th>
@@ -1885,7 +1900,7 @@ export default function AdminNavbarPage() {
                                     slotName: "Hero Image 1",
                                   })
                                 }
-                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                                className="px-3 py-1.5 min-h-[32px] text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
                               >
                                 Restore
                               </button>
@@ -1908,7 +1923,7 @@ export default function AdminNavbarPage() {
               data-testid="hero-card-2"
               className="bg-white border border-[#E5E7EB] rounded-lg shadow-sm overflow-hidden"
             >
-              <div className="px-6 py-4 border-b border-[#F0F0F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="px-4 sm:px-6 py-4 border-b border-[#F0F0F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
                     Hero Image 2 — Upper Right Banner
@@ -1923,7 +1938,7 @@ export default function AdminNavbarPage() {
                 </div>
               </div>
 
-              <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <div className="lg:col-span-5 space-y-3">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[#333333]">
                     Current Image Asset
@@ -1955,7 +1970,7 @@ export default function AdminNavbarPage() {
                     />
                     <label
                       htmlFor="hero-image-2-upload"
-                      className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium uppercase tracking-wider text-[#111111] bg-white border border-[#D1D5DB] rounded hover:bg-[#F9F9F9] cursor-pointer transition-colors"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 sm:py-2 min-h-[38px] text-xs font-medium uppercase tracking-wider text-[#111111] bg-white border border-[#D1D5DB] rounded hover:bg-[#F9F9F9] cursor-pointer transition-colors"
                     >
                       <Upload className="w-3.5 h-3.5 text-[#C5A572]" />
                       <span>Replace Image</span>
@@ -1990,7 +2005,7 @@ export default function AdminNavbarPage() {
                         setHero2Form((prev) => ({ ...prev, normalHeadline: e.target.value }))
                       }
                       placeholder="e.g. Just Lunched"
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
                     />
                   </div>
 
@@ -2010,7 +2025,7 @@ export default function AdminNavbarPage() {
                         setHero2Form((prev) => ({ ...prev, boldHeadline: e.target.value }))
                       }
                       placeholder="e.g. Desk The Hals"
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
                     />
                   </div>
 
@@ -2028,7 +2043,7 @@ export default function AdminNavbarPage() {
                       onChange={(e) =>
                         setHero2Form((prev) => ({ ...prev, categoryId: e.target.value || null }))
                       }
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] bg-white border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors cursor-pointer"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] bg-white border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors cursor-pointer"
                     >
                       <option value="">Select a category</option>
                       {categories.map((c) => (
@@ -2045,21 +2060,21 @@ export default function AdminNavbarPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span className="text-xs text-gray-500">
+              <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-[#F0F0F0] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <span className="text-xs text-gray-500 text-center sm:text-left">
                   {hasHero2Changes ? (
                     <span className="text-amber-700 font-medium">Unsaved changes on Hero Image 2</span>
                   ) : (
                     <span>Published live as v{serverHeroSettings.heroImage2Version ?? 1}</span>
                   )}
                 </span>
-                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto justify-end">
                   <button
                     type="button"
                     onClick={() => handleCancelHeroSlot("heroImage2")}
                     disabled={!hasHero2Changes || isSaving}
                     data-testid="hero2-cancel-button"
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Cancel Changes</span>
@@ -2069,7 +2084,7 @@ export default function AdminNavbarPage() {
                     onClick={() => handleSaveHeroSlot("heroImage2")}
                     disabled={!hasHero2Changes || isSaving}
                     data-testid="hero2-save-button"
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
                   >
                     {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                     <span>Save & Publish Changes</span>
@@ -2087,8 +2102,13 @@ export default function AdminNavbarPage() {
                 </h3>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              {/* Mobile Table Scroll Indicator */}
+              <div className="sm:hidden flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50/80 px-2.5 py-1 rounded border border-amber-200/60 mb-2">
+                <span>Swipe horizontally to view full history &amp; actions &rarr;</span>
+              </div>
+
+              <div className="overflow-x-auto overscroll-x-contain -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full min-w-[640px] text-left text-xs">
                   <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
                     <tr>
                       <th className="py-2.5 px-3 font-semibold">Version</th>
@@ -2148,7 +2168,7 @@ export default function AdminNavbarPage() {
                                     slotName: "Hero Image 2",
                                   })
                                 }
-                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                                className="px-3 py-1.5 min-h-[32px] text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
                               >
                                 Restore
                               </button>
@@ -2171,7 +2191,7 @@ export default function AdminNavbarPage() {
               data-testid="hero-card-3"
               className="bg-white border border-[#E5E7EB] rounded-lg shadow-sm overflow-hidden"
             >
-              <div className="px-6 py-4 border-b border-[#F0F0F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="px-4 sm:px-6 py-4 border-b border-[#F0F0F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-[#111111]">
                     Hero Image 3 — Lower Right Banner
@@ -2186,7 +2206,7 @@ export default function AdminNavbarPage() {
                 </div>
               </div>
 
-              <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <div className="lg:col-span-5 space-y-3">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[#333333]">
                     Current Image Asset
@@ -2218,7 +2238,7 @@ export default function AdminNavbarPage() {
                     />
                     <label
                       htmlFor="hero-image-3-upload"
-                      className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium uppercase tracking-wider text-[#111111] bg-white border border-[#D1D5DB] rounded hover:bg-[#F9F9F9] cursor-pointer transition-colors"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2.5 sm:py-2 min-h-[38px] text-xs font-medium uppercase tracking-wider text-[#111111] bg-white border border-[#D1D5DB] rounded hover:bg-[#F9F9F9] cursor-pointer transition-colors"
                     >
                       <Upload className="w-3.5 h-3.5 text-[#C5A572]" />
                       <span>Replace Image</span>
@@ -2253,7 +2273,7 @@ export default function AdminNavbarPage() {
                         setHero3Form((prev) => ({ ...prev, normalHeadline: e.target.value }))
                       }
                       placeholder="e.g. Jewelry &"
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
                     />
                   </div>
 
@@ -2273,7 +2293,7 @@ export default function AdminNavbarPage() {
                         setHero3Form((prev) => ({ ...prev, boldHeadline: e.target.value }))
                       }
                       placeholder="e.g. Charm Bracelets"
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors"
                     />
                   </div>
 
@@ -2291,7 +2311,7 @@ export default function AdminNavbarPage() {
                       onChange={(e) =>
                         setHero3Form((prev) => ({ ...prev, categoryId: e.target.value || null }))
                       }
-                      className="w-full px-3.5 py-2 text-sm text-[#111111] bg-white border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors cursor-pointer"
+                      className="w-full px-3.5 py-2 text-base sm:text-sm text-[#111111] bg-white border border-[#D1D5DB] rounded focus:border-[#C5A572] focus:ring-1 focus:ring-[#C5A572] outline-none transition-colors cursor-pointer"
                     >
                       <option value="">Select a category</option>
                       {categories.map((c) => (
@@ -2308,21 +2328,21 @@ export default function AdminNavbarPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-[#F0F0F0] flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span className="text-xs text-gray-500">
+              <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-[#F0F0F0] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <span className="text-xs text-gray-500 text-center sm:text-left">
                   {hasHero3Changes ? (
                     <span className="text-amber-700 font-medium">Unsaved changes on Hero Image 3</span>
                   ) : (
                     <span>Published live as v{serverHeroSettings.heroImage3Version ?? 1}</span>
                   )}
                 </span>
-                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto justify-end">
                   <button
                     type="button"
                     onClick={() => handleCancelHeroSlot("heroImage3")}
                     disabled={!hasHero3Changes || isSaving}
                     data-testid="hero3-cancel-button"
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition disabled:opacity-40"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Cancel Changes</span>
@@ -2332,7 +2352,7 @@ export default function AdminNavbarPage() {
                     onClick={() => handleSaveHeroSlot("heroImage3")}
                     disabled={!hasHero3Changes || isSaving}
                     data-testid="hero3-save-button"
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm disabled:opacity-40"
                   >
                     {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                     <span>Save & Publish Changes</span>
@@ -2350,8 +2370,13 @@ export default function AdminNavbarPage() {
                 </h3>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              {/* Mobile Table Scroll Indicator */}
+              <div className="sm:hidden flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50/80 px-2.5 py-1 rounded border border-amber-200/60 mb-2">
+                <span>Swipe horizontally to view full history &amp; actions &rarr;</span>
+              </div>
+
+              <div className="overflow-x-auto overscroll-x-contain -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full min-w-[640px] text-left text-xs">
                   <thead className="bg-[#F9F9F9] text-[#666666] uppercase text-[11px] border-b border-gray-200">
                     <tr>
                       <th className="py-2.5 px-3 font-semibold">Version</th>
@@ -2411,7 +2436,7 @@ export default function AdminNavbarPage() {
                                     slotName: "Hero Image 3",
                                   })
                                 }
-                                className="px-2.5 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                                className="px-3 py-1.5 min-h-[32px] text-[11px] font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
                               >
                                 Restore
                               </button>
@@ -2455,7 +2480,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 onClick={() => setRestoreConfirmTarget(null)}
                 disabled={isRestoring}
-                className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
               >
                 Cancel
               </button>
@@ -2463,7 +2488,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 onClick={handleExecuteNavbarRestore}
                 disabled={isRestoring}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm"
               >
                 {isRestoring ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                 <span>Confirm & Publish</span>
@@ -2531,7 +2556,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 onClick={() => setHeroRestoreConfirmTarget(null)}
                 disabled={isRestoring}
-                className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition"
               >
                 Cancel
               </button>
@@ -2539,7 +2564,7 @@ export default function AdminNavbarPage() {
                 type="button"
                 onClick={handleExecuteHeroRestore}
                 disabled={isRestoring}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 min-h-[40px] text-xs font-medium text-white bg-[#111111] hover:bg-black rounded transition shadow-sm"
               >
                 {isRestoring ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                 <span>Confirm & Publish</span>

@@ -66,13 +66,13 @@ test-results/
 # ──────────────────────────────────────────────────
 # Uploaded Assets
 # ──────────────────────────────────────────────────
-apps/backend/uploads/hero/*
-!apps/backend/uploads/hero/.gitkeep
-apps/frontend/public/uploads/hero/*
-!apps/frontend/public/uploads/hero/.gitkeep
-apps/frontend/public/uploads/categories/*
-!apps/frontend/public/uploads/categories/.gitkeep
+apps/backend/uploads/**
+!apps/backend/uploads/**/.gitkeep
+apps/frontend/public/uploads/**
+!apps/frontend/public/uploads/**/.gitkeep
 data/
 # Local scratch directories
 scratch/
+backups/
+apps/backend/backups/
 

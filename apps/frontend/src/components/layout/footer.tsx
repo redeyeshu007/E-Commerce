@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useSyncExternalStore } from "react";
+import React, { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ArrowUp, Headphones, ChevronDown } from "lucide-react";
 import { scrollToSectionId } from "@/lib/navigation";
+import {
+  fetchPublicStoreDetails,
+  STORE_DETAILS_UPDATED_EVENT,
+} from "@/services/store-details-service";
+import type { StoreDetailsData } from "@/types/store-details";
 import type {
   FooterConfig,
   FooterColumnConfig,
@@ -295,7 +300,7 @@ export function FooterLinkGroup({ column, className = "" }: FooterLinkGroupProps
  * ------------------------------------------------------------------------- */
 
 export interface FooterStoreDetailsProps {
-  details: StoreDetailsConfig;
+  details?: Partial<StoreDetailsConfig> | null;
   className?: string;
 }
 
@@ -303,10 +308,105 @@ export function FooterStoreDetails({
   details,
   className = "",
 }: FooterStoreDetailsProps) {
+  const [storeData, setStoreData] = useState<StoreDetailsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const title = details?.title || "Store Details";
+  const helpLabel = details?.helpLabel || "Need Any Help?";
+
+  const loadData = useCallback(async () => {
+    try {
+      setHasError(false);
+      const data = await fetchPublicStoreDetails();
+      if (data) {
+        setStoreData(data);
+      } else {
+        setHasError(true);
+      }
+    } catch {
+      setHasError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+
+    const handleUpdate = () => {
+      loadData();
+    };
+
+    window.addEventListener(STORE_DETAILS_UPDATED_EVENT, handleUpdate);
+    return () => {
+      window.removeEventListener(STORE_DETAILS_UPDATED_EVENT, handleUpdate);
+    };
+  }, [loadData]);
+
+  // Loading skeleton while fetching from database
+  if (isLoading && !storeData) {
+    return (
+      <FooterAccordionSection
+        id="store-details"
+        title={title}
+        className={className}
+        testId="footer-column-store-details"
+      >
+        <div data-testid="store-details-skeleton" className="animate-pulse">
+          <div className="flex items-center gap-3.5 mb-4 sm:mb-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#EAEAEA] text-[#777777] shrink-0">
+              <Headphones className="h-5 w-5 stroke-[1.75]" aria-hidden="true" />
+            </div>
+            <div className="space-y-1.5">
+              <span className="block text-xs text-[#777777] font-normal leading-tight">
+                {helpLabel}
+              </span>
+              <div className="h-4 w-28 bg-[#EAEAEA] rounded" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-3.5 w-44 bg-[#EAEAEA] rounded" />
+            <div className="h-3.5 w-36 bg-[#EAEAEA] rounded" />
+          </div>
+        </div>
+      </FooterAccordionSection>
+    );
+  }
+
+  // Error state without hardcoded fake contact details
+  if (hasError && !storeData) {
+    return (
+      <FooterAccordionSection
+        id="store-details"
+        title={title}
+        className={className}
+        testId="footer-column-store-details"
+      >
+        <div data-testid="store-details-error" className="py-2 text-xs text-[#888888]">
+          <p>Unable to load store contact details.</p>
+          <button
+            type="button"
+            onClick={loadData}
+            className="mt-1 text-[11px] text-[#C5A572] hover:underline"
+          >
+            Retry
+          </button>
+        </div>
+      </FooterAccordionSection>
+    );
+  }
+
+  const phone = storeData?.phone || "";
+  const address = storeData?.address || "";
+  const email = storeData?.email || "";
+  const phoneDigits = phone.replace(/[^\d+]/g, "");
+  const phoneHref = phoneDigits ? `tel:${phoneDigits}` : `tel:${phone.replace(/\s+/g, "")}`;
+
   return (
     <FooterAccordionSection
       id="store-details"
-      title={details.title}
+      title={title}
       className={className}
       testId="footer-column-store-details"
     >
@@ -317,35 +417,29 @@ export function FooterStoreDetails({
         </div>
         <div>
           <span className="block text-xs text-[#777777] font-normal leading-tight">
-            {details.helpLabel}
+            {helpLabel}
           </span>
-          {details.phoneHref ? (
-            <a
-              href={details.phoneHref}
-              className="text-sm sm:text-base font-semibold text-[#111111] hover:text-[#C5A572] transition-colors tracking-tight focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
-            >
-              {details.phone}
-            </a>
-          ) : (
-            <span className="text-sm sm:text-base font-semibold text-[#111111] tracking-tight">
-              {details.phone}
-            </span>
-          )}
+          <a
+            href={phoneHref}
+            className="text-sm sm:text-base font-semibold text-[#111111] hover:text-[#C5A572] transition-colors tracking-tight focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+          >
+            {phone}
+          </a>
         </div>
       </div>
 
       {/* Address & Email */}
       <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-[13px] text-[#666666] leading-relaxed">
         <p>
-          <span className="font-medium text-[#222222]">Address:</span> {details.address}
+          <span className="font-medium text-[#222222]">Address:</span> {address}
         </p>
         <p>
           <span className="font-medium text-[#222222]">Email:</span>{" "}
           <a
-            href={`mailto:${details.email}`}
+            href={`mailto:${email}`}
             className="hover:text-[#111111] transition-colors underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
           >
-            {details.email}
+            {email}
           </a>
         </p>
       </div>

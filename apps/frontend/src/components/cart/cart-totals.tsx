@@ -2,9 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ShieldCheck, Truck, Lock } from "lucide-react";
 import { formatInr } from "@/lib/utils";
 import type { Coupon } from "@/services/coupon-service";
+import { useStorefront } from "@/providers/storefront-provider";
 
 export interface CartTotalsProps {
   subtotalInr: number;
@@ -25,9 +27,21 @@ export function CartTotals({
   appliedCoupon,
   className = "",
 }: CartTotalsProps) {
+  const router = useRouter();
+  const { isAuthenticated, openAuthModal } = useStorefront();
+
   // Free Insured Express Delivery for all PERALAGAE fine jewellery orders in India
   const shippingInr = 0;
   const finalTotalInr = Math.max(0, subtotalInr - discountInr + shippingInr);
+
+  const handleCheckoutClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAuthenticated) {
+      router.push("/checkout");
+    } else {
+      openAuthModal("login", "/checkout");
+    }
+  };
 
   return (
     <div
@@ -102,8 +116,9 @@ export function CartTotals({
       <div className="pt-6 flex flex-col gap-3">
         <Link
           href="/checkout"
+          onClick={handleCheckoutClick}
           data-testid="proceed-to-checkout-btn"
-          className="w-full py-4 bg-[#111111] hover:bg-black text-white text-xs font-semibold tracking-widest uppercase text-center transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+          className="w-full py-4 bg-[#111111] hover:bg-black text-white text-xs font-semibold tracking-widest uppercase text-center transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer"
         >
           <Lock className="h-3.5 w-3.5" />
           <span>Proceed to Checkout</span>

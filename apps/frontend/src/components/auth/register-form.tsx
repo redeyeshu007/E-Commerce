@@ -9,6 +9,9 @@ import { registerSchema, type RegisterFormData } from "./auth-schemas";
 import { AuthFormField } from "./auth-form-field";
 import { GoogleSignInButton } from "./google-sign-in-button";
 
+import { useStorefront } from "@/providers/storefront-provider";
+import { useRouter } from "next/navigation";
+
 export interface RegisterFormProps {
   initialEmail?: string;
   onSwitchToLogin: () => void;
@@ -24,6 +27,9 @@ export function RegisterForm({
 }: RegisterFormProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const router = useRouter();
+  const { registerCustomer, authReturnUrl, setAuthReturnUrl } = useStorefront();
 
   const {
     register,
@@ -44,36 +50,21 @@ export function RegisterForm({
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: data.fullName,
-          email: data.email,
-          password: data.password,
-        }),
+      await registerCustomer({
+        fullName: data.fullName,
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
       });
 
-      if (!res.ok) {
-        if (res.status === 409) {
-          setFormError("An account with this email address already exists. Please sign in.");
-        } else if (res.status === 404) {
-          setFormError("Customer registration is not available in this phase. Only administrative authentication is currently enabled.");
-        } else {
-          setFormError("Unable to create account at this time. Please try again later.");
-        }
-        setIsSubmitting(false);
-        return;
-      }
+      onSuccess?.();
 
-      const result = await res.json();
-      if (result.success) {
-        onSuccess?.();
-      } else {
-        setFormError(result.message || "Failed to create account. Please check your information.");
-      }
-    } catch {
-      setFormError("Unable to connect to registration server. Please verify your connection.");
+      const returnTarget = authReturnUrl ? `?returnUrl=${encodeURIComponent(authReturnUrl)}` : "";
+      setAuthReturnUrl(null);
+      router.push(`/profile/setup${returnTarget}`);
+    } catch (err: unknown) {
+      const error = err as Error;
+      setFormError(error?.message || "Failed to create account. Please check your information.");
     } finally {
       setIsSubmitting(false);
     }

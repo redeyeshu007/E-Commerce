@@ -3,7 +3,18 @@
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, LayoutDashboard, PanelTop, Layers } from "lucide-react";
+import {
+  X,
+  LayoutDashboard,
+  PanelTop,
+  Layers,
+  Package,
+  Gem,
+  Instagram,
+  PanelBottom,
+  ShoppingBag,
+  Percent,
+} from "lucide-react";
 import { brandConfig } from "@/config/brand";
 
 export interface AdminSidebarProps {
@@ -19,7 +30,7 @@ export interface AdminSidebarProps {
  * - Closes on close button, backdrop click, or Escape key
  * - Prevents background scrolling while open
  * - Displays small drawer heading: PERALAGAE
- * - Contains Dashboard and Navbar items
+ * - Contains Dashboard, Header Management, Categories, Products, Materials, and Instagram items
  * - Minimal white-and-neutral visual style with restrained gold accent
  */
 export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
@@ -55,6 +66,21 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const isNavbarActive = pathname === "/admin/navbar" || pathname.startsWith("/admin/navbar");
   const isCategoriesActive =
     pathname === "/admin/categories" || pathname.startsWith("/admin/categories");
+  const isProductsActive =
+    pathname === "/admin/products" || pathname.startsWith("/admin/products");
+  const isMaterialsActive =
+    pathname === "/admin/materials" || pathname.startsWith("/admin/materials");
+  const isInstagramActive =
+    pathname === "/admin/instagram" || pathname.startsWith("/admin/instagram");
+  const isOrdersActive =
+    pathname === "/admin/orders" || pathname.startsWith("/admin/orders");
+  const isGstActive =
+    pathname === "/admin/gst" || pathname.startsWith("/admin/gst");
+  const isFooterActive =
+    pathname === "/admin/footer" ||
+    pathname.startsWith("/admin/footer") ||
+    pathname === "/admin/contact" ||
+    pathname.startsWith("/admin/contact");
 
   return (
     <>
@@ -79,7 +105,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         }`}
       >
         {/* Drawer Header */}
-        <div className="h-16 px-6 border-b border-[#E5E7EB] flex items-center justify-between">
+        <div className="h-16 px-4 sm:px-6 border-b border-[#E5E7EB] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="text-base font-medium tracking-[0.18em] uppercase text-[#1A1A1A]">
               {brandConfig.name}
@@ -91,14 +117,14 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
             onClick={onClose}
             aria-label="Close navigation menu"
             data-testid="admin-sidebar-close-button"
-            className="p-1.5 -mr-1.5 text-[#666666] hover:text-[#1A1A1A] hover:bg-[#F5F5F5] rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+            className="p-2 sm:p-1.5 -mr-1 text-[#666666] hover:text-[#1A1A1A] hover:bg-[#F5F5F5] rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black min-w-[40px] min-h-[40px] flex items-center justify-center"
           >
             <X className="w-5 h-5 stroke-[1.5]" aria-hidden="true" />
           </button>
         </div>
 
         {/* Navigation Content Area */}
-        <nav className="flex-1 px-4 py-6 space-y-1">
+        <nav className="flex-1 px-3 sm:px-4 py-4 sm:py-6 space-y-1 overflow-y-auto overscroll-contain">
           <Link
             href="/admin/dashboard"
             onClick={onClose}
@@ -151,6 +177,114 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               aria-hidden="true"
             />
             <span>Categories</span>
+          </Link>
+
+          <Link
+            href="/admin/products"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isProductsActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <Package
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isProductsActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>Products</span>
+          </Link>
+
+          <Link
+            href="/admin/orders"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isOrdersActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <ShoppingBag
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isOrdersActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>Orders</span>
+          </Link>
+
+          <Link
+            href="/admin/materials"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isMaterialsActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <Gem
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isMaterialsActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>Materials</span>
+          </Link>
+
+          <Link
+            href="/admin/instagram"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isInstagramActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <Instagram
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isInstagramActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>Instagram</span>
+          </Link>
+
+          <Link
+            href="/admin/gst"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isGstActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <Percent
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isGstActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>GST Settings</span>
+          </Link>
+
+          <Link
+            href="/admin/footer"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isFooterActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <PanelBottom
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isFooterActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>Footer</span>
           </Link>
         </nav>
       </aside>

@@ -10,6 +10,8 @@ import { notFoundHandler } from "./middleware/not-found.js";
 import { healthRouter } from "./routes/health.js";
 import { v1Router } from "./routes/v1/index.js";
 import { createAdminAuthRouter } from "./routes/admin-auth.js";
+import { createCustomerAuthRouter } from "./routes/customer-auth.js";
+import { createOrderRouter } from "./routes/order.js";
 import { createNavbarRouter } from "./routes/navbar.js";
 import path from "node:path";
 import { setupSwagger } from "./lib/swagger.js";
@@ -19,6 +21,14 @@ import { HeroMediaService } from "./services/hero-media-service.js";
 import { createCategoryRouter } from "./routes/category.js";
 import { CategoryMediaService } from "./services/category-media-service.js";
 import { createProductRouter } from "./routes/product.js";
+import { ProductMediaService } from "./services/product-media-service.js";
+import { createMaterialRouter } from "./routes/material.js";
+import { MaterialMediaService } from "./services/material-media-service.js";
+import { createInstagramRouter } from "./routes/instagram.js";
+import { InstagramMediaService } from "./services/instagram-media-service.js";
+import { createStoreDetailsRouter } from "./routes/store-details.js";
+import { createGstRouter } from "./routes/gst.js";
+import { ShippingMediaService } from "./services/shipping-media-service.js";
 import fs from "node:fs";
 
 /**
@@ -107,12 +117,22 @@ export function createApp(env: EnvConfig): Application {
   // Primary infrastructure health check (liveness & database readiness)
   app.use("/api/health", healthRouter);
 
-  // Phase 1: Authentication endpoints (supports /api/admin/auth, /api/v1/admin/auth, /api/auth, /api/v1/auth)
+  // Admin Authentication endpoints
   const adminAuthRouter = createAdminAuthRouter(env);
   app.use("/api/admin/auth", adminAuthRouter);
   app.use("/api/v1/admin/auth", adminAuthRouter);
-  app.use("/api/auth", adminAuthRouter);
-  app.use("/api/v1/auth", adminAuthRouter);
+
+  // Customer Authentication endpoints
+  const customerAuthRouter = createCustomerAuthRouter(env);
+  app.use("/api/auth", customerAuthRouter);
+  app.use("/api/v1/auth", customerAuthRouter);
+
+  // Protected Checkout & Order endpoints
+  const orderRouter = createOrderRouter(env);
+  app.use("/api/orders", orderRouter);
+  app.use("/api/v1/orders", orderRouter);
+  app.use("/api/checkout", orderRouter);
+  app.use("/api/v1/checkout", orderRouter);
 
   // Navbar Management endpoints (storefront public & admin protected)
   const navbarRouter = createNavbarRouter(env);
@@ -123,8 +143,12 @@ export function createApp(env: EnvConfig): Application {
   const uploadsDir = path.resolve(process.cwd(), "uploads");
   const heroUploadsDir = path.join(uploadsDir, "hero");
   const categoryUploadsDir = path.join(uploadsDir, "categories");
+  const productUploadsDir = path.join(uploadsDir, "products");
+  const materialUploadsDir = path.join(uploadsDir, "materials");
+  const instagramUploadsDir = path.join(uploadsDir, "instagram");
+  const shippingUploadsDir = path.join(uploadsDir, "shipping");
 
-  // Durable media serving: fallback to PostgreSQL if local disk cache is missing (e.g. after Render restart)
+  // Durable media serving: fallback to MongoDB if local disk cache is missing (e.g. after Render restart)
   app.get("/uploads/hero/:filename", async (req: Request, res: Response, next: NextFunction) => {
     const filename = req.params["filename"];
     if (typeof filename !== "string" || !filename) {
@@ -151,7 +175,7 @@ export function createApp(env: EnvConfig): Application {
         return res.send(asset.data);
       }
     } catch (err) {
-      logger.warn({ err, filename }, "Failed to fetch media asset from PostgreSQL");
+      logger.warn({ err, filename }, "Failed to fetch media asset from MongoDB");
     }
     next();
   });
@@ -182,7 +206,131 @@ export function createApp(env: EnvConfig): Application {
         return res.send(asset.data);
       }
     } catch (err) {
-      logger.warn({ err, filename }, "Failed to fetch category media asset from PostgreSQL");
+      logger.warn({ err, filename }, "Failed to fetch category media asset from MongoDB");
+    }
+    next();
+  });
+
+  app.get("/uploads/products/:filename", async (req: Request, res: Response, next: NextFunction) => {
+    const filename = req.params["filename"];
+    if (typeof filename !== "string" || !filename) {
+      return next();
+    }
+    const localPath = path.join(productUploadsDir, filename);
+    if (fs.existsSync(localPath)) {
+      return next();
+    }
+    try {
+      const asset = await ProductMediaService.getAsset(filename);
+      if (asset) {
+        try {
+          if (!fs.existsSync(productUploadsDir)) {
+            fs.mkdirSync(productUploadsDir, { recursive: true });
+          }
+          fs.writeFileSync(localPath, asset.data);
+        } catch {
+          // Ignore local disk cache write error
+        }
+        res.setHeader("Content-Type", asset.mimeType);
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+        return res.send(asset.data);
+      }
+    } catch (err) {
+      logger.warn({ err, filename }, "Failed to fetch product media asset from MongoDB");
+    }
+    next();
+  });
+
+  app.get("/uploads/materials/:filename", async (req: Request, res: Response, next: NextFunction) => {
+    const filename = req.params["filename"];
+    if (typeof filename !== "string" || !filename) {
+      return next();
+    }
+    const localPath = path.join(materialUploadsDir, filename);
+    if (fs.existsSync(localPath)) {
+      return next();
+    }
+    try {
+      const asset = await MaterialMediaService.getAsset(filename);
+      if (asset) {
+        try {
+          if (!fs.existsSync(materialUploadsDir)) {
+            fs.mkdirSync(materialUploadsDir, { recursive: true });
+          }
+          fs.writeFileSync(localPath, asset.data);
+        } catch {
+          // Ignore local disk cache write error
+        }
+        res.setHeader("Content-Type", asset.mimeType);
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+        return res.send(asset.data);
+      }
+    } catch (err) {
+      logger.warn({ err, filename }, "Failed to fetch material media asset from MongoDB");
+    }
+    next();
+  });
+
+  app.get("/uploads/instagram/:filename", async (req: Request, res: Response, next: NextFunction) => {
+    const filename = req.params["filename"];
+    if (typeof filename !== "string" || !filename) {
+      return next();
+    }
+    const localPath = path.join(instagramUploadsDir, filename);
+    if (fs.existsSync(localPath)) {
+      return next();
+    }
+    try {
+      const asset = await InstagramMediaService.getAsset(filename);
+      if (asset) {
+        try {
+          if (!fs.existsSync(instagramUploadsDir)) {
+            fs.mkdirSync(instagramUploadsDir, { recursive: true });
+          }
+          fs.writeFileSync(localPath, asset.data);
+        } catch {
+          // Ignore local disk cache write error
+        }
+        res.setHeader("Content-Type", asset.mimeType);
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+        return res.send(asset.data);
+      }
+    } catch (err) {
+      logger.warn({ err, filename }, "Failed to fetch instagram media asset from MongoDB");
+    }
+    next();
+  });
+
+  app.get("/uploads/shipping/:filename", async (req: Request, res: Response, next: NextFunction) => {
+    const filename = req.params["filename"];
+    if (typeof filename !== "string" || !filename) {
+      return next();
+    }
+    const localPath = path.join(shippingUploadsDir, filename);
+    if (fs.existsSync(localPath)) {
+      return next();
+    }
+    try {
+      const asset = await ShippingMediaService.getAsset(filename);
+      if (asset) {
+        try {
+          if (!fs.existsSync(shippingUploadsDir)) {
+            fs.mkdirSync(shippingUploadsDir, { recursive: true });
+          }
+          fs.writeFileSync(localPath, asset.data);
+        } catch {
+          // Ignore local disk cache write error
+        }
+        res.setHeader("Content-Type", asset.mimeType);
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+        return res.send(asset.data);
+      }
+    } catch (err) {
+      logger.warn({ err, filename }, "Failed to fetch shipping media asset from MongoDB");
     }
     next();
   });
@@ -195,6 +343,11 @@ export function createApp(env: EnvConfig): Application {
       },
     })
   );
+
+  // GST Settings endpoints (storefront public & admin protected)
+  const gstRouter = createGstRouter(env);
+  app.use("/api/gst", gstRouter);
+  app.use("/api/v1/gst", gstRouter);
 
   // Hero Images Management endpoints (storefront public & admin protected)
   const heroRouter = createHeroRouter(env);
@@ -210,6 +363,25 @@ export function createApp(env: EnvConfig): Application {
   const productRouter = createProductRouter(env);
   app.use("/api/products", productRouter);
   app.use("/api/v1/products", productRouter);
+
+  // Material Management endpoints (storefront public & admin)
+  const materialRouter = createMaterialRouter(env);
+  app.use("/api/materials", materialRouter);
+  app.use("/api/v1/materials", materialRouter);
+
+  // Instagram Section Management endpoints (storefront public & admin)
+  const instagramRouter = createInstagramRouter(env);
+  app.use("/api/instagram", instagramRouter);
+  app.use("/api/v1/instagram", instagramRouter);
+
+  // Store Details Management endpoints (storefront public & admin)
+  const storeDetailsRouter = createStoreDetailsRouter(env);
+  app.use("/api/store-details", storeDetailsRouter);
+  app.use("/api/v1/store-details", storeDetailsRouter);
+  app.use("/api/contact", storeDetailsRouter);
+  app.use("/api/v1/contact", storeDetailsRouter);
+  app.use("/api/footer", storeDetailsRouter);
+  app.use("/api/v1/footer", storeDetailsRouter);
 
   // API v1 namespace
   app.use("/api/v1", v1Router);

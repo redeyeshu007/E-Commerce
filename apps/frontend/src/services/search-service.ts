@@ -196,7 +196,7 @@ export function searchCatalogue(
 }
 
 /**
- * Asynchronously searches products via the PostgreSQL database API.
+ * Asynchronously searches products via the MongoDB database API.
  */
 export async function searchProducts(
   query: string,

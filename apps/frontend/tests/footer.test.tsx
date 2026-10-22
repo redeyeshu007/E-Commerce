@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import {
   SiteFooter,
   FooterLinkGroup,
@@ -8,6 +8,7 @@ import {
   BackToTopButton,
 } from "@/components/layout/footer";
 import { defaultFooterConfig } from "@/config/footer";
+import * as storeDetailsService from "@/services/store-details-service";
 
 describe("PERALAGAE Footer Unit Test Suite", () => {
   beforeEach(() => {
@@ -86,18 +87,27 @@ describe("PERALAGAE Footer Unit Test Suite", () => {
       });
     });
 
-    it("renders Column 4: Store Details with phone, address, and email", () => {
+    it("renders Column 4: Store Details with phone, address, and email", async () => {
+      vi.spyOn(storeDetailsService, "fetchPublicStoreDetails").mockResolvedValue({
+        id: "current",
+        phone: "123 45678 90",
+        address: "502 New Design Str, Melbourne, Australia",
+        email: "contact@peralagae.com",
+      });
+
       render(<SiteFooter />);
 
       const storeHeading = screen.getByText("Store Details");
       expect(storeHeading).toBeInTheDocument();
 
-      expect(screen.getByText("Need Any Help?")).toBeInTheDocument();
-      expect(screen.getByText("123 45678 90")).toBeInTheDocument();
-      expect(
-        screen.getByText(/502 New Design Str, Melbourne, Australia/i)
-      ).toBeInTheDocument();
-      expect(screen.getByText("contact@peralagae.com")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText("Need Any Help?")).toBeInTheDocument();
+        expect(screen.getByText("123 45678 90")).toBeInTheDocument();
+        expect(
+          screen.getByText(/502 New Design Str, Melbourne, Australia/i)
+        ).toBeInTheDocument();
+        expect(screen.getByText("contact@peralagae.com")).toBeInTheDocument();
+      });
     });
 
     it("renders Column 5: Follow Us with social media links", () => {
