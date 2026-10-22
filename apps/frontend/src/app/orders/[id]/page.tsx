@@ -519,11 +519,6 @@ function CustomerOrderTrackingContent({ params }: PageProps = {}) {
               <strong className="text-neutral-900">{order.orderNumber}</strong>?
             </p>
 
-            <p className="text-[11px] text-neutral-500 bg-neutral-50 p-3 rounded-lg border border-neutral-200">
-              Confirming receipt will record the delivery completion timestamp and transition this
-              order to <strong>DELIVERED</strong> in MongoDB.
-            </p>
-
             <div className="pt-2 flex gap-3 justify-center">
               <button
                 type="button"
