@@ -27,9 +27,12 @@ export function Providers({ children }: ProvidersProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Conservative defaults — adjust per feature requirement
             staleTime: 60 * 1000, // 1 minute
-            retry: 1,
+            retry: (failureCount) => {
+              if (process.env["VITEST"]) return false;
+              return failureCount < 3;
+            },
+            retryDelay: (attemptIndex) => Math.min(1500 * (attemptIndex + 1), 6000),
           },
         },
       }),

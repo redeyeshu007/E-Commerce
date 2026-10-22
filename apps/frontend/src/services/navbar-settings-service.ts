@@ -11,7 +11,10 @@ export const NAVBAR_SETTINGS_UPDATED_EVENT = "peralagae:navbar-settings-updated"
  *
  * Safe to call from Server Components, Route Handlers, and client services.
  */
-export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData | null> {
+export async function fetchPublicNavbarSettings(
+  retries: number = 3,
+  delayMs: number = 2000,
+): Promise<NavbarSettingsData | null> {
   const isBrowser =
     typeof window !== "undefined" &&
     typeof document !== "undefined" &&
@@ -30,6 +33,10 @@ export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData | 
     });
 
     if (!res.ok) {
+      if ([502, 503, 504].includes(res.status) && retries > 0 && isBrowser) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        return fetchPublicNavbarSettings(retries - 1, delayMs * 1.5);
+      }
       console.warn(`[fetchPublicNavbarSettings] Non-200 response: ${res.status}`);
       return null;
     }
@@ -41,6 +48,10 @@ export async function fetchPublicNavbarSettings(): Promise<NavbarSettingsData | 
 
     return null;
   } catch (err) {
+    if (retries > 0 && isBrowser) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return fetchPublicNavbarSettings(retries - 1, delayMs * 1.5);
+    }
     console.warn("[fetchPublicNavbarSettings] Failed to retrieve navbar settings:", err);
     return null;
   }

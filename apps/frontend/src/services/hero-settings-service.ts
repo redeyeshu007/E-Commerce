@@ -131,7 +131,10 @@ export function transformHeroSettingsToConfig(
  * Works seamlessly both on the server (SSR / Server Component) and in the browser.
  * Returns default fallback values if the request fails or backend is unreachable.
  */
-export async function fetchPublicHeroSettings(): Promise<HeroSettingsData | null> {
+export async function fetchPublicHeroSettings(
+  retries: number = 3,
+  delayMs: number = 2000,
+): Promise<HeroSettingsData | null> {
   const isServer = typeof window === "undefined";
   const url = isServer
     ? `${getBackendOrigin()}/api/v1/hero`
@@ -147,6 +150,15 @@ export async function fetchPublicHeroSettings(): Promise<HeroSettingsData | null
     });
 
     if (!res.ok) {
+      if (
+        [502, 503, 504].includes(res.status) &&
+        retries > 0 &&
+        !isServer &&
+        !process.env["VITEST"]
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        return fetchPublicHeroSettings(retries - 1, delayMs * 1.5);
+      }
       return null;
     }
 
@@ -155,7 +167,10 @@ export async function fetchPublicHeroSettings(): Promise<HeroSettingsData | null
       return json.data as HeroSettingsData;
     }
   } catch (err) {
-    // Return null during offline prerender/build so server render does not crash
+    if (retries > 0 && !isServer && !process.env["VITEST"]) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return fetchPublicHeroSettings(retries - 1, delayMs * 1.5);
+    }
     return null;
   }
 

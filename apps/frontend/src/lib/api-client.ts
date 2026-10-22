@@ -26,25 +26,52 @@ export const API_BASE_URL =
 
 /**
  * Base fetch wrapper with default headers and error handling.
- * Extend this as authentication and other concerns are added.
+ * Automatically retries on 502/503/504 Bad Gateway errors (Render free-tier cold starts).
  */
-export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  options?: RequestInit,
+  retries: number = 3,
+  delayMs: number = 2000,
+): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
 
-  const res = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-    ...options,
-  });
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+      ...options,
+    });
 
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => ({}));
-    throw new Error(
-      errorBody?.error?.message ?? `API request failed: ${res.status} ${res.statusText}`,
-    );
+    if (!res.ok) {
+      // If server is cold-starting on Render (502 Bad Gateway / 503 / 504), retry automatically
+      if (
+        [502, 503, 504].includes(res.status) &&
+        retries > 0 &&
+        !process.env["VITEST"]
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        return apiFetch<T>(path, options, retries - 1, delayMs * 1.5);
+      }
+
+      const errorBody = await res.json().catch(() => ({}));
+      throw new Error(
+        errorBody?.error?.message ?? `API request failed: ${res.status} ${res.statusText}`,
+      );
+    }
+
+    return res.json() as Promise<T>;
+  } catch (err: unknown) {
+    if (
+      retries > 0 &&
+      !process.env["VITEST"] &&
+      !(err instanceof DOMException && err.name === "AbortError")
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return apiFetch<T>(path, options, retries - 1, delayMs * 1.5);
+    }
+    throw err;
   }
-
-  return res.json() as Promise<T>;
 }
