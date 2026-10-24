@@ -431,14 +431,38 @@ function CustomerOrderTrackingContent({ params }: PageProps = {}) {
 
               <div className="pt-2 border-t border-neutral-200 space-y-1.5">
                 <div className="flex justify-between">
+                  <span className="text-neutral-500">Payment Gateway:</span>
+                  <span className="font-semibold text-neutral-900">
+                    {order.paymentProvider || "RAZORPAY"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-neutral-500">Payment Method:</span>
                   <span className="font-semibold text-neutral-900">{order.paymentMethod}</span>
                 </div>
+                {order.razorpayPaymentId && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-neutral-500">Transaction ID:</span>
+                    <span className="font-mono text-[11px] text-neutral-800">
+                      {order.razorpayPaymentId}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-neutral-500">Payment Status:</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                    {order.paymentStatus} (TEST)
-                  </span>
+                  {order.paymentStatus === "PAID" ? (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      PAID (Verified)
+                    </span>
+                  ) : order.paymentStatus === "FAILED" ? (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                      FAILED
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                      {order.paymentStatus || "PENDING"}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,6 +1,8 @@
 import { prisma } from "../database/prisma.js";
 import { logger } from "../utils/logger.js";
 import { GstService } from "./gst-service.js";
+import { RazorpayService } from "./razorpay-service.js";
+import { validateEnv } from "../config/env.js";
 
 export interface ShippingAddressInput {
   fullName: string;
@@ -36,6 +38,19 @@ export interface AdminOrdersFilter {
 }
 
 export class OrderService {
+  private static razorpayServiceInstance: RazorpayService | null = null;
+
+  public static getRazorpayService(): RazorpayService {
+    if (!this.razorpayServiceInstance) {
+      this.razorpayServiceInstance = new RazorpayService(validateEnv());
+    }
+    return this.razorpayServiceInstance;
+  }
+
+  public static setRazorpayService(service: RazorpayService | null): void {
+    this.razorpayServiceInstance = service;
+  }
+
   /**
    * Generates a collision-resistant luxury order number
    * Format: PLG-YYYYMMDD-XXXX (e.g. PLG-20261021-9K4F)
@@ -53,7 +68,7 @@ export class OrderService {
   /**
    * Creates an order with strict server-side price, stock, and GST validation.
    * Cash on Delivery (COD) is strictly disallowed.
-   * Payment method is UPI only with SIMULATED test payment status.
+   * Generates a server-created Razorpay Order using exact payable amount in paise.
    */
   static async createOrder(input: CreateOrderInput) {
     const { customerId, items, shippingAddress, paymentMethod = "UPI", idempotencyKey } = input;
@@ -69,7 +84,7 @@ export class OrderService {
     const normalizedPaymentMethod = (paymentMethod || "UPI").trim().toUpperCase();
     if (normalizedPaymentMethod === "COD") {
       throw Object.assign(
-        new Error("Cash on Delivery (COD) is not supported. Please select UPI simulation payment."),
+        new Error("Cash on Delivery (COD) is not supported. Please select UPI / Razorpay payment."),
         {
           code: "COD_NOT_ALLOWED",
           status: 400,
@@ -93,7 +108,20 @@ export class OrderService {
           { orderId: existingOrder.id, orderNumber: existingOrder.orderNumber, idempotencyKey },
           "Returning existing order matched by idempotency key"
         );
-        return existingOrder;
+        const razorpayInfo = {
+          orderId: existingOrder.razorpayOrderId || `order_${existingOrder.orderNumber}`,
+          amount: Math.round(existingOrder.totalInr * 100),
+          currency: existingOrder.currency || "INR",
+          keyId: this.getRazorpayService().getPublicConfig().keyId,
+          customer: {
+            name: (existingOrder.shippingAddress as any)?.fullName || "",
+            contact: (existingOrder.shippingAddress as any)?.phone || "",
+          },
+        };
+        return {
+          ...existingOrder,
+          razorpay: razorpayInfo,
+        };
       }
     }
 
@@ -233,6 +261,18 @@ export class OrderService {
     const discountInr = 0;
     const totalInr = subtotalInr - discountInr + shippingInr; // Inclusive of GST
     const orderNumber = this.generateOrderNumber();
+    const amountPaise = Math.round(totalInr * 100);
+
+    // Create server-side Razorpay Order in paise
+    const razorpayOrder = await this.getRazorpayService().createOrder({
+      amountPaise,
+      currency: "INR",
+      receipt: orderNumber,
+      notes: {
+        customerId: customer.id,
+        orderNumber,
+      },
+    });
 
     // 8. Atomic transaction: create order, status log, and concurrency-safe stock deduction
     const order = await prisma.$transaction(async (tx) => {
@@ -260,7 +300,10 @@ export class OrderService {
             country: shippingAddress.country?.trim() || "India",
           },
           paymentMethod: "UPI",
-          paymentStatus: "SIMULATED", // Explicitly simulated test payment
+          paymentStatus: "PENDING",
+          paymentProvider: "RAZORPAY",
+          razorpayOrderId: razorpayOrder.id,
+          currency: "INR",
           items: {
             create: validatedItems.map((item) => ({
               productId: item.productId,
@@ -278,7 +321,7 @@ export class OrderService {
             create: {
               fromStatus: null,
               toStatus: "PLACED",
-              note: "Test order placed via UPI simulation",
+              note: `Order placed awaiting Razorpay payment (${razorpayOrder.id})`,
               updatedBy: customer.id,
               updatedByRole: "CUSTOMER",
             },
@@ -308,14 +351,29 @@ export class OrderService {
       }
 
       return createdOrder;
-    });
+    }, { maxWait: 15000, timeout: 30000 });
+
+    const result = {
+      ...order,
+      razorpay: {
+        orderId: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        keyId: this.getRazorpayService().getPublicConfig().keyId,
+        customer: {
+          name: shippingAddress.fullName.trim(),
+          email: customer.email,
+          contact: shippingAddress.phone.trim(),
+        },
+      },
+    };
 
     logger.info(
-      { orderId: order.id, orderNumber: order.orderNumber, customerId: customer.id, totalInr },
-      "Order created successfully in MongoDB with SIMULATED UPI payment"
+      { orderId: order.id, orderNumber: order.orderNumber, razorpayOrderId: razorpayOrder.id, totalInr },
+      "Order created successfully in MongoDB with Razorpay payment initialization"
     );
 
-    return order;
+    return result;
   }
 
   /**
@@ -731,4 +789,343 @@ export class OrderService {
 
     return updatedOrder;
   }
+
+  /**
+   * Verifies Razorpay Checkout payment result cryptographically.
+   * Matches server-side order and customer ownership.
+   * Idempotently marks paymentStatus as PAID upon successful verification.
+   */
+  static async verifyPayment(
+    customerId: string,
+    payload: {
+      orderId?: string | undefined;
+      razorpayOrderId: string;
+      razorpayPaymentId: string;
+      razorpaySignature: string;
+    }
+  ) {
+    const { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = payload;
+
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      throw Object.assign(
+        new Error("Razorpay Order ID, Payment ID, and Signature are required for verification"),
+        { code: "VALIDATION_ERROR", status: 400 }
+      );
+    }
+
+    // 1. Locate local order record
+    const whereClause: any[] = [{ razorpayOrderId }];
+    if (orderId) {
+      whereClause.push({ id: orderId });
+      whereClause.push({ orderNumber: orderId });
+    }
+
+    const order = await prisma.order.findFirst({
+      where: { OR: whereClause },
+      include: {
+        items: true,
+        statusLogs: { orderBy: { createdAt: "asc" } },
+        shippingUpdates: { orderBy: { createdAt: "asc" } },
+      },
+    });
+
+    if (!order) {
+      throw Object.assign(new Error("Matching order not found for payment verification"), {
+        code: "ORDER_NOT_FOUND",
+        status: 404,
+      });
+    }
+
+    // 2. Strict Customer Ownership Check
+    if (order.customerId !== customerId) {
+      throw Object.assign(new Error("You do not have permission to verify payment for this order"), {
+        code: "FORBIDDEN",
+        status: 403,
+      });
+    }
+
+    // 3. Match Razorpay Order ID created by server
+    if (order.razorpayOrderId && order.razorpayOrderId !== razorpayOrderId) {
+      throw Object.assign(new Error("Razorpay Order ID does not match server created order"), {
+        code: "ORDER_MISMATCH",
+        status: 400,
+      });
+    }
+
+    // 4. Verify Cryptographic Signature
+    const isValidSignature = this.getRazorpayService().verifyPaymentSignature({
+      orderId: razorpayOrderId,
+      paymentId: razorpayPaymentId,
+      signature: razorpaySignature,
+    });
+
+    if (!isValidSignature) {
+      logger.warn(
+        { orderId: order.id, razorpayOrderId, razorpayPaymentId },
+        "Razorpay signature verification rejected: HMAC mismatch"
+      );
+      throw Object.assign(new Error("Invalid payment signature. Verification failed."), {
+        code: "INVALID_SIGNATURE",
+        status: 400,
+      });
+    }
+
+    // 5. Idempotent check: if already verified as PAID, return order directly
+    if (order.paymentStatus === "PAID") {
+      logger.info(
+        { orderId: order.id, razorpayPaymentId },
+        "Order payment already verified and captured (idempotent request)"
+      );
+      return order;
+    }
+
+    // 6. Fetch / verify status and amount through trusted Razorpay API when available
+    const paymentDetails = await this.getRazorpayService().fetchPayment(razorpayPaymentId);
+    if (paymentDetails && paymentDetails.amount > 0) {
+      const expectedPaise = Math.round(order.totalInr * 100);
+      if (paymentDetails.amount !== expectedPaise) {
+        throw Object.assign(
+          new Error(`Payment amount mismatch: Expected ${expectedPaise} paise, received ${paymentDetails.amount}`),
+          { code: "AMOUNT_MISMATCH", status: 400 }
+        );
+      }
+      if (paymentDetails.currency !== "INR") {
+        throw Object.assign(
+          new Error(`Payment currency mismatch: Expected INR, received ${paymentDetails.currency}`),
+          { code: "CURRENCY_MISMATCH", status: 400 }
+        );
+      }
+    }
+
+    // 7. Atomically update MongoDB payment state
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      return tx.order.update({
+        where: { id: order.id },
+        data: {
+          paymentStatus: "PAID",
+          razorpayPaymentId,
+          razorpaySignature,
+          razorpayPaymentStatus: paymentDetails?.status || "captured",
+          paymentCapturedAt: new Date(),
+          statusLogs: {
+            create: {
+              fromStatus: order.status,
+              toStatus: order.status,
+              note: `Payment verified and captured via Razorpay (${razorpayPaymentId})`,
+              updatedBy: customerId,
+              updatedByRole: "CUSTOMER",
+            },
+          },
+        },
+        include: {
+          items: true,
+          statusLogs: { orderBy: { createdAt: "asc" } },
+          shippingUpdates: { orderBy: { createdAt: "asc" } },
+        },
+      });
+    });
+
+    logger.info(
+      { orderId: order.id, orderNumber: order.orderNumber, razorpayPaymentId },
+      "Payment successfully verified and persisted to MongoDB as PAID"
+    );
+
+    return updatedOrder;
+  }
+
+  /**
+   * Processes inbound webhook from Razorpay (public endpoint).
+   * Verifies raw request signature, deduplicates event IDs, updates orders idempotently.
+   */
+  static async handleWebhook(rawBody: string | Buffer, signature: string, payload: any) {
+    if (!signature) {
+      throw Object.assign(new Error("Missing X-Razorpay-Signature header"), {
+        code: "MISSING_SIGNATURE",
+        status: 400,
+      });
+    }
+
+    // 1. Verify webhook signature using raw bytes
+    const isValid = this.getRazorpayService().verifyWebhookSignature(rawBody, signature);
+    if (!isValid) {
+      logger.warn("Razorpay webhook signature verification rejected");
+      throw Object.assign(new Error("Invalid webhook signature"), {
+        code: "INVALID_WEBHOOK_SIGNATURE",
+        status: 400,
+      });
+    }
+
+    const eventId =
+      payload?.event_id ||
+      payload?.id ||
+      `evt_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const eventType = payload?.event || "unknown";
+
+    // 2. Idempotency Check: Don't reprocess duplicate events
+    const existingEvent = await prisma.razorpayWebhookEvent.findUnique({
+      where: { id: eventId },
+    });
+    if (existingEvent) {
+      logger.info({ eventId, eventType }, "Duplicate webhook event received; safely skipped");
+      return { status: "ignored", message: "Duplicate event already processed", eventId };
+    }
+
+    // 3. Extract order and payment references from official Razorpay event payload
+    const paymentEntity = payload?.payload?.payment?.entity;
+    const orderEntity = payload?.payload?.order?.entity;
+    const razorpayOrderId = paymentEntity?.order_id || orderEntity?.id;
+    const razorpayPaymentId = paymentEntity?.id;
+
+    if (razorpayOrderId) {
+      const order = await prisma.order.findFirst({
+        where: { razorpayOrderId },
+        include: { items: true },
+      });
+
+      if (order) {
+        if (eventType === "payment.captured" || eventType === "order.paid") {
+          if (order.paymentStatus !== "PAID") {
+            await prisma.$transaction(async (tx) => {
+              await tx.order.update({
+                where: { id: order.id },
+                data: {
+                  paymentStatus: "PAID",
+                  razorpayPaymentId: razorpayPaymentId || order.razorpayPaymentId,
+                  razorpayPaymentStatus: "captured",
+                  paymentCapturedAt: new Date(),
+                  statusLogs: {
+                    create: {
+                      fromStatus: order.status,
+                      toStatus: order.status,
+                      note: `Payment captured via Razorpay Webhook [${eventType}] (${razorpayPaymentId || ""})`,
+                      updatedBy: "RAZORPAY_WEBHOOK",
+                      updatedByRole: "SYSTEM",
+                    },
+                  },
+                },
+              });
+            });
+            logger.info(
+              { orderId: order.id, orderNumber: order.orderNumber, eventId },
+              "Order marked as PAID via Razorpay webhook"
+            );
+          }
+        } else if (eventType === "payment.failed") {
+          // Only mark failed if order is not already verified as PAID
+          if (order.paymentStatus !== "PAID") {
+            const errorDescription =
+              paymentEntity?.error_description || "Payment failed at issuing bank / gateway";
+
+            await prisma.$transaction(async (tx) => {
+              await tx.order.update({
+                where: { id: order.id },
+                data: {
+                  paymentStatus: "FAILED",
+                  paymentFailureReason: errorDescription,
+                  statusLogs: {
+                    create: {
+                      fromStatus: order.status,
+                      toStatus: order.status,
+                      note: `Payment failed via Razorpay Webhook: ${errorDescription}`,
+                      updatedBy: "RAZORPAY_WEBHOOK",
+                      updatedByRole: "SYSTEM",
+                    },
+                  },
+                },
+              });
+
+              // Safely restore reserved stock for this unpaid order
+              for (const item of order.items) {
+                await tx.product.update({
+                  where: { id: item.productId },
+                  data: {
+                    stockCount: { increment: item.quantity },
+                    inStock: true,
+                  },
+                });
+              }
+            });
+
+            logger.info(
+              { orderId: order.id, orderNumber: order.orderNumber, eventId },
+              "Order marked as FAILED and product stock restored via webhook"
+            );
+          }
+        }
+      }
+    }
+
+    // 4. Record event for persistent idempotency and auditing
+    await prisma.razorpayWebhookEvent.create({
+      data: {
+        id: eventId,
+        event: eventType,
+        orderId: razorpayOrderId || null,
+        paymentId: razorpayPaymentId || null,
+        payload: payload || {},
+      },
+    });
+
+    return { status: "processed", eventId };
+  }
+
+  /**
+   * Reconciles an order with Razorpay API (for administrative audit or recovery).
+   */
+  static async reconcilePayment(orderId: string) {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
+    if (!order) {
+      throw Object.assign(new Error("Order not found for reconciliation"), {
+        code: "NOT_FOUND",
+        status: 404,
+      });
+    }
+
+    if (order.paymentStatus === "PAID") {
+      return { order, reconciled: false, reason: "Order is already verified as PAID" };
+    }
+
+    if (!order.razorpayPaymentId) {
+      return { order, reconciled: false, reason: "No Razorpay Payment ID recorded yet" };
+    }
+
+    const paymentDetails = await this.getRazorpayService().fetchPayment(order.razorpayPaymentId);
+    if (!paymentDetails) {
+      return { order, reconciled: false, reason: "Payment record not found on Razorpay" };
+    }
+
+    if (paymentDetails.status === "captured" && paymentDetails.amount === Math.round(order.totalInr * 100)) {
+      const updated = await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          paymentStatus: "PAID",
+          razorpayPaymentStatus: "captured",
+          paymentCapturedAt: new Date(),
+          statusLogs: {
+            create: {
+              fromStatus: order.status,
+              toStatus: order.status,
+              note: `Payment reconciled and verified with Razorpay API (${order.razorpayPaymentId})`,
+              updatedBy: "SYSTEM_RECONCILIATION",
+              updatedByRole: "SYSTEM",
+            },
+          },
+        },
+        include: {
+          items: true,
+          statusLogs: { orderBy: { createdAt: "asc" } },
+          shippingUpdates: { orderBy: { createdAt: "asc" } },
+        },
+      });
+
+      return { order: updated, reconciled: true };
+    }
+
+    return { order, reconciled: false, paymentDetails };
+  }
 }
+

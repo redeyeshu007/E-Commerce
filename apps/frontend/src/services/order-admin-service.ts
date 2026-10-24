@@ -101,4 +101,24 @@ export class OrderAdminService {
 
     return body.data.order;
   }
+
+  /**
+   * Reconciles order payment status with Razorpay API
+   */
+  static async reconcilePayment(
+    orderId: string
+  ): Promise<{ order: Order; reconciled: boolean; reason?: string }> {
+    const res = await fetch(`/api/v1/orders/admin/${orderId}/reconcile-payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(body?.error?.message || "Failed to reconcile payment with Razorpay");
+    }
+
+    return body.data;
+  }
 }

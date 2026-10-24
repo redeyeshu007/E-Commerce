@@ -160,28 +160,28 @@ export default function AdminOrdersPage() {
 
   const renderPaymentBadge = (paymentStatusVal: PaymentStatus | string) => {
     switch (paymentStatusVal) {
-      case "SIMULATED":
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
-            SIMULATED
-          </span>
-        );
       case "PAID":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
-            PAID
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            PAID (Verified)
           </span>
         );
       case "PENDING":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
             PENDING
           </span>
         );
       case "FAILED":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-rose-50 text-rose-800 border border-rose-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
             FAILED
+          </span>
+        );
+      case "SIMULATED":
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200">
+            SIMULATED
           </span>
         );
       default:
@@ -401,8 +401,9 @@ export default function AdminOrdersPage() {
                         {/* Payment */}
                         <td className="py-4 px-4 whitespace-nowrap">
                           <div className="space-y-1">
-                            <div className="text-[11px] font-semibold text-neutral-900">
-                              {order.paymentMethod}
+                            <div className="text-[11px] font-semibold text-neutral-900 flex items-center gap-1.5">
+                              <span>{order.paymentProvider || "RAZORPAY"}</span>
+                              <span className="text-neutral-400 font-normal">({order.paymentMethod})</span>
                             </div>
                             {renderPaymentBadge(order.paymentStatus)}
                           </div>

@@ -106,8 +106,15 @@ export function createApp(env: EnvConfig): Application {
     });
   }
 
-  // ── Body Parsing with Safe Limits ─────────────────────────────────────────
-  app.use(express.json({ limit: "1mb" }));
+  // ── Body Parsing with Safe Limits & Raw Body Capture for Signature Verification ───
+  app.use(
+    express.json({
+      limit: "1mb",
+      verify: (req: Request, _res: Response, buf: Buffer) => {
+        (req as any).rawBody = buf;
+      },
+    }),
+  );
   app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
   // ── API Documentation (Future Integration Point) ──────────────────────────
@@ -127,12 +134,14 @@ export function createApp(env: EnvConfig): Application {
   app.use("/api/auth", customerAuthRouter);
   app.use("/api/v1/auth", customerAuthRouter);
 
-  // Protected Checkout & Order endpoints
+  // Protected Checkout, Order & Razorpay Payment endpoints
   const orderRouter = createOrderRouter(env);
   app.use("/api/orders", orderRouter);
   app.use("/api/v1/orders", orderRouter);
   app.use("/api/checkout", orderRouter);
   app.use("/api/v1/checkout", orderRouter);
+  app.use("/api/payments/razorpay", orderRouter);
+  app.use("/api/v1/payments/razorpay", orderRouter);
 
   // Navbar Management endpoints (storefront public & admin protected)
   const navbarRouter = createNavbarRouter(env);

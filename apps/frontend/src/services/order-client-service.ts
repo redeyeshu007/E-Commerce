@@ -1,4 +1,4 @@
-import { type Order, type ShippingAddress } from "@/types/order";
+import { type Order, type ShippingAddress, type RazorpayOrderData, type CreateOrderResult } from "@/types/order";
 
 export interface OrderItemInput {
   productId: string;
@@ -18,17 +18,42 @@ export interface ShippingAddressInput {
 // Re-export Order as OrderOutput for backward compatibility
 export type OrderOutput = Order;
 
+export interface RazorpayPublicConfig {
+  keyId: string;
+  mode: "test" | "live";
+  currency: string;
+  isMock?: boolean;
+}
+
 export class OrderClientService {
   /**
+   * Retrieves public Razorpay configuration from backend (Key ID, Mode, Currency).
+   * Secret keys are NEVER exposed.
+   */
+  static async getRazorpayConfig(): Promise<RazorpayPublicConfig> {
+    const res = await fetch("/api/checkout/config", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) {
+      throw new Error("Unable to retrieve payment gateway configuration.");
+    }
+
+    const body = await res.json();
+    return body.data;
+  }
+
+  /**
    * Submits order to backend protected checkout endpoint.
-   * Enforces UPI test simulation payment method and idempotency key.
+   * Generates server-side Razorpay order and returns immutable snapshots.
    */
   static async createOrder(payload: {
     items: OrderItemInput[];
     shippingAddress: ShippingAddressInput;
     paymentMethod?: string;
     idempotencyKey?: string;
-  }): Promise<Order> {
+  }): Promise<CreateOrderResult> {
     const res = await fetch("/api/checkout/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -48,7 +73,41 @@ export class OrderClientService {
       throw new Error(body?.error?.message || "Failed to place order. Please try again.");
     }
 
-    return body.data.order;
+    return {
+      order: body.data.order,
+      razorpay: body.data.razorpay,
+    };
+  }
+
+  /**
+   * Cryptographically verifies Razorpay payment signature on backend.
+   * Updates order status to PAID upon verified success.
+   */
+  static async verifyPayment(payload: {
+    orderId?: string;
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    razorpaySignature: string;
+  }): Promise<{ order: Order; verified: boolean }> {
+    const res = await fetch("/api/checkout/verify-payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    const body = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(
+        body?.error?.message || "Payment signature verification failed. Please contact customer support."
+      );
+    }
+
+    return {
+      order: body.data.order,
+      verified: Boolean(body.data.verified),
+    };
   }
 
   /**

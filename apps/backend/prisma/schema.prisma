@@ -413,7 +413,15 @@ model Order {
   idempotencyKey      String?
   shippingAddress     Json                  // { fullName, addressLine, city, state, postalCode, phone, country }
   paymentMethod       String                @default("UPI") // UPI
-  paymentStatus       String                @default("SIMULATED") // SIMULATED, PENDING, PAID, FAILED, REFUNDED
+  paymentStatus       String                @default("PENDING") // PENDING, PAID, FAILED, REFUNDED, SIMULATED
+  paymentProvider     String                @default("RAZORPAY") // RAZORPAY
+  razorpayOrderId     String?
+  razorpayPaymentId   String?
+  razorpaySignature   String?
+  razorpayPaymentStatus String?             // created, authorized, captured, failed
+  paymentCapturedAt   DateTime?
+  paymentFailureReason String?
+  currency            String                @default("INR")
   carrierName         String?
   trackingNumber      String?
   shippingDescription String?
@@ -429,9 +437,24 @@ model Order {
 
   @@index([customerId])
   @@index([status])
+  @@index([paymentStatus])
+  @@index([razorpayOrderId])
   @@index([createdAt])
   @@index([idempotencyKey])
   @@map("orders")
+}
+
+model RazorpayWebhookEvent {
+  id         String   @id @map("_id") // Razorpay event ID (e.g. event_...)
+  event      String   // e.g. payment.captured, order.paid, payment.failed
+  orderId    String?
+  paymentId  String?
+  payload    Json
+  createdAt  DateTime @default(now())
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("razorpay_webhook_events")
 }
 
 model OrderItem {

@@ -1,6 +1,446 @@
 {
   "heroImage1": [
     {
+      "id": "hist_hero1_1792821669738_restored_b96723",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Look to our new season collection for girls.",
+        "boldHeadline": "Body Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Necklaces &"
+      },
+      "version": 201,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Necklaces &",
+      "boldHeadline": "Body Jewels",
+      "description": "Look to our new season collection for girls.",
+      "createdAt": "2026-10-24T06:01:09.738Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792821669738_pre_ce6ea3",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Temporary Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Temporary Text &"
+      },
+      "version": 200,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-24T06:01:09.738Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792821668858_3d470d",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Temporary Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Temporary Text &"
+      },
+      "version": 199,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-24T06:01:08.858Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792821667748_d78ea9",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Fine Gold",
+        "categorySlug": null,
+        "normalHeadline": "Luxury &"
+      },
+      "version": 198,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Luxury &",
+      "boldHeadline": "Fine Gold",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-24T06:01:07.748Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792821665878_d57499",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Bridal Sets",
+        "categorySlug": null,
+        "normalHeadline": "Royal Jewels &"
+      },
+      "version": 197,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Royal Jewels &",
+      "boldHeadline": "Bridal Sets",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-24T06:01:05.878Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792764542479_restored_574f81",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Look to our new season collection for girls.",
+        "boldHeadline": "Body Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Necklaces &"
+      },
+      "version": 196,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Necklaces &",
+      "boldHeadline": "Body Jewels",
+      "description": "Look to our new season collection for girls.",
+      "createdAt": "2026-10-23T14:09:02.479Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792764542479_pre_f3f121",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Temporary Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Temporary Text &"
+      },
+      "version": 195,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-23T14:09:02.479Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792764541720_310849",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Temporary Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Temporary Text &"
+      },
+      "version": 194,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-23T14:09:01.720Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792764540820_b8083c",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Fine Gold",
+        "categorySlug": null,
+        "normalHeadline": "Luxury &"
+      },
+      "version": 193,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Luxury &",
+      "boldHeadline": "Fine Gold",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-23T14:09:00.820Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792764539439_9425b4",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Bridal Sets",
+        "categorySlug": null,
+        "normalHeadline": "Royal Jewels &"
+      },
+      "version": 192,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Royal Jewels &",
+      "boldHeadline": "Bridal Sets",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-23T14:08:59.439Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792763662195_restored_ffb7c5",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Look to our new season collection for girls.",
+        "boldHeadline": "Body Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Necklaces &"
+      },
+      "version": 191,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Necklaces &",
+      "boldHeadline": "Body Jewels",
+      "description": "Look to our new season collection for girls.",
+      "createdAt": "2026-10-23T13:54:22.195Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792763662195_pre_541e15",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Temporary Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Temporary Text &"
+      },
+      "version": 190,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-23T13:54:22.195Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792763661381_9bdf0b",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Temporary Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Temporary Text &"
+      },
+      "version": 189,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-23T13:54:21.381Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792763660342_b9435a",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Fine Gold",
+        "categorySlug": null,
+        "normalHeadline": "Luxury &"
+      },
+      "version": 188,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Luxury &",
+      "boldHeadline": "Fine Gold",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-23T13:54:20.342Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792763658762_327a3a",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Bridal Sets",
+        "categorySlug": null,
+        "normalHeadline": "Royal Jewels &"
+      },
+      "version": 187,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Royal Jewels &",
+      "boldHeadline": "Bridal Sets",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-23T13:54:18.762Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792645642294_restored_a2c10a",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Look to our new season collection for girls.",
+        "boldHeadline": "Body Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Necklaces &"
+      },
+      "version": 186,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Necklaces &",
+      "boldHeadline": "Body Jewels",
+      "description": "Look to our new season collection for girls.",
+      "createdAt": "2026-10-22T05:07:22.294Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792645642294_pre_48371b",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Temporary Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Temporary Text &"
+      },
+      "version": 185,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-22T05:07:22.294Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792645641491_eab006",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Temporary Jewels",
+        "categorySlug": null,
+        "normalHeadline": "Temporary Text &"
+      },
+      "version": 184,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Temporary Text &",
+      "boldHeadline": "Temporary Jewels",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-22T05:07:21.491Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792645640476_569a00",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Fine Gold",
+        "categorySlug": null,
+        "normalHeadline": "Luxury &"
+      },
+      "version": 183,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Luxury &",
+      "boldHeadline": "Fine Gold",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-22T05:07:20.476Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero1_1792645638840_2a7de1",
+      "slotId": "heroImage1",
+      "snapshot": {
+        "id": "heroImage1",
+        "name": "Hero Image 1",
+        "imageAlt": "Necklaces &. Body Jewels. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-necklaces.jpg",
+        "categoryId": null,
+        "description": "Exclusive handcrafted bridal collections for the modern era.",
+        "boldHeadline": "Bridal Sets",
+        "categorySlug": null,
+        "normalHeadline": "Royal Jewels &"
+      },
+      "version": 182,
+      "imageUrl": "/images/hero/banner-necklaces.jpg",
+      "normalHeadline": "Royal Jewels &",
+      "boldHeadline": "Bridal Sets",
+      "description": "Exclusive handcrafted bridal collections for the modern era.",
+      "createdAt": "2026-10-22T05:07:18.840Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
       "id": "hist_hero1_1792615073267_restored_98f187",
       "slotId": "heroImage1",
       "snapshot": {
@@ -3326,6 +3766,78 @@
     }
   ],
   "heroImage2": [
+    {
+      "id": "hist_hero2_1792821666858_3d741a",
+      "slotId": "heroImage2",
+      "snapshot": {
+        "id": "heroImage2",
+        "name": "Hero Image 2",
+        "imageAlt": "Just Lunched Desk The Hals. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-desk-hals.jpg",
+        "boldHeadline": "Diamond Chokers",
+        "normalHeadline": "New Arrival"
+      },
+      "version": 42,
+      "imageUrl": "/images/hero/banner-desk-hals.jpg",
+      "normalHeadline": "New Arrival",
+      "boldHeadline": "Diamond Chokers",
+      "createdAt": "2026-10-24T06:01:06.858Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero2_1792764540194_4c3663",
+      "slotId": "heroImage2",
+      "snapshot": {
+        "id": "heroImage2",
+        "name": "Hero Image 2",
+        "imageAlt": "Just Lunched Desk The Hals. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-desk-hals.jpg",
+        "boldHeadline": "Diamond Chokers",
+        "normalHeadline": "New Arrival"
+      },
+      "version": 41,
+      "imageUrl": "/images/hero/banner-desk-hals.jpg",
+      "normalHeadline": "New Arrival",
+      "boldHeadline": "Diamond Chokers",
+      "createdAt": "2026-10-23T14:09:00.194Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero2_1792763659631_da6954",
+      "slotId": "heroImage2",
+      "snapshot": {
+        "id": "heroImage2",
+        "name": "Hero Image 2",
+        "imageAlt": "Just Lunched Desk The Hals. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-desk-hals.jpg",
+        "boldHeadline": "Diamond Chokers",
+        "normalHeadline": "New Arrival"
+      },
+      "version": 40,
+      "imageUrl": "/images/hero/banner-desk-hals.jpg",
+      "normalHeadline": "New Arrival",
+      "boldHeadline": "Diamond Chokers",
+      "createdAt": "2026-10-23T13:54:19.631Z",
+      "createdBy": "javixtech@gmail.com"
+    },
+    {
+      "id": "hist_hero2_1792645639727_7f55c0",
+      "slotId": "heroImage2",
+      "snapshot": {
+        "id": "heroImage2",
+        "name": "Hero Image 2",
+        "imageAlt": "Just Lunched Desk The Hals. - PERALAGAE",
+        "imageUrl": "/images/hero/banner-desk-hals.jpg",
+        "boldHeadline": "Diamond Chokers",
+        "normalHeadline": "New Arrival"
+      },
+      "version": 39,
+      "imageUrl": "/images/hero/banner-desk-hals.jpg",
+      "normalHeadline": "New Arrival",
+      "boldHeadline": "Diamond Chokers",
+      "createdAt": "2026-10-22T05:07:19.727Z",
+      "createdBy": "javixtech@gmail.com"
+    },
     {
       "id": "hist_hero2_1792615070476_863d63",
       "slotId": "heroImage2",

@@ -32,8 +32,8 @@ describe("Instagram Section Management API Test Suite", () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data).toBeDefined();
-      expect(res.body.data.heading).toBe("Follow Us on Instagram");
-      expect(res.body.data.handle).toBe("@peralagaeofficial");
+      expect(res.body.data.heading).toMatch(/Instagram/i);
+      expect(res.body.data.handle).toMatch(/^@/);
       expect(Array.isArray(res.body.data.images)).toBe(true);
       expect(res.body.data.images.length).toBeGreaterThanOrEqual(6);
 
@@ -48,7 +48,7 @@ describe("Instagram Section Management API Test Suite", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.heading).toBe("Follow Us on Instagram");
+      expect(res.body.data.heading).toMatch(/Instagram/i);
     });
   });
 

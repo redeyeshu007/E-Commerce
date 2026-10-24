@@ -79,6 +79,28 @@ function AdminOrderDetailContent({ params }: PageProps = {}) {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [statusNote, setStatusNote] = useState("");
 
+  // Payment Reconciliation state
+  const [isReconciling, setIsReconciling] = useState(false);
+  const [reconcileResult, setReconcileResult] = useState<string | null>(null);
+
+  const handleReconcilePayment = async () => {
+    setIsReconciling(true);
+    setReconcileResult(null);
+    try {
+      const res = await OrderAdminService.reconcilePayment(orderId);
+      if (res.reconciled) {
+        setOrder(res.order);
+        setReconcileResult("Payment verified with Razorpay and updated to PAID.");
+      } else {
+        setReconcileResult(res.reason || "Status checked with Razorpay API (no change required).");
+      }
+    } catch (err: unknown) {
+      setReconcileResult(err instanceof Error ? err.message : "Reconciliation failed");
+    } finally {
+      setIsReconciling(false);
+    }
+  };
+
   // Shipping Evidence Modal / Form state
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
   const [carrierName, setCarrierName] = useState("Blue Dart Apex Insured");
@@ -557,16 +579,95 @@ function AdminOrderDetailContent({ params }: PageProps = {}) {
 
             <div className="pt-3 border-t border-[#EAE6DF] space-y-2">
               <div className="flex justify-between text-xs">
+                <span className="text-[#666666]">Payment Gateway:</span>
+                <span className="font-semibold text-[#111111]">
+                  {order.paymentProvider || "RAZORPAY"}
+                </span>
+              </div>
+
+              <div className="flex justify-between text-xs">
                 <span className="text-[#666666]">Payment Method:</span>
                 <span className="font-semibold text-[#111111]">{order.paymentMethod}</span>
               </div>
 
-              <div className="flex justify-between items-center text-xs">
+              {order.razorpayOrderId && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-[#666666]">Razorpay Order ID:</span>
+                  <span className="font-mono text-[11px] text-[#111111]">
+                    {order.razorpayOrderId}
+                  </span>
+                </div>
+              )}
+
+              {order.razorpayPaymentId && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-[#666666]">Razorpay Payment ID:</span>
+                  <span className="font-mono text-[11px] text-[#111111]">
+                    {order.razorpayPaymentId}
+                  </span>
+                </div>
+              )}
+
+              {order.paymentCapturedAt && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-[#666666]">Captured At:</span>
+                  <span className="text-[#111111]">
+                    {new Date(order.paymentCapturedAt).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              )}
+
+              {order.paymentFailureReason && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded text-[11px] text-red-700">
+                  <span className="font-semibold">Failure Reason: </span>
+                  <span>{order.paymentFailureReason}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center text-xs pt-1 border-t border-[#EAE6DF]">
                 <span className="text-[#666666]">Payment Status:</span>
-                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]">
-                  {order.paymentStatus}
-                </span>
+                {order.paymentStatus === "PAID" ? (
+                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    PAID (Verified)
+                  </span>
+                ) : order.paymentStatus === "FAILED" ? (
+                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                    FAILED
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]">
+                    {order.paymentStatus || "PENDING"}
+                  </span>
+                )}
               </div>
+
+              {order.paymentStatus !== "PAID" && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleReconcilePayment}
+                    disabled={isReconciling}
+                    className="w-full py-2 bg-neutral-900 hover:bg-black disabled:opacity-50 text-white text-[11px] font-medium uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {isReconciling ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Reconciling with Gateway...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Reconcile with Razorpay API</span>
+                      </>
+                    )}
+                  </button>
+                  {reconcileResult && (
+                    <p className="mt-1.5 text-[11px] text-neutral-600 bg-neutral-50 p-2 rounded border border-neutral-200">
+                      {reconcileResult}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

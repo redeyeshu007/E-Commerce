@@ -80,6 +80,23 @@ export interface OrderCustomerSummary {
   } | null;
 }
 
+export interface RazorpayOrderData {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  customer?: {
+    name?: string;
+    email?: string;
+    contact?: string;
+  };
+}
+
+export interface CreateOrderResult {
+  order: Order;
+  razorpay?: RazorpayOrderData;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -97,6 +114,14 @@ export interface Order {
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod | string;
   paymentStatus: PaymentStatus | string;
+  paymentProvider?: string;
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
+  razorpaySignature?: string | null;
+  razorpayPaymentStatus?: string | null;
+  paymentCapturedAt?: string | null;
+  paymentFailureReason?: string | null;
+  currency?: string;
   carrierName?: string | null;
   trackingNumber?: string | null;
   shippingDescription?: string | null;

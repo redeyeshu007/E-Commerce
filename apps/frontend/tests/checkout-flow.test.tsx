@@ -85,7 +85,7 @@ describe("Protected Checkout & Order Placement Test Suite", () => {
 
       CustomerAuthService.setStoredCustomer(mockCustomer);
 
-      const createOrderSpy = vi.spyOn(OrderClientService, "createOrder").mockResolvedValue({
+      const mockOrder = {
         id: "ord-test-999",
         orderNumber: "PLG-2026-TEST-999",
         status: "CONFIRMED",
@@ -95,8 +95,10 @@ describe("Protected Checkout & Order Placement Test Suite", () => {
         taxInr: 0,
         totalInr: 125000,
         shippingAddress: {},
-        paymentMethod: "COD",
-        paymentStatus: "PENDING",
+        paymentMethod: "UPI",
+        paymentStatus: "PAID",
+        paymentProvider: "RAZORPAY",
+        razorpayPaymentId: "pay_test_999",
         createdAt: new Date().toISOString(),
         items: [
           {
@@ -109,7 +111,39 @@ describe("Protected Checkout & Order Placement Test Suite", () => {
             totalPriceInr: 125000,
           },
         ],
+      };
+
+      const createOrderSpy = vi.spyOn(OrderClientService, "createOrder").mockResolvedValue({
+        order: mockOrder,
+        razorpay: {
+          orderId: "order_test_999",
+          amount: 12500000,
+          currency: "INR",
+          keyId: "rzp_test_mock",
+          customer: {
+            name: "Maharani Gayatri Devi",
+            email: "vip@peralagae.com",
+            contact: "+91 9876543210",
+          },
+        },
       });
+
+      vi.spyOn(OrderClientService, "verifyPayment").mockResolvedValue({
+        order: mockOrder,
+        verified: true,
+      });
+
+      // Mock Razorpay SDK on window
+      (window as any).Razorpay = vi.fn().mockImplementation((options: any) => ({
+        open: vi.fn().mockImplementation(() => {
+          options.handler({
+            razorpay_payment_id: "pay_test_999",
+            razorpay_order_id: "order_test_999",
+            razorpay_signature: "sig_test_mock",
+          });
+        }),
+        on: vi.fn(),
+      }));
 
       localStorage.setItem(
         "peralagae_cart_items",

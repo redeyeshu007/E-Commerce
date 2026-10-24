@@ -86,6 +86,25 @@ const baseEnvSchema = z.object({
     .optional()
     .default("")
     .transform((val) => (val ? val.trim().replace(/^["']|["']$/g, "") : "")),
+
+  // ── Razorpay Payment Gateway Configuration ──────────────────────────────────
+  RAZORPAY_KEY_ID: z
+    .string()
+    .default("rzp_test_placeholder")
+    .transform((val) => val.trim().replace(/^["']|["']$/g, "")),
+  RAZORPAY_KEY_SECRET: z
+    .string()
+    .default("placeholder_secret")
+    .transform((val) => val.trim().replace(/^["']|["']$/g, "")),
+  RAZORPAY_WEBHOOK_SECRET: z
+    .string()
+    .default("placeholder_webhook_secret")
+    .transform((val) => val.trim().replace(/^["']|["']$/g, "")),
+  RAZORPAY_MODE: z.enum(["test", "live"]).default("test"),
+  FRONTEND_URL: z
+    .string()
+    .default("http://localhost:3000")
+    .transform((val) => val.trim().replace(/\/+$/, "")),
 });
 
 export const envSchema = baseEnvSchema.superRefine((data, ctx) => {

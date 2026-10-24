@@ -148,6 +148,13 @@ const createOrderSchema = z.object({
   idempotencyKey: z.string().optional(),
 });
 
+const verifyPaymentSchema = z.object({
+  orderId: z.string().optional(),
+  razorpayOrderId: z.string().min(1, "Razorpay Order ID is required"),
+  razorpayPaymentId: z.string().min(1, "Razorpay Payment ID is required"),
+  razorpaySignature: z.string().min(1, "Razorpay Signature is required"),
+});
+
 export function createOrderRouter(env: EnvConfig): Router {
   const router = Router();
   const requireCustomerAuth = createCustomerAuthMiddleware(env);
@@ -265,6 +272,31 @@ export function createOrderRouter(env: EnvConfig): Router {
         error: {
           code: error.code || "UPDATE_ORDER_STATUS_FAILED",
           message: error.message || "Failed to update order status",
+        },
+      });
+    }
+  });
+
+  /**
+   * POST /admin/:id/reconcile-payment
+   * Admin: Queries Razorpay API to verify payment state and repair inconsistent local records
+   */
+  router.post("/admin/:id/reconcile-payment", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const rawId = req.params["id"];
+      const orderId = String(Array.isArray(rawId) ? rawId[0] || "" : rawId || "");
+      const result = await OrderService.reconcilePayment(orderId);
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (err: unknown) {
+      const error = err as { code?: string; status?: number; message?: string };
+      res.status(error.status || 500).json({
+        success: false,
+        error: {
+          code: error.code || "RECONCILE_PAYMENT_FAILED",
+          message: error.message || "Failed to reconcile order payment with Razorpay",
         },
       });
     }
@@ -402,10 +434,25 @@ export function createOrderRouter(env: EnvConfig): Router {
   // ═══════════════════════════════════════════════════════════════════════════
 
   /**
+   * GET /config
+   * Returns public Razorpay configuration (Key ID, Mode, Currency).
+   * Key Secret is NEVER exposed to the frontend.
+   */
+  const handleGetConfig = (_req: Request, res: Response) => {
+    const config = OrderService.getRazorpayService().getPublicConfig();
+    res.status(200).json({
+      success: true,
+      data: config,
+    });
+  };
+
+  router.get("/config", handleGetConfig);
+
+  /**
    * POST /
    * POST /create-order
    * Protected endpoint: Creates an order for the authenticated customer.
-   * Disallows COD, enforces UPI simulation payment.
+   * Disallows COD, generates server-side Razorpay Order with exact amount in paise.
    */
   const handleCreateOrder = async (req: Request, res: Response): Promise<void> => {
     // 1. Enforce verified customer identity
@@ -449,7 +496,7 @@ export function createOrderRouter(env: EnvConfig): Router {
     }
 
     try {
-      const order = await OrderService.createOrder({
+      const result = await OrderService.createOrder({
         customerId, // Strictly from verified server-side session
         items: parseResult.data.items,
         shippingAddress: parseResult.data.shippingAddress,
@@ -457,11 +504,14 @@ export function createOrderRouter(env: EnvConfig): Router {
         idempotencyKey: parseResult.data.idempotencyKey,
       });
 
+      const { razorpay, ...order } = result as any;
+
       res.status(201).json({
         success: true,
         data: {
           order,
-          message: "Test order placed successfully via UPI payment simulation.",
+          razorpay,
+          message: "Order placed successfully. Proceed to Razorpay checkout.",
         },
       });
     } catch (err: unknown) {
@@ -478,6 +528,86 @@ export function createOrderRouter(env: EnvConfig): Router {
 
   router.post("/", requireCustomerAuth, handleCreateOrder);
   router.post("/create-order", requireCustomerAuth, handleCreateOrder);
+
+  /**
+   * POST /verify-payment
+   * Protected endpoint: Cryptographically verifies Razorpay payment signature
+   * and updates MongoDB order status to PAID idempotently.
+   */
+  router.post("/verify-payment", requireCustomerAuth, async (req: Request, res: Response) => {
+    const customerId = req.customer?.id;
+    if (!customerId) {
+      res.status(401).json({
+        success: false,
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Customer authentication required to verify payment.",
+        },
+      });
+      return;
+    }
+
+    const parseResult = verifyPaymentSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: parseResult.error.issues[0]?.message || "Invalid payment verification data",
+        },
+      });
+      return;
+    }
+
+    try {
+      const order = await OrderService.verifyPayment(customerId, parseResult.data);
+      res.status(200).json({
+        success: true,
+        data: {
+          order,
+          verified: true,
+          message: "Payment successfully verified. Order confirmed.",
+        },
+      });
+    } catch (err: unknown) {
+      const error = err as { code?: string; status?: number; message?: string };
+      res.status(error.status || 400).json({
+        success: false,
+        error: {
+          code: error.code || "PAYMENT_VERIFICATION_FAILED",
+          message: error.message || "Payment verification failed",
+        },
+      });
+    }
+  });
+
+  /**
+   * POST /webhook
+   * Public webhook endpoint called by Razorpay.
+   * Cryptographically verifies X-Razorpay-Signature using raw request body.
+   */
+  router.post("/webhook", async (req: Request, res: Response) => {
+    const signature = (req.headers["x-razorpay-signature"] as string) || "";
+    const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+
+    try {
+      const result = await OrderService.handleWebhook(rawBody, signature, req.body);
+      res.status(200).json({
+        status: "ok",
+        result,
+      });
+    } catch (err: unknown) {
+      const error = err as { code?: string; status?: number; message?: string };
+      logger.warn({ err }, "Razorpay webhook execution failed");
+      res.status(error.status || 400).json({
+        status: "error",
+        error: {
+          code: error.code || "WEBHOOK_FAILED",
+          message: error.message || "Webhook processing failed",
+        },
+      });
+    }
+  });
 
   /**
    * GET /

@@ -193,7 +193,7 @@ describe("Complete Order, GST, Shipping, and Customer Delivery Confirmation Work
       // Assert status and payment details
       expect(order.status).toBe("PLACED");
       expect(order.paymentMethod).toBe("UPI");
-      expect(order.paymentStatus).toBe("SIMULATED");
+      expect(order.paymentStatus).toBe("PENDING");
 
       // Assert GST breakdown snapshot
       expect(order.gstRate).toBe(3.0);
@@ -344,7 +344,7 @@ describe("Complete Order, GST, Shipping, and Customer Delivery Confirmation Work
       expect(res.body.success).toBe(true);
       const order = res.body.data.order;
       expect(order.status).toBe("SHIPPED");
-      expect(order.paymentStatus).toBe("SIMULATED");
+      expect(order.paymentStatus).toBe("PENDING");
       expect(order.shippingUpdates.length).toBeGreaterThanOrEqual(1);
       expect(order.shippingUpdates[0].carrierName).toBe("Blue Dart Apex Insured");
     });

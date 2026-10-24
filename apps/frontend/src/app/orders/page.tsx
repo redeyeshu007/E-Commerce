@@ -200,9 +200,19 @@ export default function CustomerOrdersPage() {
 
                   <div className="flex items-center gap-2">
                     {renderStatusBadge(order.status)}
-                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
-                      {order.paymentStatus}
-                    </span>
+                    {order.paymentStatus === "PAID" ? (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        PAID (Verified)
+                      </span>
+                    ) : order.paymentStatus === "FAILED" ? (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                        FAILED
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                        {order.paymentStatus || "PENDING"}
+                      </span>
+                    )}
                   </div>
                 </div>
 
