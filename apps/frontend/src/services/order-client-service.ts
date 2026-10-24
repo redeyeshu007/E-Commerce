@@ -1,4 +1,4 @@
-import { type Order, type ShippingAddress, type RazorpayOrderData, type CreateOrderResult } from "@/types/order";
+import { type Order, type CreateOrderResult } from "@/types/order";
 
 export interface OrderItemInput {
   productId: string;

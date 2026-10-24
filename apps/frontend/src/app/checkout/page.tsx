@@ -227,6 +227,38 @@ export default function CheckoutPage() {
       theme: {
         color: "#000000",
       },
+      config: {
+        display: {
+          blocks: {
+            upi: {
+              name: "Pay using UPI / QR Code",
+              instruments: [
+                {
+                  method: "upi",
+                },
+              ],
+            },
+            other: {
+              name: "Cards, NetBanking & Wallets",
+              instruments: [
+                {
+                  method: "card",
+                },
+                {
+                  method: "netbanking",
+                },
+                {
+                  method: "wallet",
+                },
+              ],
+            },
+          },
+          sequence: ["block.upi", "block.other"],
+          preferences: {
+            show_default_blocks: true,
+          },
+        },
+      },
       handler: async function (response: {
         razorpay_payment_id: string;
         razorpay_order_id: string;
