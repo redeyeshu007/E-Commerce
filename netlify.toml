@@ -1,0 +1,33 @@
+# ==============================================================================
+# PERALAGAE Jewellery — Production Netlify Configuration
+# Monorepo architecture: Next.js Frontend + Package dependencies
+# ==============================================================================
+
+[build]
+  # Build from repository root to resolve workspaces (@gold-commerce/shared-types & validation)
+  base = ""
+  command = "npm run build:frontend"
+  publish = "apps/frontend/.next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Next.js Official Netlify Runtime Plugin
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# ── API & Media Rewrites ──────────────────────────────────────────────────────
+# Seamlessly proxy backend API calls and uploaded media to the backend service.
+# Replace the target URL with your deployed backend URL on Render or server host.
+[[redirects]]
+  from = "/api/*"
+  to = "https://peralagae-backend-api.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/uploads/*"
+  to = "https://peralagae-backend-api.onrender.com/uploads/:splat"
+  status = 200
+  force = true

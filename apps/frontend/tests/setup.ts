@@ -3,7 +3,7 @@
  * Runs before every test file in the Vitest suite.
  */
 import "@testing-library/jest-dom";
-import { afterEach, vi } from "vitest";
+import { beforeEach, afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
 vi.mock("next/navigation", () => ({
