@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import { prisma } from "../database/prisma.js";
 import {
   signCustomerToken,
@@ -8,6 +9,7 @@ import {
 } from "../utils/customer-auth.js";
 import type { EnvConfig } from "../config/env.js";
 import { logger } from "../utils/logger.js";
+import { EmailService } from "./email/email-service.js";
 
 export interface CustomerProfile {
   id: string;
@@ -70,19 +72,19 @@ export class CustomerService {
       createdAt: customer.createdAt,
       profile: customer.profile
         ? {
-            id: customer.profile.id,
-            customerId: customer.profile.customerId,
-            recipientName: customer.profile.recipientName,
-            phone: customer.profile.phone,
-            streetAddress: customer.profile.streetAddress,
-            city: customer.profile.city,
-            state: customer.profile.state,
-            pinCode: customer.profile.pinCode,
-            country: customer.profile.country || "India",
-            isComplete: customer.profile.isComplete,
-            createdAt: customer.profile.createdAt,
-            updatedAt: customer.profile.updatedAt,
-          }
+          id: customer.profile.id,
+          customerId: customer.profile.customerId,
+          recipientName: customer.profile.recipientName,
+          phone: customer.profile.phone,
+          streetAddress: customer.profile.streetAddress,
+          city: customer.profile.city,
+          state: customer.profile.state,
+          pinCode: customer.profile.pinCode,
+          country: customer.profile.country || "India",
+          isComplete: customer.profile.isComplete,
+          createdAt: customer.profile.createdAt,
+          updatedAt: customer.profile.updatedAt,
+        }
         : null,
     };
   }
@@ -138,7 +140,8 @@ export class CustomerService {
     // Hash password with bcrypt cost 12
     const passwordHash = await bcrypt.hash(data.password, 12);
 
-    // Create customer record (ALWAYS customer role)
+    // Create customer record (ALWAYS customer role) with unique unsubscribe token
+    const unsubscribeToken = crypto.randomBytes(24).toString("hex");
     const customer = await prisma.customer.create({
       data: {
         email: normalizedEmail,
@@ -146,11 +149,25 @@ export class CustomerService {
         passwordHash,
         role: "customer",
         isEmailVerified: false,
+        unsubscribeToken,
+        emailCartRemindersEnabled: true,
+        emailOrderUpdatesEnabled: true,
       },
     });
 
     // Create authenticated session
     const token = await this.createSession(customer.id, env, meta);
+
+    // Asynchronously dispatch luxury welcome email (never blocks registration)
+    try {
+      await EmailService.sendWelcomeEmail({
+        customerId: customer.id,
+        email: customer.email,
+        fullName: customer.fullName,
+      });
+    } catch (err) {
+      logger.warn({ err, customerId: customer.id }, "Failed to send welcome email upon registration");
+    }
 
     logger.info({ customerId: customer.id, email: customer.email }, "Customer registered successfully");
 
@@ -266,7 +283,7 @@ export class CustomerService {
     if (!session || session.expiresAt < new Date()) {
       if (session) {
         // Cleanup expired session
-        await prisma.customerSession.delete({ where: { id: session.id } }).catch(() => {});
+        await prisma.customerSession.delete({ where: { id: session.id } }).catch(() => { });
       }
       return null;
     }
@@ -286,7 +303,7 @@ export class CustomerService {
     const hashed = hashToken(token);
     await prisma.customerSession.deleteMany({
       where: { token: hashed },
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   /**
@@ -295,16 +312,230 @@ export class CustomerService {
   static async revokeAllCustomerSessions(customerId: string): Promise<void> {
     await prisma.customerSession.deleteMany({
       where: { customerId },
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   /**
-   * Initiates a password reset request
-   * Always returns a generic response to prevent user enumeration
+   * Helper to hash numeric OTP securely with app secret
+   */
+  private static hashOtp(otp: string): string {
+    const secret = process.env["CUSTOMER_JWT_SECRET"] || "peralagae_otp_salt_key_default";
+    return crypto.createHmac("sha256", secret).update(otp.trim()).digest("hex");
+  }
+
+  /**
+   * 1. Requests password reset OTP (6 digits, 10 min validity, secure hashed storage)
+   */
+  static async requestPasswordResetOtp(
+    email: string
+  ): Promise<{ success: boolean; message: string; debugOtp?: string }> {
+    const normalizedEmail = (email || "").trim().toLowerCase();
+
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      // Privacy-preserving response
+      return {
+        success: true,
+        message: "If an account exists with this email, a verification code has been sent.",
+      };
+    }
+
+    const customer = await prisma.customer.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    let rawOtp: string | undefined;
+
+    if (customer) {
+      // Generate cryptographically secure 6-digit numeric OTP (100000 - 999999)
+      rawOtp = crypto.randomInt(100000, 1000000).toString();
+      const otpHash = this.hashOtp(rawOtp);
+      const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          passwordResetOtpHash: otpHash,
+          passwordResetOtpExpires: expires,
+          passwordResetOtpAttempts: 0,
+          resetPasswordToken: null,
+          resetPasswordExpires: null,
+        },
+      });
+
+      logger.info(
+        { customerId: customer.id, email: customer.email },
+        "Password reset OTP issued and hashed"
+      );
+
+      // Dispatch OTP email via Nodemailer SMTP
+      try {
+        await EmailService.sendPasswordResetOtpEmail({
+          email: customer.email,
+          fullName: customer.fullName,
+          otp: rawOtp,
+          expiryMinutes: 10,
+          customerId: customer.id,
+        });
+      } catch (err) {
+        logger.error({ err, customerId: customer.id }, "Failed to dispatch password reset OTP email");
+      }
+    }
+
+    return {
+      success: true,
+      message: "If an account exists with this email, a verification code has been sent.",
+      ...(process.env["NODE_ENV"] === "test" && rawOtp ? { debugOtp: rawOtp } : {}),
+    };
+  }
+
+  /**
+   * 2. Verifies the OTP entered by customer
+   */
+  static async verifyPasswordResetOtp(
+    email: string,
+    otp: string
+  ): Promise<{ success: boolean; valid: boolean; message: string }> {
+    const normalizedEmail = (email || "").trim().toLowerCase();
+    const cleanOtp = (otp || "").trim();
+
+    if (!normalizedEmail || !cleanOtp) {
+      throw Object.assign(new Error("Email and 6-digit verification code are required"), {
+        code: "VALIDATION_ERROR",
+        status: 400,
+      });
+    }
+
+    const customer = await prisma.customer.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!customer || !customer.passwordResetOtpHash || !customer.passwordResetOtpExpires) {
+      throw Object.assign(new Error("Verification code is invalid or has expired. Please request a new code."), {
+        code: "INVALID_OTP",
+        status: 400,
+      });
+    }
+
+    // Rate limiting attempts: Max 5 incorrect attempts
+    if (customer.passwordResetOtpAttempts >= 5) {
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          passwordResetOtpHash: null,
+          passwordResetOtpExpires: null,
+          passwordResetOtpAttempts: 0,
+        },
+      });
+      throw Object.assign(
+        new Error("Too many incorrect attempts. This code has been invalidated. Please request a new code."),
+        { code: "OTP_MAX_ATTEMPTS_EXCEEDED", status: 400 }
+      );
+    }
+
+    // Expiry check
+    if (customer.passwordResetOtpExpires < new Date()) {
+      throw Object.assign(new Error("Verification code has expired. Please request a new code."), {
+        code: "EXPIRED_OTP",
+        status: 400,
+      });
+    }
+
+    // Constant-time hash comparison
+    const incomingHash = this.hashOtp(cleanOtp);
+    const expectedBuffer = Buffer.from(customer.passwordResetOtpHash, "hex");
+    const incomingBuffer = Buffer.from(incomingHash, "hex");
+
+    const matches =
+      expectedBuffer.length === incomingBuffer.length &&
+      crypto.timingSafeEqual(expectedBuffer, incomingBuffer);
+
+    if (!matches) {
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          passwordResetOtpAttempts: { increment: 1 },
+        },
+      });
+
+      const remaining = 5 - (customer.passwordResetOtpAttempts + 1);
+      throw Object.assign(
+        new Error(
+          remaining > 0
+            ? `Invalid verification code. ${remaining} attempt(s) remaining.`
+            : "Invalid verification code. Maximum attempts reached. Please request a new code."
+        ),
+        { code: "INVALID_OTP", status: 400 }
+      );
+    }
+
+    return {
+      success: true,
+      valid: true,
+      message: "Verification code verified successfully.",
+    };
+  }
+
+  /**
+   * 3. Completes password reset using verified OTP
+   */
+  static async resetPasswordWithOtp(
+    email: string,
+    otp: string,
+    newPassword: string
+  ): Promise<{ success: boolean; message: string }> {
+    // Verify OTP first
+    await this.verifyPasswordResetOtp(email, otp);
+
+    const normalizedEmail = (email || "").trim().toLowerCase();
+    if (!newPassword || newPassword.length < 8) {
+      throw Object.assign(
+        new Error("New password must be at least 8 characters with letters & numbers"),
+        { code: "VALIDATION_ERROR", status: 400 }
+      );
+    }
+
+    const customer = await prisma.customer.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!customer) {
+      throw Object.assign(new Error("Customer account not found"), {
+        code: "NOT_FOUND",
+        status: 404,
+      });
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 12);
+
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: {
+        passwordHash: newPasswordHash,
+        passwordResetOtpHash: null,
+        passwordResetOtpExpires: null,
+        passwordResetOtpAttempts: 0,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      },
+    });
+
+    // Invalidate all active customer sessions for security
+    await this.revokeAllCustomerSessions(customer.id);
+
+    logger.info({ customerId: customer.id }, "Customer password reset via OTP completed successfully");
+
+    return {
+      success: true,
+      message: "Password has been reset successfully. Please sign in with your new password.",
+    };
+  }
+
+  /**
+   * Initiates password reset by issuing OTP (and legacy debugToken for existing tests)
    */
   static async requestPasswordReset(
     email: string
-  ): Promise<{ success: boolean; message: string; debugToken?: string }> {
+  ): Promise<{ success: boolean; message: string; debugToken?: string; debugOtp?: string }> {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) {
       return {
@@ -312,6 +543,8 @@ export class CustomerService {
         message: "If an account exists with this email, password reset instructions have been sent.",
       };
     }
+
+    const otpResult = await this.requestPasswordResetOtp(normalizedEmail);
 
     const customer = await prisma.customer.findUnique({
       where: { email: normalizedEmail },
@@ -331,27 +564,29 @@ export class CustomerService {
           resetPasswordExpires: expires,
         },
       });
-
-      logger.info(
-        { customerId: customer.id, email: customer.email },
-        "Password reset token issued"
-      );
     }
 
     return {
       success: true,
       message: "If an account exists with this email, password reset instructions have been sent.",
       ...(process.env["NODE_ENV"] === "test" && rawToken ? { debugToken: rawToken } : {}),
+      ...(process.env["NODE_ENV"] === "test" && otpResult.debugOtp ? { debugOtp: otpResult.debugOtp } : {}),
     };
   }
 
   /**
-   * Completes password reset using single-use token
+   * Completes password reset using single-use token or OTP
    */
   static async resetPassword(
     token: string,
-    newPassword: string
+    newPassword: string,
+    email?: string
   ): Promise<{ success: boolean; message: string }> {
+    // If token is a 6-digit numeric OTP and email is provided, delegate to OTP reset
+    if (/^\d{6}$/.test(token.trim()) && email) {
+      return this.resetPasswordWithOtp(email, token, newPassword);
+    }
+
     if (!token || !token.trim()) {
       throw Object.assign(new Error("Password reset token is required"), {
         code: "VALIDATION_ERROR",
@@ -390,6 +625,8 @@ export class CustomerService {
         passwordHash: newPasswordHash,
         resetPasswordToken: null,
         resetPasswordExpires: null,
+        passwordResetOtpHash: null,
+        passwordResetOtpExpires: null,
       },
     });
 
@@ -643,19 +880,19 @@ export class CustomerService {
 
     const formattedProfile = customer.profile
       ? {
-          id: customer.profile.id,
-          customerId: customer.profile.customerId,
-          recipientName: customer.profile.recipientName,
-          phone: customer.profile.phone,
-          streetAddress: customer.profile.streetAddress,
-          city: customer.profile.city,
-          state: customer.profile.state,
-          pinCode: customer.profile.pinCode,
-          country: customer.profile.country || "India",
-          isComplete: customer.profile.isComplete,
-          createdAt: customer.profile.createdAt,
-          updatedAt: customer.profile.updatedAt,
-        }
+        id: customer.profile.id,
+        customerId: customer.profile.customerId,
+        recipientName: customer.profile.recipientName,
+        phone: customer.profile.phone,
+        streetAddress: customer.profile.streetAddress,
+        city: customer.profile.city,
+        state: customer.profile.state,
+        pinCode: customer.profile.pinCode,
+        country: customer.profile.country || "India",
+        isComplete: customer.profile.isComplete,
+        createdAt: customer.profile.createdAt,
+        updatedAt: customer.profile.updatedAt,
+      }
       : null;
 
     return {

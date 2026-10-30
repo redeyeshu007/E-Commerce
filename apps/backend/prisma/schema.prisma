@@ -342,21 +342,29 @@ model StoreDetails {
 // ──────────────────────────────────────────────────────────────────────────
 
 model Customer {
-  id                   String            @id @default(cuid()) @map("_id")
-  email                String            @unique
-  fullName             String
-  passwordHash         String?           // Nullable for OAuth-only users
-  isEmailVerified      Boolean           @default(false)
-  isProfileComplete    Boolean           @default(false)
-  googleId             String?
-  role                 String            @default("customer") // ALWAYS "customer", NEVER "admin"
-  resetPasswordToken   String?
-  resetPasswordExpires DateTime?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
-  sessions             CustomerSession[]
-  orders               Order[]
-  profile              CustomerProfile?
+  id                        String            @id @default(cuid()) @map("_id")
+  email                     String            @unique
+  fullName                  String
+  passwordHash              String?           // Nullable for OAuth-only users
+  isEmailVerified           Boolean           @default(false)
+  isProfileComplete         Boolean           @default(false)
+  googleId                  String?
+  role                      String            @default("customer") // ALWAYS "customer", NEVER "admin"
+  resetPasswordToken        String?
+  resetPasswordExpires      DateTime?
+  passwordResetOtpHash      String?
+  passwordResetOtpExpires   DateTime?
+  passwordResetOtpAttempts  Int               @default(0)
+  emailCartRemindersEnabled Boolean           @default(true)
+  emailOrderUpdatesEnabled  Boolean           @default(true)
+  unsubscribeToken          String?           @unique
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  sessions                  CustomerSession[]
+  orders                    Order[]
+  profile                   CustomerProfile?
+  cart                      CustomerCart?
+  emailLogs                 EmailLog[]
 
   @@map("customers")
 }
@@ -527,4 +535,53 @@ model ShippingMediaAsset {
 
   @@map("shipping_media_assets")
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Customer Cart Persistence (for Real-time Cart Sync & Abandoned Reminders)
+// ──────────────────────────────────────────────────────────────────────────
+
+model CustomerCart {
+  id         String   @id @default(cuid()) @map("_id")
+  customerId String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items      Json     @default("[]") // Array of { productId: string, quantity: number, addedAt: string }
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@map("customer_carts")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Email Notification & Outbox Tracking
+// ──────────────────────────────────────────────────────────────────────────
+
+model EmailLog {
+  id                String    @id @default(cuid()) @map("_id")
+  customerId        String?
+  customer          Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  orderId           String?
+  recipientEmail    String
+  emailType         String    // WELCOME, PASSWORD_RESET_OTP, DAILY_CART_REMINDER, ORDER_CONFIRMED, ORDER_PROCESSING, ORDER_SHIPPED, ORDER_COMPLETED
+  subject           String
+  provider          String    @default("SMTP")
+  providerMessageId String?
+  status            String    @default("PENDING") // PENDING, SENT, DELIVERED, BOUNCED, FAILED
+  errorMessage      String?
+  scheduledFor      DateTime?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  idempotencyKey    String?   @unique
+  metadata          Json?
+  attempts          Int       @default(1)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([recipientEmail])
+  @@index([emailType])
+  @@index([status])
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("email_logs")
+}
+
 

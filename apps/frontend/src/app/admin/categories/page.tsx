@@ -37,7 +37,7 @@ import {
 import type { CategoryItem } from "@/types/category";
 import { useNotification } from "@/providers/storefront-provider";
 
-export function slugify(text: string): string {
+function slugify(text: string): string {
   return text
     .toString()
     .toLowerCase()

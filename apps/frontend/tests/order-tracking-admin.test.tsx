@@ -183,7 +183,7 @@ describe("Admin Orders, GST Management, and Customer Tracking Suite", () => {
         status: "PROCESSING",
       });
 
-      render(<AdminOrderDetailPage params={{ id: "order-plg-001" }} />);
+      render(<AdminOrderDetailPage params={Promise.resolve({ id: "order-plg-001" })} />);
 
       await waitFor(() => {
         expect(screen.getByText(/PLG-20261021-0001/)).toBeInTheDocument();
@@ -219,7 +219,7 @@ describe("Admin Orders, GST Management, and Customer Tracking Suite", () => {
         ...mockShippedOrder,
       });
 
-      render(<AdminOrderDetailPage params={{ id: "order-plg-001" }} />);
+      render(<AdminOrderDetailPage params={Promise.resolve({ id: "order-plg-001" })} />);
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /ship order \(add evidence\)/i })).toBeInTheDocument();
@@ -249,7 +249,7 @@ describe("Admin Orders, GST Management, and Customer Tracking Suite", () => {
     it("strictly hides unilateral DELIVERED button from admin (customer confirmation required)", async () => {
       vi.spyOn(OrderAdminService, "getOrderById").mockResolvedValue(mockShippedOrder);
 
-      render(<AdminOrderDetailPage params={{ id: "order-plg-002" }} />);
+      render(<AdminOrderDetailPage params={Promise.resolve({ id: "order-plg-002" })} />);
 
       await waitFor(() => {
         expect(screen.getByText(/PLG-20261021-0002/)).toBeInTheDocument();
@@ -284,7 +284,7 @@ describe("Admin Orders, GST Management, and Customer Tracking Suite", () => {
 
       render(
         <StorefrontProvider>
-          <CustomerOrderTrackingPage params={{ id: "order-plg-002" }} />
+          <CustomerOrderTrackingPage params={Promise.resolve({ id: "order-plg-002" })} />
         </StorefrontProvider>
       );
 

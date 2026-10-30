@@ -105,6 +105,54 @@ const baseEnvSchema = z.object({
     .string()
     .default("http://localhost:3000")
     .transform((val) => val.trim().replace(/\/+$/, "")),
+
+  // ── Email Notification System (SMTP via Nodemailer) ───────────────────────
+  SMTP_HOST: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val ? val.trim().replace(/^["']|["']$/g, "") : "")),
+  SMTP_PORT: z
+    .union([z.number(), z.string()])
+    .default(587)
+    .transform((val) => Number(val) || 587),
+  SMTP_SECURE: z
+    .union([z.boolean(), z.string()])
+    .default(false)
+    .transform((val) => {
+      if (typeof val === "boolean") return val;
+      return val.trim().toLowerCase() === "true" || val.trim() === "1";
+    }),
+  SMTP_USER: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val ? val.trim().replace(/^["']|["']$/g, "") : "")),
+  SMTP_PASS: z
+    .string()
+    .optional()
+    .default("")
+    .transform((val) => (val ? val.trim().replace(/^["']|["']$/g, "") : "")),
+  EMAIL_FROM: z
+    .string()
+    .default("notifications@peralagae.com")
+    .transform((val) => val.trim().replace(/^["']|["']$/g, "")),
+  EMAIL_FROM_NAME: z
+    .string()
+    .default("PERALAGAE Jewellery")
+    .transform((val) => val.trim().replace(/^["']|["']$/g, "")),
+  EMAIL_REPLY_TO: z
+    .string()
+    .default("support@peralagae.com")
+    .transform((val) => val.trim().replace(/^["']|["']$/g, "")),
+  EMAIL_ENABLED: z
+    .union([z.boolean(), z.string()])
+    .default(true)
+    .transform((val) => {
+      if (typeof val === "boolean") return val;
+      return val.trim().toLowerCase() === "true" || val.trim() === "1";
+    }),
+  BUSINESS_TIMEZONE: z.string().default("Asia/Kolkata"),
 });
 
 export const envSchema = baseEnvSchema.superRefine((data, ctx) => {

@@ -28,6 +28,8 @@ import { createInstagramRouter } from "./routes/instagram.js";
 import { InstagramMediaService } from "./services/instagram-media-service.js";
 import { createStoreDetailsRouter } from "./routes/store-details.js";
 import { createGstRouter } from "./routes/gst.js";
+import { createCartRouter } from "./routes/cart.js";
+import { createEmailRouter } from "./routes/email.js";
 import { ShippingMediaService } from "./services/shipping-media-service.js";
 import fs from "node:fs";
 
@@ -391,6 +393,16 @@ export function createApp(env: EnvConfig): Application {
   app.use("/api/v1/contact", storeDetailsRouter);
   app.use("/api/footer", storeDetailsRouter);
   app.use("/api/v1/footer", storeDetailsRouter);
+
+  // Cart Management endpoints (storefront customer authenticated)
+  const cartRouter = createCartRouter(env);
+  app.use("/api/cart", cartRouter);
+  app.use("/api/v1/cart", cartRouter);
+
+  // Email Notification & Management endpoints (Admin, Customer Preferences, Webhooks)
+  const emailRouter = createEmailRouter(env);
+  app.use("/api/emails", emailRouter);
+  app.use("/api/v1/emails", emailRouter);
 
   // API v1 namespace
   app.use("/api/v1", v1Router);

@@ -7,6 +7,13 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+    fileParallelism: false,
     setupFiles: ["./tests/setup.ts"],
     testTimeout: 10000,
     include: ["tests/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],

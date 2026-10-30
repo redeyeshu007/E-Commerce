@@ -26,24 +26,21 @@ import { formatInr } from "@/lib/utils";
 import { useStorefront } from "@/providers/storefront-provider";
 
 interface PageProps {
-  params?: Promise<{ id: string }> | { id: string };
+  params: Promise<{ id: string }>;
 }
 
-function CustomerOrderTrackingContent({ params }: PageProps = {}) {
+function CustomerOrderTrackingContent({ params }: { params?: Promise<{ id: string }> } = {}) {
   const routeParams = useParams();
   const [resolvedId, setResolvedId] = useState<string>(() => {
-    if (params && "id" in params && typeof params.id === "string") {
-      return params.id;
-    }
     const rId = routeParams?.id;
     return (Array.isArray(rId) ? rId[0] : rId) || "";
   });
 
   useEffect(() => {
-    if (params && typeof (params as Promise<{ id: string }>).then === "function") {
-      (params as Promise<{ id: string }>).then((p) => {
+    if (params) {
+      params.then((p) => {
         if (p?.id) setResolvedId(p.id);
-      });
+      }).catch(() => {});
     }
   }, [params]);
 
@@ -592,7 +589,7 @@ function CustomerOrderTrackingContent({ params }: PageProps = {}) {
   );
 }
 
-export default function CustomerOrderTrackingPage({ params }: PageProps = {}) {
+export default function CustomerOrderTrackingPage(props: PageProps) {
   return (
     <React.Suspense
       fallback={
@@ -606,7 +603,7 @@ export default function CustomerOrderTrackingPage({ params }: PageProps = {}) {
         </div>
       }
     >
-      <CustomerOrderTrackingContent params={params} />
+      <CustomerOrderTrackingContent params={props.params} />
     </React.Suspense>
   );
 }

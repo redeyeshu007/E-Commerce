@@ -31,24 +31,21 @@ import { type Order, type OrderStatus } from "@/types/order";
 import { formatInr } from "@/lib/utils";
 
 interface PageProps {
-  params?: Promise<{ id: string }> | { id: string };
+  params: Promise<{ id: string }>;
 }
 
-function AdminOrderDetailContent({ params }: PageProps = {}) {
+function AdminOrderDetailContent({ params }: { params?: Promise<{ id: string }> } = {}) {
   const routeParams = useParams();
   const [resolvedId, setResolvedId] = useState<string>(() => {
-    if (params && "id" in params && typeof params.id === "string") {
-      return params.id;
-    }
     const rId = routeParams?.id;
     return (Array.isArray(rId) ? rId[0] : rId) || "";
   });
 
   useEffect(() => {
-    if (params && typeof (params as Promise<{ id: string }>).then === "function") {
-      (params as Promise<{ id: string }>).then((p) => {
+    if (params) {
+      params.then((p) => {
         if (p?.id) setResolvedId(p.id);
-      });
+      }).catch(() => {});
     }
   }, [params]);
 
@@ -832,7 +829,7 @@ function AdminOrderDetailContent({ params }: PageProps = {}) {
   );
 }
 
-export default function AdminOrderDetailPage({ params }: PageProps = {}) {
+export default function AdminOrderDetailPage(props: PageProps) {
   return (
     <React.Suspense
       fallback={
@@ -846,7 +843,7 @@ export default function AdminOrderDetailPage({ params }: PageProps = {}) {
         </div>
       }
     >
-      <AdminOrderDetailContent params={params} />
+      <AdminOrderDetailContent params={props.params} />
     </React.Suspense>
   );
 }

@@ -117,15 +117,21 @@ export default function CheckoutPage() {
 
   // Fetch active GST rate from MongoDB setting
   useEffect(() => {
-    fetch("/api/v1/gst/settings")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.success && data?.data?.setting) {
-          setGstRate(Number(data.data.setting.percentage) || 3.0);
-          setIsGstInclusive(Boolean(data.data.setting.isInclusive));
-        }
-      })
-      .catch(() => {});
+    try {
+      const p = typeof fetch === "function" ? fetch("/api/v1/gst/settings") : undefined;
+      if (p && typeof p.then === "function") {
+        p.then((res) => (res && typeof res.json === "function" ? res.json() : null))
+          .then((data) => {
+            if (data?.success && data?.data?.setting) {
+              setGstRate(Number(data.data.setting.percentage) || 3.0);
+              setIsGstInclusive(Boolean(data.data.setting.isInclusive));
+            }
+          })
+          .catch(() => {});
+      }
+    } catch {
+      // Safe fallback: defaults to 3% GST
+    }
   }, []);
 
   // Redirect incomplete profiles to setup

@@ -28,6 +28,26 @@ services:
         sync: false # Set in Render Dashboard: your secure admin password
       - key: ADMIN_JWT_SECRET
         generateValue: true # Render automatically generates a cryptographically secure 32+ char secret
+      - key: SMTP_HOST
+        sync: false # Set in Render Dashboard: your SMTP server (e.g. smtp.gmail.com or mail.peralagae.com)
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false" # false for 587 STARTTLS, true for 465 implicit TLS
+      - key: SMTP_USER
+        sync: false # Set in Render Dashboard: SMTP username or mailbox address
+      - key: SMTP_PASS
+        sync: false # Set in Render Dashboard: SMTP password or provider app password
+      - key: EMAIL_FROM
+        value: orders@peralagae.com
+      - key: EMAIL_FROM_NAME
+        value: PERALAGAE Jewellery
+      - key: EMAIL_REPLY_TO
+        value: support@peralagae.com
+      - key: EMAIL_ENABLED
+        value: "true"
+      - key: BUSINESS_TIMEZONE
+        value: Asia/Kolkata
 
 
   # ── 2. Frontend Next.js Storefront ──────────────────────────────────────────
@@ -50,3 +70,43 @@ services:
         value: https://peralagae-backend-api.onrender.com
       - key: INTERNAL_API_URL
         value: https://peralagae-backend-api.onrender.com
+
+  # ── 3. Daily Evening Cart Reminder Cron Job ──────────────────────────────────
+  # Business Requirement: Executes every evening at 6:00 PM IST (12:30 PM UTC)
+  # 6:00 PM IST = 12:30 PM UTC -> Schedule: 30 12 * * *
+  # Note: Render Cron Jobs require a paid starter plan ($1/month or per execution)
+  - type: cron
+    name: peralagae-cart-reminder-cron
+    runtime: node
+    plan: starter
+    region: singapore
+    schedule: "30 12 * * *"
+    buildCommand: npm install && npm run prisma:generate --workspace=apps/backend && npm run build --workspace=apps/backend
+    startCommand: npm run cron:cart-reminder --workspace=apps/backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Matches backend database connection string
+      - key: SMTP_HOST
+        sync: false # Matches backend SMTP server
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: EMAIL_FROM
+        value: orders@peralagae.com
+      - key: EMAIL_FROM_NAME
+        value: PERALAGAE Jewellery
+      - key: EMAIL_REPLY_TO
+        value: support@peralagae.com
+      - key: EMAIL_ENABLED
+        value: "true"
+      - key: BUSINESS_TIMEZONE
+        value: Asia/Kolkata
+      - key: FRONTEND_URL
+        value: https://e-commerce-s9ws.onrender.com

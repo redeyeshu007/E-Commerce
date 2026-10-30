@@ -340,15 +340,83 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
     }
   }, []);
 
-  // Save cart changes to localStorage
-  const saveCart = useCallback((items: CartItem[]) => {
-    setCartItems(items);
-    try {
-      localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(items));
-    } catch {
-      // Ignore
-    }
-  }, []);
+  // Save cart changes to localStorage & sync to MongoDB if authenticated
+  const saveCart = useCallback(
+    (items: CartItem[]) => {
+      setCartItems(items);
+      try {
+        localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(items));
+      } catch {
+        // Ignore
+      }
+
+      if (customer) {
+        fetch("/api/cart", {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: items.map((i) => ({
+              productId: i.product.id,
+              quantity: i.quantity,
+            })),
+          }),
+        }).catch(() => {});
+      }
+    },
+    [customer]
+  );
+
+  // Synchronize cart with backend MongoDB whenever customer signs in
+  useEffect(() => {
+    if (!customer?.id) return;
+    let isSubscribed = true;
+
+    const syncRemoteCart = async () => {
+      try {
+        const res = await fetch("/api/cart", {
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) return;
+        const body = await res.json();
+        if (body.success && body.data && isSubscribed) {
+          const remoteItems = body.data.items || [];
+          if (remoteItems.length > 0 && cartItems.length === 0) {
+            const mapped: CartItem[] = remoteItems.map((r: { productId: string; product: Product; quantity: number }) => ({
+              id: `cart-${r.productId}`,
+              product: r.product,
+              quantity: r.quantity,
+            }));
+            setCartItems(mapped);
+            try {
+              localStorage.setItem(STORAGE_KEY_CART, JSON.stringify(mapped));
+            } catch {}
+          } else if (cartItems.length > 0) {
+            fetch("/api/cart", {
+              method: "PUT",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                items: cartItems.map((ci) => ({
+                  productId: ci.product.id,
+                  quantity: ci.quantity,
+                })),
+              }),
+            }).catch(() => {});
+          }
+        }
+      } catch {
+        // Ignore background network errors
+      }
+    };
+
+    syncRemoteCart();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [customer?.id]);
 
   const isWishlisted = useCallback(
     (productId: string) => wishlistIds.includes(productId),
@@ -435,10 +503,16 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
 
   const clearCart = useCallback(() => {
     saveCart([]);
+    if (customer) {
+      fetch("/api/cart", {
+        method: "DELETE",
+        credentials: "include",
+      }).catch(() => {});
+    }
     notify.info("Cart cleared.", {
       description: "All items have been removed from your shopping bag.",
     });
-  }, [saveCart, notify]);
+  }, [saveCart, customer, notify]);
 
   const openQuickView = useCallback((product: Product) => {
     setQuickViewProduct(product);

@@ -52,3 +52,24 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+
+export const otpResetPasswordSchema = z
+  .object({
+    otp: z
+      .string()
+      .trim()
+      .min(1, "Verification code is required")
+      .regex(/^\d{6}$/, "Must be a 6-digit number"),
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[a-zA-Z]/, "Password must contain at least one letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export type OtpResetPasswordFormData = z.infer<typeof otpResetPasswordSchema>;

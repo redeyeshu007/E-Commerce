@@ -29,9 +29,16 @@ const forgotPasswordSchema = z.object({
   email: z.string().trim().email("A valid email address is required"),
 });
 
+const verifyOtpSchema = z.object({
+  email: z.string().trim().email("A valid email address is required"),
+  otp: z.string().trim().regex(/^\d{6}$/, "OTP must be a 6-digit number"),
+});
+
 const resetPasswordSchema = z
   .object({
-    token: z.string().min(1, "Reset token is required"),
+    email: z.string().trim().email().optional(),
+    otp: z.string().trim().optional(),
+    token: z.string().optional(),
     newPassword: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -45,6 +52,10 @@ const resetPasswordSchema = z
       .regex(/[0-9]/, "Password must contain at least one number")
       .optional(),
     confirmPassword: z.string().optional(),
+  })
+  .refine((data) => Boolean(data.token || (data.email && data.otp)), {
+    message: "Reset token or email with OTP is required",
+    path: ["token"],
   })
   .refine((data) => Boolean(data.newPassword || data.password), {
     message: "New password is required",
@@ -357,7 +368,7 @@ export function createCustomerAuthRouter(env: EnvConfig): Router {
 
   /**
    * POST /forgot-password
-   * Sends password reset instructions
+   * Sends password reset instructions with secure 6-digit OTP
    */
   router.post("/forgot-password", authLimiter, async (req: Request, res: Response) => {
     const parseResult = forgotPasswordSchema.safeParse(req.body);
@@ -385,8 +396,43 @@ export function createCustomerAuthRouter(env: EnvConfig): Router {
   });
 
   /**
+   * POST /verify-otp
+   * Validates OTP code before password entry
+   */
+  router.post("/verify-otp", authLimiter, async (req: Request, res: Response) => {
+    const parseResult = verifyOtpSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: parseResult.error.issues[0]?.message || "Invalid OTP code",
+        },
+      });
+      return;
+    }
+
+    try {
+      const result = await CustomerService.verifyPasswordResetOtp(
+        parseResult.data.email,
+        parseResult.data.otp
+      );
+      res.status(200).json(result);
+    } catch (err: unknown) {
+      const error = err as { code?: string; status?: number; message?: string };
+      res.status(error.status || 400).json({
+        success: false,
+        error: {
+          code: error.code || "INVALID_OTP",
+          message: error.message || "Invalid or expired verification code",
+        },
+      });
+    }
+  });
+
+  /**
    * POST /reset-password
-   * Resets password using single-use token
+   * Resets password using single-use token or OTP
    */
   router.post("/reset-password", authLimiter, async (req: Request, res: Response) => {
     const parseResult = resetPasswordSchema.safeParse(req.body);
@@ -401,7 +447,7 @@ export function createCustomerAuthRouter(env: EnvConfig): Router {
       return;
     }
 
-    const { token, newPassword, password, confirmPassword } = parseResult.data;
+    const { token, email, otp, newPassword, password, confirmPassword } = parseResult.data;
     const finalPassword = (newPassword || password)!;
 
     if (confirmPassword && confirmPassword !== finalPassword) {
@@ -416,7 +462,13 @@ export function createCustomerAuthRouter(env: EnvConfig): Router {
     }
 
     try {
-      const result = await CustomerService.resetPassword(token, finalPassword);
+      if (email && otp) {
+        const result = await CustomerService.resetPasswordWithOtp(email, otp, finalPassword);
+        res.status(200).json(result);
+        return;
+      }
+
+      const result = await CustomerService.resetPassword(token!, finalPassword, email);
       res.status(200).json(result);
     } catch (err: unknown) {
       const error = err as { code?: string; status?: number; message?: string };

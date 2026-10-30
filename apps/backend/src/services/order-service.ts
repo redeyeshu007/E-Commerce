@@ -3,6 +3,8 @@ import { logger } from "../utils/logger.js";
 import { GstService } from "./gst-service.js";
 import { RazorpayService } from "./razorpay-service.js";
 import { validateEnv } from "../config/env.js";
+import { EmailService } from "./email/email-service.js";
+import { CartService } from "./cart-service.js";
 
 export interface ShippingAddressInput {
   fullName: string;
@@ -474,9 +476,15 @@ export class OrderService {
       });
 
       return updated;
-    });
+    }, { maxWait: 15000, timeout: 30000 });
 
     logger.info({ orderId, customerId }, "Order receipt confirmed by customer and marked DELIVERED");
+
+    // Dispatch delivery completion email
+    await this.dispatchOrderDeliveredEmail(orderId).catch((err) => {
+      logger.warn({ err, orderId }, "Failed to dispatch delivery completion email");
+    });
+
     return updatedOrder;
   }
 
@@ -676,12 +684,23 @@ export class OrderService {
           shippingUpdates: { orderBy: { createdAt: "asc" } },
         },
       });
-    });
+    }, { timeout: 30000, maxWait: 15000 });
 
     logger.info(
       { orderId, fromStatus: currentStatus, toStatus: targetStatus, adminId },
       "Admin updated order status"
     );
+
+    // Dispatch status change notification emails
+    if (targetStatus === "PROCESSING") {
+      await this.dispatchOrderProcessingEmail(orderId).catch((err) => {
+        logger.warn({ err, orderId }, "Failed to dispatch processing email");
+      });
+    } else if (targetStatus === "DELIVERED") {
+      await this.dispatchOrderDeliveredEmail(orderId).catch((err) => {
+        logger.warn({ err, orderId }, "Failed to dispatch delivery completion email");
+      });
+    }
 
     return updated;
   }
@@ -780,12 +799,17 @@ export class OrderService {
           shippingUpdates: { orderBy: { createdAt: "asc" } },
         },
       });
-    });
+    }, { timeout: 30000, maxWait: 15000 });
 
     logger.info(
       { orderId, imagesCount: data.images?.length || 0, newStatus, adminId },
       "Shipping update saved and status transitioned to SHIPPED"
     );
+
+    // Dispatch shipping notification email with uploaded proofs
+    await this.dispatchOrderShippedEmail(orderId).catch((err) => {
+      logger.warn({ err, orderId }, "Failed to dispatch order shipped email");
+    });
 
     return updatedOrder;
   }
@@ -923,12 +947,18 @@ export class OrderService {
           shippingUpdates: { orderBy: { createdAt: "asc" } },
         },
       });
-    });
+    }, { maxWait: 15000, timeout: 30000 });
 
     logger.info(
       { orderId: order.id, orderNumber: order.orderNumber, razorpayPaymentId },
       "Payment successfully verified and persisted to MongoDB as PAID"
     );
+
+    // Dispatch order confirmation email & clear customer cart
+    await this.dispatchOrderConfirmedEmail(order.id).catch((err) => {
+      logger.warn({ err, orderId: order.id }, "Failed to dispatch order confirmed email");
+    });
+    await CartService.clearCustomerCart(customerId).catch(() => {});
 
     return updatedOrder;
   }
@@ -1009,6 +1039,12 @@ export class OrderService {
               { orderId: order.id, orderNumber: order.orderNumber, eventId },
               "Order marked as PAID via Razorpay webhook"
             );
+
+            // Asynchronously dispatch confirmation email & clear customer cart
+            this.dispatchOrderConfirmedEmail(order.id).catch((err) => {
+              logger.warn({ err, orderId: order.id }, "Failed to dispatch webhook order confirmed email");
+            });
+            CartService.clearCustomerCart(order.customerId).catch(() => {});
           }
         } else if (eventType === "payment.failed") {
           // Only mark failed if order is not already verified as PAID
@@ -1126,6 +1162,186 @@ export class OrderService {
     }
 
     return { order, reconciled: false, paymentDetails };
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Dedicated Email Dispatch Helpers
+  // ──────────────────────────────────────────────────────────────────────────
+
+  static async dispatchOrderConfirmedEmail(orderId: string): Promise<void> {
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          items: true,
+          customer: { select: { id: true, email: true, fullName: true } },
+        },
+      });
+
+      if (!order || !order.customer?.email) return;
+
+      const env = validateEnv();
+      const rawAddress = (order.shippingAddress || {}) as any;
+      const formattedAddress = {
+        fullName: rawAddress.fullName || order.customer.fullName || "Valued Client",
+        addressLine: rawAddress.addressLine || "",
+        city: rawAddress.city || "",
+        state: rawAddress.state || "",
+        postalCode: rawAddress.postalCode || "",
+        country: rawAddress.country || "India",
+        phone: rawAddress.phone || "",
+      };
+
+      const dateStr = new Intl.DateTimeFormat("en-IN", {
+        timeZone: "Asia/Kolkata",
+        dateStyle: "long",
+      }).format(order.createdAt);
+
+      await EmailService.sendOrderConfirmedEmail({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        orderDate: dateStr,
+        customerId: order.customerId,
+        recipientEmail: order.customer.email,
+        customerName: formattedAddress.fullName,
+        items: order.items.map((i) => ({
+          productName: i.productName,
+          productImageUrl: i.productImageUrl
+            ? i.productImageUrl.startsWith("http")
+              ? i.productImageUrl
+              : `${env.FRONTEND_URL}${i.productImageUrl}`
+            : null,
+          unitPriceInr: i.unitPriceInr,
+          quantity: i.quantity,
+          totalPriceInr: i.totalPriceInr,
+        })),
+        subtotalInr: order.subtotalInr,
+        taxInr: order.taxInr,
+        shippingInr: order.shippingInr,
+        totalInr: order.totalInr,
+        shippingAddress: formattedAddress,
+        paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
+        orderUrl: `${env.FRONTEND_URL}/orders/${order.id}`,
+      });
+    } catch (err) {
+      logger.warn({ err, orderId }, "Failed in dispatchOrderConfirmedEmail");
+    }
+  }
+
+  static async dispatchOrderProcessingEmail(orderId: string): Promise<void> {
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          items: true,
+          customer: { select: { id: true, email: true, fullName: true } },
+        },
+      });
+
+      if (!order || !order.customer?.email) return;
+      const env = validateEnv();
+
+      await EmailService.sendOrderProcessingEmail({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        customerId: order.customerId,
+        recipientEmail: order.customer.email,
+        customerName: order.customer.fullName || "Valued Client",
+        items: order.items.map((i) => ({
+          productName: i.productName,
+          productImageUrl: i.productImageUrl
+            ? i.productImageUrl.startsWith("http")
+              ? i.productImageUrl
+              : `${env.FRONTEND_URL}${i.productImageUrl}`
+            : null,
+          quantity: i.quantity,
+        })),
+        orderUrl: `${env.FRONTEND_URL}/orders/${order.id}`,
+      });
+    } catch (err) {
+      logger.warn({ err, orderId }, "Failed in dispatchOrderProcessingEmail");
+    }
+  }
+
+  static async dispatchOrderShippedEmail(orderId: string): Promise<void> {
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          customer: { select: { id: true, email: true, fullName: true } },
+        },
+      });
+
+      if (!order || !order.customer?.email) return;
+      const env = validateEnv();
+
+      const rawImages = Array.isArray(order.shippingImages)
+        ? (order.shippingImages as Array<{ url: string; filename?: string }>)
+        : [];
+
+      const absoluteImages: Array<{ url: string; filename?: string | undefined }> = rawImages.map((img) => ({
+        url: img.url.startsWith("http") ? img.url : `${env.FRONTEND_URL}${img.url}`,
+        filename: img.filename || undefined,
+      }));
+
+      const rawAddress = (order.shippingAddress || {}) as any;
+
+      await EmailService.sendOrderShippedEmail({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        customerId: order.customerId,
+        recipientEmail: order.customer.email,
+        customerName: order.customer.fullName || rawAddress.fullName || "Valued Client",
+        carrierName: order.carrierName || "Direct Insured Courier",
+        trackingNumber: order.trackingNumber,
+        shipmentDescription: order.shippingDescription,
+        shippingImages: absoluteImages,
+        deliveryAddress: {
+          fullName: rawAddress.fullName || order.customer.fullName || "Recipient",
+          city: rawAddress.city || "",
+          state: rawAddress.state || "",
+          postalCode: rawAddress.postalCode || "",
+        },
+        orderUrl: `${env.FRONTEND_URL}/orders/${order.id}`,
+      });
+    } catch (err) {
+      logger.warn({ err, orderId }, "Failed in dispatchOrderShippedEmail");
+    }
+  }
+
+  static async dispatchOrderDeliveredEmail(orderId: string): Promise<void> {
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          items: true,
+          customer: { select: { id: true, email: true, fullName: true } },
+        },
+      });
+
+      if (!order || !order.customer?.email) return;
+      const env = validateEnv();
+
+      await EmailService.sendOrderDeliveredEmail({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        customerId: order.customerId,
+        recipientEmail: order.customer.email,
+        customerName: order.customer.fullName || "Valued Client",
+        items: order.items.map((i) => ({
+          productName: i.productName,
+          productImageUrl: i.productImageUrl
+            ? i.productImageUrl.startsWith("http")
+              ? i.productImageUrl
+              : `${env.FRONTEND_URL}${i.productImageUrl}`
+            : null,
+        })),
+        shopUrl: `${env.FRONTEND_URL}/shop`,
+      });
+    } catch (err) {
+      logger.warn({ err, orderId }, "Failed in dispatchOrderDeliveredEmail");
+    }
   }
 }
 

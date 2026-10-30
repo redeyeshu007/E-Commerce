@@ -201,11 +201,11 @@ describe("Frontend Customer Authentication Test Suite", () => {
         target: { value: "forgot@peralagae.com" },
       });
 
-      fireEvent.click(screen.getByRole("button", { name: "Send Reset Link" }));
+      fireEvent.click(screen.getByRole("button", { name: /send verification code/i }));
 
       await waitFor(() => {
-        expect(screen.getByText("Instructions Sent")).toBeInTheDocument();
-        expect(screen.getByText(/If an account is associated with this email/i)).toBeInTheDocument();
+        expect(screen.getByText(/6-Digit Verification Code/i)).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /update password/i })).toBeInTheDocument();
       });
     });
   });

@@ -79,6 +79,7 @@ describe("PERALAGAE Premium Authentication Experience Suite", () => {
     });
 
     it("locks and restores document body scroll overflow when opening and closing", () => {
+      document.body.style.overflow = "";
       const { rerender } = render(<AuthModal isOpen={true} onClose={vi.fn()} />);
       expect(document.body.style.overflow).toBe("hidden");
 
@@ -275,11 +276,11 @@ describe("PERALAGAE Premium Authentication Experience Suite", () => {
 
       expect(screen.getByRole("heading", { name: "Reset Your Password" })).toBeInTheDocument();
       expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Send Reset Link" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /send verification code/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Back to Sign In" })).toBeInTheDocument();
     });
 
-    it("displays generic privacy-preserving confirmation upon submitting valid email", async () => {
+    it("displays generic privacy-preserving confirmation and transitions to OTP step upon submitting valid email", async () => {
       render(
         <ForgotPasswordForm onSwitchToLogin={vi.fn()} />
       );
@@ -288,16 +289,11 @@ describe("PERALAGAE Premium Authentication Experience Suite", () => {
         target: { value: "registered.user@example.com" },
       });
 
-      fireEvent.click(screen.getByRole("button", { name: "Send Reset Link" }));
+      fireEvent.click(screen.getByRole("button", { name: /send verification code/i }));
 
       await waitFor(() => {
-        expect(screen.getByText("Instructions Sent")).toBeInTheDocument();
-        expect(
-          screen.getByText(
-            /If an account is associated with this email, you will receive password reset instructions shortly./
-          )
-        ).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Return to Sign In" })).toBeInTheDocument();
+        expect(screen.getByText(/6-Digit Verification Code/i)).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /update password/i })).toBeInTheDocument();
       });
     });
   });

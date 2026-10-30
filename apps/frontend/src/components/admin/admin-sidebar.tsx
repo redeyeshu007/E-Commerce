@@ -14,6 +14,7 @@ import {
   PanelBottom,
   ShoppingBag,
   Percent,
+  Mail,
 } from "lucide-react";
 import { brandConfig } from "@/config/brand";
 
@@ -74,6 +75,8 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     pathname === "/admin/instagram" || pathname.startsWith("/admin/instagram");
   const isOrdersActive =
     pathname === "/admin/orders" || pathname.startsWith("/admin/orders");
+  const isEmailsActive =
+    pathname === "/admin/emails" || pathname.startsWith("/admin/emails");
   const isGstActive =
     pathname === "/admin/gst" || pathname.startsWith("/admin/gst");
   const isFooterActive =
@@ -213,6 +216,24 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
               aria-hidden="true"
             />
             <span>Orders</span>
+          </Link>
+
+          <Link
+            href="/admin/emails"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-medium uppercase tracking-wider rounded transition-colors duration-150 ${
+              isEmailsActive
+                ? "bg-[#F5F5F5] text-[#111111] font-semibold border-l-2 border-[#C5A572]"
+                : "text-[#666666] hover:bg-[#F9F9F9] hover:text-[#111111]"
+            }`}
+          >
+            <Mail
+              className={`w-4 h-4 shrink-0 transition-colors ${
+                isEmailsActive ? "text-[#C5A572]" : "text-[#888888]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>Email Logs</span>
           </Link>
 
           <Link
