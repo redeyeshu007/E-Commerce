@@ -63,18 +63,21 @@ export function createApp(env: EnvConfig): Application {
           return callback(null, true);
         }
 
-        // Automatically allow any Netlify preview or production deployment domain (*.netlify.app)
-        let isNetlifyDomain = false;
+        // Automatically allow any Netlify or Render deployment domain (*.netlify.app, *.onrender.com)
+        let isCloudDomain = false;
         try {
           const parsed = new URL(origin);
-          if (parsed.hostname.endsWith(".netlify.app")) {
-            isNetlifyDomain = true;
+          if (
+            parsed.hostname.endsWith(".netlify.app") ||
+            parsed.hostname.endsWith(".onrender.com")
+          ) {
+            isCloudDomain = true;
           }
         } catch {}
 
         const isAllowed =
           env.CORS_ORIGINS.includes(origin) ||
-          isNetlifyDomain ||
+          isCloudDomain ||
           (env.NODE_ENV !== "production" && env.CORS_ORIGINS.includes("*"));
 
         if (isAllowed) {

@@ -20,9 +20,11 @@ export function getBackendOrigin(): string {
 export const BACKEND_ORIGIN = getBackendOrigin();
 
 export const API_BASE_URL =
-  typeof window !== "undefined" && window.location?.origin && !process.env["VITEST"]
-    ? "/api/v1"
-    : `${BACKEND_ORIGIN}/api/v1`;
+  process.env["NEXT_PUBLIC_API_URL"]
+    ? process.env["NEXT_PUBLIC_API_URL"].replace(/\/+$/, "")
+    : typeof window !== "undefined" && window.location?.origin && !process.env["VITEST"]
+      ? "/api/v1"
+      : `${BACKEND_ORIGIN}/api/v1`;
 
 /**
  * Base fetch wrapper with default headers and error handling.
@@ -31,8 +33,8 @@ export const API_BASE_URL =
 export async function apiFetch<T>(
   path: string,
   options?: RequestInit,
-  retries: number = 3,
-  delayMs: number = 2000,
+  retries: number = 1,
+  delayMs: number = 2500,
 ): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
 
@@ -46,14 +48,14 @@ export async function apiFetch<T>(
     });
 
     if (!res.ok) {
-      // If server is cold-starting on Render (502 Bad Gateway / 503 / 504), retry automatically
+      // If server is cold-starting on Render (502 Bad Gateway / 503 / 504), retry with backoff
       if (
         [502, 503, 504].includes(res.status) &&
         retries > 0 &&
         !process.env["VITEST"]
       ) {
         await new Promise((resolve) => setTimeout(resolve, delayMs));
-        return apiFetch<T>(path, options, retries - 1, delayMs * 1.5);
+        return apiFetch<T>(path, options, retries - 1, delayMs * 2);
       }
 
       const errorBody = await res.json().catch(() => ({}));
