@@ -79,7 +79,7 @@ export default function CheckoutPage() {
   const country = "India";
 
   const [gstRate, setGstRate] = useState<number>(3.0);
-  const [isGstInclusive, setIsGstInclusive] = useState<boolean>(true);
+  const [isGstInclusive, setIsGstInclusive] = useState<boolean>(false);
   const [idempotencyKey, setIdempotencyKey] = useState<string>("");
 
   const [formError, setFormError] = useState<string | null>(null);

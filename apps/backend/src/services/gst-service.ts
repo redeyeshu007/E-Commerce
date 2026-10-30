@@ -10,7 +10,7 @@ export interface GstSettingDto {
 
 const DEFAULT_GST_SETTING: GstSettingDto = {
   percentage: 3.0, // Standard GST for gold and fine jewellery in India
-  isInclusive: true, // Display prices are retail GST-inclusive
+  isInclusive: false, // Default: Retail catalogue prices are GST-exclusive; tax added at checkout
   updatedAt: new Date(),
   updatedBy: "system",
 };
