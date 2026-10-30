@@ -1,4 +1,6 @@
 import { type Order, type AdminOrdersResponse } from "@/types/order";
+import { API_BASE_URL } from "@/lib/api-client";
+import { getStoredAdminToken } from "./admin-auth-service";
 
 export interface AdminOrdersFilterParams {
   page?: number;
@@ -8,6 +10,18 @@ export interface AdminOrdersFilterParams {
   paymentStatus?: string;
   startDate?: string;
   endDate?: string;
+}
+
+function getAuthHeaders(includeContentType = true): HeadersInit {
+  const token = getStoredAdminToken();
+  const headers: Record<string, string> = {};
+  if (includeContentType) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
 }
 
 export class OrderAdminService {
@@ -27,11 +41,11 @@ export class OrderAdminService {
     if (params.endDate) query.set("endDate", params.endDate);
 
     const queryString = query.toString();
-    const url = `/api/v1/orders/admin${queryString ? `?${queryString}` : ""}`;
+    const url = `${API_BASE_URL}/orders/admin${queryString ? `?${queryString}` : ""}`;
 
     const res = await fetch(url, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -47,9 +61,9 @@ export class OrderAdminService {
    * Retrieves single order details for admin inspection
    */
   static async getOrderById(orderId: string): Promise<Order> {
-    const res = await fetch(`/api/v1/orders/admin/${orderId}`, {
+    const res = await fetch(`${API_BASE_URL}/orders/admin/${orderId}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -69,9 +83,9 @@ export class OrderAdminService {
     status: string,
     note?: string
   ): Promise<Order> {
-    const res = await fetch(`/api/v1/orders/admin/${orderId}/status`, {
+    const res = await fetch(`${API_BASE_URL}/orders/admin/${orderId}/status`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       credentials: "include",
       body: JSON.stringify({ status, note }),
     });
@@ -88,8 +102,9 @@ export class OrderAdminService {
    * Uploads shipping evidence images and dispatch notes, transitioning order to SHIPPED
    */
   static async addShippingUpdate(orderId: string, formData: FormData): Promise<Order> {
-    const res = await fetch(`/api/v1/orders/admin/${orderId}/shipping`, {
+    const res = await fetch(`${API_BASE_URL}/orders/admin/${orderId}/shipping`, {
       method: "POST",
+      headers: getAuthHeaders(false),
       credentials: "include",
       body: formData, // multipart/form-data handled natively
     });
@@ -108,9 +123,9 @@ export class OrderAdminService {
   static async reconcilePayment(
     orderId: string
   ): Promise<{ order: Order; reconciled: boolean; reason?: string }> {
-    const res = await fetch(`/api/v1/orders/admin/${orderId}/reconcile-payment`, {
+    const res = await fetch(`${API_BASE_URL}/orders/admin/${orderId}/reconcile-payment`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 

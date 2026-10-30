@@ -1,11 +1,24 @@
 import { type GstSetting } from "@/types/gst";
+import { API_BASE_URL } from "@/lib/api-client";
+import { getStoredAdminToken } from "./admin-auth-service";
+
+function getAuthHeaders(): HeadersInit {
+  const token = getStoredAdminToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 export class GstAdminService {
   /**
    * Retrieves active global GST setting
    */
   static async getGstSetting(): Promise<GstSetting> {
-    const res = await fetch("/api/v1/gst/settings", {
+    const res = await fetch(`${API_BASE_URL}/gst/settings`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -26,9 +39,9 @@ export class GstAdminService {
     percentage: number;
     isInclusive?: boolean;
   }): Promise<GstSetting> {
-    const res = await fetch("/api/v1/gst/admin/settings", {
+    const res = await fetch(`${API_BASE_URL}/gst/admin/settings`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       credentials: "include",
       body: JSON.stringify(payload),
     });
