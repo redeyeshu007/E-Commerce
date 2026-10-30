@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${inter.variable} ${jost.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
+      <body className="min-h-full flex flex-col bg-white text-black" suppressHydrationWarning>
         <Script
           id="fdprocessedid-cleanup"
           strategy="beforeInteractive"
@@ -96,8 +96,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             `,
           }}
         />
-      </head>
-      <body className="min-h-full flex flex-col bg-white text-black" suppressHydrationWarning>
         <Providers>
           <AnimatedTabTitle baseTitle={brandConfig.metaTitle} />
           <LuxuryPreloader />
