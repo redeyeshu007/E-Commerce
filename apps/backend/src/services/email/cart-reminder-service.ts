@@ -132,7 +132,11 @@ export class CartReminderService {
 
       // Rule: Exclude customers who already purchased these cart items in recent orders
       const purchasedProductIds = new Set(
-        customer.orders.flatMap((o) => o.items.map((item) => item.productId))
+        customer.orders.flatMap((o) =>
+          o.items
+            .map((item) => item.productId)
+            .filter((id): id is string => typeof id === "string")
+        )
       );
       const unpurchasedItems = rawItems.filter((i) => !purchasedProductIds.has(i.productId));
 

@@ -1072,13 +1072,15 @@ export class OrderService {
 
               // Safely restore reserved stock for this unpaid order
               for (const item of order.items) {
-                await tx.product.update({
-                  where: { id: item.productId },
-                  data: {
-                    stockCount: { increment: item.quantity },
-                    inStock: true,
-                  },
-                });
+                if (item.productId) {
+                  await tx.product.update({
+                    where: { id: item.productId },
+                    data: {
+                      stockCount: { increment: item.quantity },
+                      inStock: true,
+                    },
+                  });
+                }
               }
             });
 

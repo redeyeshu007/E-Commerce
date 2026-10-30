@@ -1125,9 +1125,16 @@ export class ProductService {
       throw new Error(`Product with ID "${id}" not found`);
     }
 
-    // Delete record from database
-    await prisma.product.delete({
-      where: { id },
+    // Safely unlink historical order items (keeping customer receipts intact) and delete product
+    await prisma.$transaction(async (tx) => {
+      await tx.orderItem.updateMany({
+        where: { productId: id },
+        data: { productId: null },
+      });
+
+      await tx.product.delete({
+        where: { id },
+      });
     });
 
     logger.info({ id: existing.id, name: existing.name }, "Product deleted from MongoDB");

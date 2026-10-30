@@ -547,15 +547,30 @@ export class CategoryService {
       updatedAt: category.updatedAt.toISOString(),
     };
 
-    // Atomic transaction: Delete associated products, then delete the category
-    await prisma.$transaction([
-      prisma.product.deleteMany({
-        where: { categoryId: id },
-      }),
-      prisma.category.delete({
+    // 1. Fetch IDs of products in this category
+    const categoryProducts = await prisma.product.findMany({
+      where: { categoryId: id },
+      select: { id: true },
+    });
+    const productIds = categoryProducts.map((p) => p.id);
+
+    // 2. Safely unlink historical order items (keeping customer receipts intact) and delete products + category
+    await prisma.$transaction(async (tx) => {
+      if (productIds.length > 0) {
+        await tx.orderItem.updateMany({
+          where: { productId: { in: productIds } },
+          data: { productId: null },
+        });
+
+        await tx.product.deleteMany({
+          where: { categoryId: id },
+        });
+      }
+
+      await tx.category.delete({
         where: { id },
-      }),
-    ]);
+      });
+    });
 
     logger.info(
       { id, name: category.name, deletedProductCount: productCount },
