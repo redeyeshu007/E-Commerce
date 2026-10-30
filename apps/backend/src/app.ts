@@ -51,6 +51,14 @@ export function createApp(env: EnvConfig): Application {
     next();
   });
 
+  // ── Normalize URL Slashes (e.g. //api -> /api from reverse proxies) ───────
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    if (req.url && req.url.startsWith("//")) {
+      req.url = req.url.replace(/^\/\/+/, "/");
+    }
+    next();
+  });
+
   // ── Security Headers ──────────────────────────────────────────────────────
   app.use(helmet());
 
