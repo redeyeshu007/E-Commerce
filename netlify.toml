@@ -1,33 +1,40 @@
 # ==============================================================================
-# PERALAGAE Jewellery — Production Netlify Configuration
-# Monorepo architecture: Next.js Frontend + Package dependencies
+# PERALAGAE Jewellery — Full-Stack Netlify Configuration
+# Next.js 16 Storefront + Express.js Serverless API (Monorepo)
 # ==============================================================================
 
 [build]
-  # Build from repository root to resolve workspaces (@gold-commerce/shared-types & validation)
+  # Build from repository root so npm workspace packages are resolved
   base = ""
-  command = "npm run build:frontend"
+  command = "npm run build:netlify"
   publish = "apps/frontend/.next"
 
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  included_files = ["apps/backend/prisma/**/*", "apps/backend/data/**/*"]
+  external_node_modules = ["@prisma/client", "prisma", "bcryptjs"]
+
 # Next.js Official Netlify Runtime Plugin
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# ── API & Media Rewrites ──────────────────────────────────────────────────────
-# Seamlessly proxy backend API calls and uploaded media to the backend service.
-# Replace the target URL with your deployed backend URL on Render or server host.
+# ── API Routing ───────────────────────────────────────────────────────────────
+# Routes all /api/* requests directly into our serverless Express API function
 [[redirects]]
   from = "/api/*"
-  to = "https://peralagae-backend-api.onrender.com/api/:splat"
+  to = "/.netlify/functions/api/:splat"
   status = 200
   force = true
 
+# ── Uploads Routing ───────────────────────────────────────────────────────────
+# Serves uploaded media files through the serverless function
 [[redirects]]
   from = "/uploads/*"
-  to = "https://peralagae-backend-api.onrender.com/uploads/:splat"
+  to = "/.netlify/functions/api/uploads/:splat"
   status = 200
   force = true

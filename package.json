@@ -15,6 +15,7 @@
     "build": "npm run build:packages && npm run build --workspaces --if-present",
     "build:frontend": "npm run build:packages && npm run build --workspace=apps/frontend",
     "build:backend": "npm run build:packages && npm run build --workspace=apps/backend",
+    "build:netlify": "npm run build:packages && npm run prisma:generate --workspace=apps/backend && npm run build:frontend",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
@@ -26,6 +27,7 @@
     "clean": "npm run clean --workspaces --if-present && rimraf node_modules"
   },
   "devDependencies": {
+    "@netlify/functions": "^6.0.3",
     "prettier": "^3.4.2",
     "rimraf": "^5.0.10",
     "typescript": "^5.7.3"
@@ -33,5 +35,8 @@
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "serverless-http": "^4.0.0"
   }
 }
