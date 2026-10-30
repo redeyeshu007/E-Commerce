@@ -11,6 +11,7 @@
   "scripts": {
     "dev:frontend": "npm run dev --workspace=apps/frontend",
     "dev:backend": "npm run dev --workspace=apps/backend",
+    "start:frontend": "npm run start --workspace=apps/frontend",
     "build:packages": "npm run build --workspace=@gold-commerce/shared-types --if-present && npm run build --workspace=@gold-commerce/validation --if-present",
     "build": "npm run build:packages && npm run build --workspaces --if-present",
     "build:frontend": "npm run build:packages && npm run build --workspace=apps/frontend",

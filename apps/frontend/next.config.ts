@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
     cpus: 1,
     workerThreads: false,
   },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Disable Webpack disk pack file cache in local development on Windows to prevent Array buffer allocation failure
+      config.cache = false;
+    }
+    return config;
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

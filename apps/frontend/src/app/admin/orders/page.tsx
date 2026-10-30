@@ -306,13 +306,24 @@ export default function AdminOrdersPage() {
               <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-3" />
               <p className="text-sm font-semibold text-neutral-900 mb-1">Failed to retrieve orders</p>
               <p className="text-xs text-neutral-500 mb-4">{error}</p>
-              <button
-                type="button"
-                onClick={() => fetchOrders()}
-                className="px-4 py-2 bg-neutral-900 text-white text-xs font-medium rounded-lg hover:bg-black transition-colors"
-              >
-                Retry
-              </button>
+              <div className="flex items-center justify-center gap-3">
+                {error.toLowerCase().includes("auth") ? (
+                  <Link
+                    href="/admin/login"
+                    className="px-4 py-2 bg-neutral-900 text-white text-xs font-medium rounded-lg hover:bg-black transition-colors"
+                  >
+                    Log In to Admin
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fetchOrders()}
+                    className="px-4 py-2 bg-neutral-900 text-white text-xs font-medium rounded-lg hover:bg-black transition-colors"
+                  >
+                    Retry
+                  </button>
+                )}
+              </div>
             </div>
           ) : orders.length === 0 ? (
             <div className="py-20 text-center">

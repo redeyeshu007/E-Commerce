@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next dev --webpack",
+    "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
