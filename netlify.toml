@@ -18,8 +18,12 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  included_files = ["apps/backend/prisma/**/*", "apps/backend/data/**/*"]
-  external_node_modules = ["@prisma/client", "prisma", "bcryptjs"]
+  included_files = [
+    "apps/backend/prisma/schema.prisma",
+    "apps/backend/data/hero-settings.json",
+    "apps/backend/data/hero-history.json"
+  ]
+  external_node_modules = ["@prisma/client", ".prisma"]
 
 # ── API Routing ───────────────────────────────────────────────────────────────
 # Routes all /api/* requests directly into our serverless Express API function
