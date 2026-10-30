@@ -46,7 +46,6 @@ export async function generateMetadata({
   };
 }
 
-export const instant = false;
 
 function ProductDetailSkeleton() {
   return (

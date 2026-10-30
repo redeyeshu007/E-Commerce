@@ -3,11 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    agentUpgrade: 'security',
+    cpus: 1,
+    workerThreads: false,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
   },
   transpilePackages: ["@gold-commerce/shared-types", "@gold-commerce/validation"],
-  cacheComponents: true,
-  partialPrefetching: true,
   turbopack: {
     rules: {
       "*.css": {

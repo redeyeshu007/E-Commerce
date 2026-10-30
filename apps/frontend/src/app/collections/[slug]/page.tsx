@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
 
-export const instant = false;
 
 interface CollectionsPageProps {
   params: Promise<{

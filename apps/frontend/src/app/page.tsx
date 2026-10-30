@@ -27,6 +27,8 @@ import { fetchPublicHeroSettings } from "@/services/hero-settings-service";
 import { fetchPublicMaterialsSection } from "@/services/material-service";
 import { fetchPublicInstagramSection } from "@/services/instagram-service";
 
+export const dynamic = "force-dynamic";
+
 function HeroBannersSkeleton() {
   return (
     <section aria-label="Promotional Collections Loading" className="w-full bg-white pt-1 sm:pt-1.5 lg:pt-2 pb-6 sm:pb-8 lg:pb-10">

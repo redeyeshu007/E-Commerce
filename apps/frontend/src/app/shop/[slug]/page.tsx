@@ -37,7 +37,6 @@ export async function generateMetadata({
   };
 }
 
-export const instant = false;
 
 function ShopProductDetailSkeleton() {
   return (
