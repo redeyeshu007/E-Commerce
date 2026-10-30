@@ -262,13 +262,13 @@ export default function CustomerOrdersPage() {
                     <span className="text-neutral-500">Total: </span>
                     <span className="text-sm font-bold text-neutral-900">
                       {formatInr(
-                        (order.totalInr && order.totalInr > order.subtotalInr)
+                        typeof order.totalInr === "number" && order.totalInr > 0
                           ? order.totalInr
-                          : order.subtotalInr + (order.taxInr || 0) - (order.discountInr || 0) + (order.shippingInr || 0)
+                          : order.subtotalInr + (order.gstInclusive ? 0 : (order.taxInr || 0)) - (order.discountInr || 0) + (order.shippingInr || 0)
                       )}
                     </span>
                     <span className="text-[11px] text-neutral-500 ml-2">
-                      (+GST {order.gstRate || 3}%: {formatInr(order.taxInr || 0)})
+                      ({order.gstInclusive ? "GST Included" : `+GST ${order.gstRate || 3}%`}: {formatInr(order.taxInr || 0)})
                     </span>
                   </div>
 

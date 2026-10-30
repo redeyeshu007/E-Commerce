@@ -26,12 +26,15 @@ const DEFAULT_STORE_CONTACT: StoreContactInfo = {
 /**
  * Format INR currency with Indian commas
  */
-function formatInr(amount: number): string {
+function formatInr(amount: number | null | undefined): string {
+  const numericAmount = typeof amount === "number" && !isNaN(amount) ? amount : 0;
+  const isFractional = !Number.isInteger(numericAmount);
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount);
+    minimumFractionDigits: isFractional ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(numericAmount);
 }
 
 /**

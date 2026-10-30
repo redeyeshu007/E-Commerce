@@ -411,17 +411,19 @@ function CustomerOrderTrackingContent({ params }: { params?: Promise<{ id: strin
               </div>
 
               <div className="flex justify-between text-neutral-700 bg-neutral-50 p-2.5 rounded-lg border border-neutral-200">
-                <span>GST ({order.gstRate || 3}%):</span>
-                <span className="font-semibold text-neutral-900">+{formatInr(order.taxInr)}</span>
+                <span>GST ({order.gstRate || 3}%{order.gstInclusive ? " Included" : ""}):</span>
+                <span className="font-semibold text-neutral-900">
+                  {order.gstInclusive ? "" : "+"}{formatInr(order.taxInr)}
+                </span>
               </div>
 
               <div className="flex justify-between text-sm font-bold text-neutral-900 pt-2 border-t border-neutral-200">
                 <span>Final Total:</span>
                 <span>
                   {formatInr(
-                    (order.totalInr && order.totalInr > order.subtotalInr)
+                    typeof order.totalInr === "number" && order.totalInr > 0
                       ? order.totalInr
-                      : order.subtotalInr + (order.taxInr || 0) - (order.discountInr || 0) + (order.shippingInr || 0)
+                      : order.subtotalInr + (order.gstInclusive ? 0 : (order.taxInr || 0)) - (order.discountInr || 0) + (order.shippingInr || 0)
                   )}
                 </span>
               </div>

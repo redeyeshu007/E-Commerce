@@ -388,13 +388,13 @@ export default function AdminOrdersPage() {
                         <td className="py-4 px-4 whitespace-nowrap">
                           <span className="font-semibold text-neutral-900">
                             {formatInr(
-                              (order.totalInr && order.totalInr > order.subtotalInr)
+                              typeof order.totalInr === "number" && order.totalInr > 0
                                 ? order.totalInr
-                                : order.subtotalInr + (order.taxInr || 0) - (order.discountInr || 0) + (order.shippingInr || 0)
+                                : order.subtotalInr + (order.gstInclusive ? 0 : (order.taxInr || 0)) - (order.discountInr || 0) + (order.shippingInr || 0)
                             )}
                           </span>
                           <p className="text-[11px] text-neutral-500">
-                            +GST {order.gstRate || 3}% ({formatInr(order.taxInr || 0)})
+                            {order.gstInclusive ? "GST Included" : `+GST ${order.gstRate || 3}%`} ({formatInr(order.taxInr || 0)})
                           </p>
                         </td>
 
