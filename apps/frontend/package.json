@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npx prisma generate --schema=../../apps/backend/prisma/schema.prisma && npm --prefix ../.. run build:packages",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",

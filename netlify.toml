@@ -19,10 +19,6 @@
   included_files = ["apps/backend/prisma/**/*", "apps/backend/data/**/*"]
   external_node_modules = ["@prisma/client", "prisma", "bcryptjs"]
 
-# Next.js Official Netlify Runtime Plugin
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
 # ── API Routing ───────────────────────────────────────────────────────────────
 # Routes all /api/* requests directly into our serverless Express API function
 [[redirects]]
