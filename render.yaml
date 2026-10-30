@@ -10,16 +10,20 @@ services:
     runtime: node
     plan: free
     region: singapore # or oregon / frankfurt
-    buildCommand: npm install && npm run prisma:generate --workspace=apps/backend && npm run build --workspace=apps/backend
+    buildCommand: npm install && npm run build:packages && npx prisma generate --schema=apps/backend/prisma/schema.prisma && npm run build --workspace=apps/backend
     startCommand: npm run start --workspace=apps/backend
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: MONGODB_URI
+        sync: false # Set manually in Render Dashboard using your MongoDB Atlas connection string
       - key: DATABASE_URL
-        sync: false # Set manually in Render Dashboard using your Supabase connection string
+        sync: false # Optional / fallback
       - key: CORS_ORIGINS
-        value: https://e-commerce-s9ws.onrender.com
+        value: https://pera-ecom.netlify.app,http://localhost:3000
+      - key: FRONTEND_URL
+        value: https://pera-ecom.netlify.app
       - key: LOG_LEVEL
         value: info
       - key: ADMIN_EMAIL
@@ -28,6 +32,14 @@ services:
         sync: false # Set in Render Dashboard: your secure admin password
       - key: ADMIN_JWT_SECRET
         generateValue: true # Render automatically generates a cryptographically secure 32+ char secret
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: RAZORPAY_MODE
+        value: test
       - key: SMTP_HOST
         sync: false # Set in Render Dashboard: your SMTP server (e.g. smtp.gmail.com or mail.peralagae.com)
       - key: SMTP_PORT
@@ -49,19 +61,18 @@ services:
       - key: BUSINESS_TIMEZONE
         value: Asia/Kolkata
 
-
   # ── 2. Frontend Next.js Storefront ──────────────────────────────────────────
   - type: web
     name: peralagae-storefront
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build --workspace=apps/frontend
+    buildCommand: npm install && npm run build:packages && npx prisma generate --schema=apps/backend/prisma/schema.prisma && npm run build --workspace=apps/frontend
     startCommand: npm run start --workspace=apps/frontend
     envVars:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_APP_URL
-        value: https://e-commerce-s9ws.onrender.com
+        value: https://pera-ecom.netlify.app
       - key: NEXT_PUBLIC_API_URL
         value: https://peralagae-backend-api.onrender.com/api/v1
       - key: NEXT_PUBLIC_BACKEND_URL
