@@ -76,6 +76,46 @@ export interface GoogleAuthUrlResponse {
 }
 
 const CUSTOMER_SESSION_KEY = "peralagae_customer_data";
+const CUSTOMER_TOKEN_KEY = "peralagae_customer_token";
+
+export function getStoredCustomerToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(CUSTOMER_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredCustomerToken(token: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CUSTOMER_TOKEN_KEY, token);
+  } catch {
+    // Ignore quota errors
+  }
+}
+
+export function clearStoredCustomerToken(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(CUSTOMER_TOKEN_KEY);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function getCustomerAuthHeaders(existing?: Record<string, string>): Record<string, string> {
+  const token = getStoredCustomerToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...existing,
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 export class CustomerAuthService {
   /**
@@ -110,6 +150,7 @@ export class CustomerAuthService {
     if (typeof window === "undefined") return;
     try {
       localStorage.removeItem(CUSTOMER_SESSION_KEY);
+      clearStoredCustomerToken();
     } catch {
       // Ignore storage errors
     }
@@ -146,6 +187,10 @@ export class CustomerAuthService {
     }
 
     const customer = body.data?.customer;
+    const token = body.data?.token;
+    if (token) {
+      setStoredCustomerToken(token);
+    }
     if (customer) {
       this.setStoredCustomer(customer);
     }
@@ -179,6 +224,10 @@ export class CustomerAuthService {
     }
 
     const customer = body.data?.customer;
+    const token = body.data?.token;
+    if (token) {
+      setStoredCustomerToken(token);
+    }
     if (customer) {
       if (body.data?.profile && !customer.profile) {
         customer.profile = body.data.profile;
@@ -195,7 +244,7 @@ export class CustomerAuthService {
     try {
       const res = await fetch("/api/auth/me", {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: getCustomerAuthHeaders(),
         credentials: "include",
       });
 
@@ -229,13 +278,14 @@ export class CustomerAuthService {
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getCustomerAuthHeaders(),
         credentials: "include",
       });
     } catch {
       // Ignore network errors on logout
     } finally {
       this.clearStoredCustomer();
+      clearStoredCustomerToken();
     }
   }
 
@@ -323,7 +373,7 @@ export class CustomerAuthService {
   static async getProfile(): Promise<CustomerProfileDetails> {
     const res = await fetch("/api/auth/profile", {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: getCustomerAuthHeaders(),
       credentials: "include",
     });
 
@@ -341,7 +391,7 @@ export class CustomerAuthService {
   static async saveProfile(data: SaveProfileInput): Promise<CustomerProfileDetails> {
     const res = await fetch("/api/auth/profile", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: getCustomerAuthHeaders(),
       credentials: "include",
       body: JSON.stringify(data),
     });

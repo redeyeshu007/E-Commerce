@@ -261,7 +261,8 @@ export class OrderService {
     // Complimentary insured express delivery for PERALAGAE fine jewellery
     const shippingInr = 0;
     const discountInr = 0;
-    const totalInr = subtotalInr - discountInr + shippingInr; // Inclusive of GST
+    const finalTaxToAdd = isInclusive ? 0 : totalTaxInr;
+    const totalInr = Math.round((subtotalInr - discountInr + shippingInr + finalTaxToAdd) * 100) / 100;
     const orderNumber = this.generateOrderNumber();
     const amountPaise = Math.round(totalInr * 100);
 

@@ -27,6 +27,7 @@ import {
 import { type Order, type RazorpayOrderData } from "@/types/order";
 import { CustomerAuthService } from "@/services/customer-auth-service";
 import { INDIAN_STATES } from "@/lib/profile-constants";
+import { API_BASE_URL } from "@/lib/api-client";
 
 /**
  * Loads Razorpay Standard Checkout SDK dynamically
@@ -118,7 +119,7 @@ export default function CheckoutPage() {
   // Fetch active GST rate from MongoDB setting
   useEffect(() => {
     try {
-      const p = typeof fetch === "function" ? fetch("/api/v1/gst/settings") : undefined;
+      const p = typeof fetch === "function" ? fetch(`${API_BASE_URL}/gst/settings`) : undefined;
       if (p && typeof p.then === "function") {
         p.then((res) => (res && typeof res.json === "function" ? res.json() : null))
           .then((data) => {
@@ -190,12 +191,15 @@ export default function CheckoutPage() {
     }
   }, [isCustomerAuthLoading, isAuthenticated, openAuthModal]);
 
-  // Calculate inclusive GST snapshot amount for display
+  // Calculate GST snapshot amount for display
   const calculatedTaxInr = isGstInclusive
     ? Math.round((subtotalInr - subtotalInr / (1 + gstRate / 100)) * 100) / 100
     : Math.round((subtotalInr * (gstRate / 100)) * 100) / 100;
 
-  const totalPayableInr = subtotalInr + calculatedTaxInr;
+  // When GST is inclusive, product subtotal already contains GST; do not add tax on top
+  const totalPayableInr = isGstInclusive
+    ? subtotalInr
+    : subtotalInr + calculatedTaxInr;
 
   // Launches Razorpay modal with server-created order info
   const launchRazorpayCheckout = async (
@@ -515,9 +519,11 @@ export default function CheckoutPage() {
               </span>
             </div>
             <div className="flex justify-between items-center text-sm pb-2.5 border-b border-[#EAE6DF]">
-              <span className="text-[#666666]">GST (3% Included):</span>
+              <span className="text-[#666666]">
+                GST ({completedOrder.gstRate ?? 3}% {completedOrder.gstInclusive ? "Included in price" : "Added"}):
+              </span>
               <span className="text-xs text-[#555555]">
-                {completedOrder.gstRate || 3}% (+{formatInr(completedOrder.taxInr)})
+                {completedOrder.gstInclusive ? "" : "+"}{formatInr(completedOrder.taxInr)}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm pb-2.5 border-b border-[#EAE6DF]">
@@ -940,8 +946,10 @@ export default function CheckoutPage() {
               </div>
 
               <div className="flex justify-between text-xs text-[#777777] bg-[#FAF8F5] p-2.5 rounded-lg border border-[#EAE6DF]">
-                <span>GST (3% Included):</span>
-                <span className="font-medium text-[#333333]">+{formatInr(calculatedTaxInr)}</span>
+                <span>GST ({gstRate}% {isGstInclusive ? "Included in price" : "Added"}):</span>
+                <span className="font-medium text-[#333333]">
+                  {isGstInclusive ? "" : "+"}{formatInr(calculatedTaxInr)}
+                </span>
               </div>
 
               <div className="flex justify-between text-base font-bold text-[#111111] pt-3 border-t border-[#EAE6DF]">

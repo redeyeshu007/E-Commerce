@@ -1,4 +1,6 @@
 import { type Order, type CreateOrderResult } from "@/types/order";
+import { API_BASE_URL } from "@/lib/api-client";
+import { getStoredCustomerToken } from "./customer-auth-service";
 
 export interface OrderItemInput {
   productId: string;
@@ -25,15 +27,26 @@ export interface RazorpayPublicConfig {
   isMock?: boolean;
 }
 
+function getOrderHeaders(): Record<string, string> {
+  const token = getStoredCustomerToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export class OrderClientService {
   /**
    * Retrieves public Razorpay configuration from backend (Key ID, Mode, Currency).
    * Secret keys are NEVER exposed.
    */
   static async getRazorpayConfig(): Promise<RazorpayPublicConfig> {
-    const res = await fetch("/api/checkout/config", {
+    const res = await fetch(`${API_BASE_URL}/checkout/config`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: getOrderHeaders(),
     });
 
     if (!res.ok) {
@@ -54,9 +67,9 @@ export class OrderClientService {
     paymentMethod?: string;
     idempotencyKey?: string;
   }): Promise<CreateOrderResult> {
-    const res = await fetch("/api/checkout/create-order", {
+    const res = await fetch(`${API_BASE_URL}/checkout/create-order`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getOrderHeaders(),
       credentials: "include",
       body: JSON.stringify({
         ...payload,
@@ -89,9 +102,9 @@ export class OrderClientService {
     razorpayPaymentId: string;
     razorpaySignature: string;
   }): Promise<{ order: Order; verified: boolean }> {
-    const res = await fetch("/api/checkout/verify-payment", {
+    const res = await fetch(`${API_BASE_URL}/checkout/verify-payment`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getOrderHeaders(),
       credentials: "include",
       body: JSON.stringify(payload),
     });
@@ -114,9 +127,9 @@ export class OrderClientService {
    * Retrieves orders for currently authenticated customer
    */
   static async getMyOrders(): Promise<Order[]> {
-    const res = await fetch("/api/orders", {
+    const res = await fetch(`${API_BASE_URL}/orders`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: getOrderHeaders(),
       credentials: "include",
     });
 
@@ -135,9 +148,9 @@ export class OrderClientService {
    * Retrieves details for a single order owned by the customer
    */
   static async getOrderById(orderId: string): Promise<Order | null> {
-    const res = await fetch(`/api/orders/${orderId}`, {
+    const res = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: getOrderHeaders(),
       credentials: "include",
     });
 
@@ -153,9 +166,9 @@ export class OrderClientService {
    * Customer confirms delivery receipt of their shipped order
    */
   static async confirmDelivery(orderId: string): Promise<Order> {
-    const res = await fetch(`/api/orders/${orderId}/confirm-delivery`, {
+    const res = await fetch(`${API_BASE_URL}/orders/${orderId}/confirm-delivery`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getOrderHeaders(),
       credentials: "include",
     });
 
