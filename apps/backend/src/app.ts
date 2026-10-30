@@ -63,8 +63,18 @@ export function createApp(env: EnvConfig): Application {
           return callback(null, true);
         }
 
+        // Automatically allow any Netlify preview or production deployment domain (*.netlify.app)
+        let isNetlifyDomain = false;
+        try {
+          const parsed = new URL(origin);
+          if (parsed.hostname.endsWith(".netlify.app")) {
+            isNetlifyDomain = true;
+          }
+        } catch {}
+
         const isAllowed =
           env.CORS_ORIGINS.includes(origin) ||
+          isNetlifyDomain ||
           (env.NODE_ENV !== "production" && env.CORS_ORIGINS.includes("*"));
 
         if (isAllowed) {

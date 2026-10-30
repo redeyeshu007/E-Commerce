@@ -36,7 +36,7 @@ const baseEnvSchema = z.object({
   MONGODB_URI: z.string().optional().default(""),
   CORS_ORIGINS: z
     .string()
-    .default("http://localhost:3000")
+    .default("http://localhost:3000,https://pera-ecom.netlify.app")
     .transform((val) =>
       val
         .split(",")
