@@ -139,6 +139,11 @@ export const defaultFooterConfig: FooterConfig = {
     brandName: "PERALAGAE",
     rightsText: "All Rights Reserved.",
   },
+  developer: {
+    text: "Design & Developed by",
+    label: "Vitamin7",
+    href: "https://vitamin7.in/",
+  },
   backToTop: {
     enabled: false,
     label: "Back to top",

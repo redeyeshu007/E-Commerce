@@ -709,34 +709,38 @@ export function FooterBottom({
           </div>
         )}
 
-        {/* Bottom Bar: Centered copyright notice (or space-between if developer exists) */}
+        {/* Bottom Bar: Copyright on left, Developer on right */}
         <div
           className={`flex flex-col sm:flex-row items-center ${
-            developer ? "justify-between sm:text-left" : "justify-center text-center"
+            developer ? "justify-between text-center sm:text-left" : "justify-center text-center"
           } gap-3 sm:gap-4`}
         >
           {/* Copyright */}
           <p
             data-testid="footer-copyright"
-            className="text-xs text-[#777777] tracking-[0.02em] font-normal text-center"
+            className={`text-xs text-[#777777] tracking-[0.02em] font-normal ${
+              developer ? "text-center sm:text-left" : "text-center"
+            }`}
           >
             © {copyright.year} {copyright.brandName}. {copyright.rightsText}
           </p>
 
-          {/* Right: Design and Developed by Javix */}
+          {/* Right end: Design & Developed by Vitamin7 */}
           {developer && (
             <p
               data-testid="footer-developer"
-              className="text-xs text-[#777777] tracking-[0.02em] font-normal"
+              className="text-xs text-[#777777] tracking-[0.02em] font-normal text-center sm:text-right"
             >
-              <span>{developer.text}{" "}</span>
               <a
                 href={developer.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#111111] hover:text-[#C5A572] font-medium transition-colors underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-black"
+                className="group inline-flex items-center gap-1 text-[#777777] hover:text-[#C5A572] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A572]"
               >
-                {developer.label}
+                <span>{developer.text}{" "}</span>
+                <span className="text-[#111111] group-hover:text-[#C5A572] font-medium underline-offset-2 underline decoration-[#111111]/30 group-hover:decoration-[#C5A572] transition-colors">
+                  {developer.label}
+                </span>
               </a>
             </p>
           )}

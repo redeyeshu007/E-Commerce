@@ -207,7 +207,7 @@ describe("PERALAGAE Footer Unit Test Suite", () => {
       });
     });
 
-    it("renders centered copyright notice without developer attribution or payment icons", () => {
+    it("renders copyright notice and developer attribution linking to Vitamin7", () => {
       render(<SiteFooter />);
 
       const copyright = screen.getByTestId("footer-copyright");
@@ -215,9 +215,15 @@ describe("PERALAGAE Footer Unit Test Suite", () => {
       expect(copyright).toHaveTextContent(
         "© 2026 PERALAGAE. All Rights Reserved."
       );
-      expect(copyright).toHaveClass("text-center");
 
-      expect(screen.queryByTestId("footer-developer")).not.toBeInTheDocument();
+      const developer = screen.getByTestId("footer-developer");
+      expect(developer).toBeInTheDocument();
+      expect(developer).toHaveTextContent("Design & Developed by Vitamin7");
+
+      const link = screen.getByRole("link", { name: /Vitamin7/i });
+      expect(link).toHaveAttribute("href", "https://vitamin7.in/");
+      expect(link).toHaveAttribute("target", "_blank");
+
       expect(screen.queryByTestId("footer-payment-methods")).not.toBeInTheDocument();
     });
 

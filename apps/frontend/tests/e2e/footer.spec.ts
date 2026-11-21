@@ -79,12 +79,16 @@ test.describe("PERALAGAE Footer Comprehensive E2E & QA Suite", () => {
     // Payment Methods Row removed per user request
     await expect(footer.getByTestId("footer-payment-methods")).toHaveCount(0);
 
-    // Bottom Row: Copyright Notice only (no developer attribution or payment icons)
+    // Bottom Row: Copyright Notice and developer attribution
     const copyright = footer.getByTestId("footer-copyright");
     await expect(copyright).toBeVisible();
     await expect(copyright).toHaveText("© 2026 PERALAGAE. All Rights Reserved.");
 
-    await expect(footer.getByTestId("footer-developer")).toHaveCount(0);
+    const developer = footer.getByTestId("footer-developer");
+    await expect(developer).toBeVisible();
+    await expect(developer).toContainText("Design & Developed by");
+    await expect(developer).toContainText("Vitamin7");
+    await expect(developer.getByRole("link")).toHaveAttribute("href", "https://vitamin7.in/");
 
     // Zero horizontal overflow
     const footerOverflow = await page.evaluate(() => {
